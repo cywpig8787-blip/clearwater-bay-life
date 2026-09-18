@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>《人生》Phone OS v2</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="game">
+  <div class="world">
+    <div class="world-ui">
+      <div class="location-card"><small>CLEARWATER BAY</small><b>宿舍房間 · 夜間</b><span>《人生》正式 Phone OS v2 測試入口</span></div>
+      <button id="phoneToggle" class="phone-toggle">📱 手機</button>
+    </div>
+  </div>
+
+  <div id="phoneLayer" class="phone-layer hidden">
+    <div class="scrim" id="scrim"></div>
+    <div class="phone">
+      <div class="phone-frame">
+        <div class="speaker"></div>
+        <div class="screen" id="screen">
+          <div class="wallpaper"></div>
+          <header class="statusbar">
+            <span id="statusTime">22:45</span>
+            <div class="status-icons"><span>▮▮▮</span><span>⌁</span><span>87%</span><span class="battery"></span></div>
+          </header>
+
+          <section id="lockScreen" class="phone-page lock-screen hidden">
+            <div class="lock-content" id="lockContent">
+              <div class="lock-time"><b id="lockTime">22:45</b><span id="lockDate"></span></div>
+              <div class="lock-notices">
+                <div class="lock-notice"><span class="app-mini">▤</span><div><b>Notes</b><small>你的筆記會保存在手機中。</small></div><time>剛剛</time></div>
+              </div>
+              <div class="unlock-hint"><span>⌃</span><small>向上滑動解鎖</small></div>
+            </div>
+          </section>
+
+          <section id="homeScreen" class="phone-page home-screen hidden">
+            <div class="home-widget"><small>CLEARWATER BAY</small><b id="homeClock">22:45</b><span id="homeDate"></span></div>
+            <div id="homeApps" class="app-grid"></div>
+            <button id="drawerHandle" class="drawer-handle"><span>⌃</span><small>所有 App</small></button>
+          </section>
+
+          <section id="drawerScreen" class="phone-page drawer-screen hidden">
+            <div class="drawer-head"><button class="back-btn" data-home>‹</button><div><b>App Drawer</b><small>所有已安裝 App</small></div></div>
+            <input id="appSearch" class="app-search" placeholder="搜尋 App">
+            <div id="drawerApps" class="drawer-grid"></div>
+          </section>
+
+          <section id="recentsScreen" class="phone-page recents-screen hidden">
+            <div class="recents-head"><div><b>Recent Apps</b><small>最近使用 App · 向上滑卡片即可關閉</small></div><button id="clearAll" class="clear-all">全部關閉</button></div>
+            <div id="recentsTrack" class="recents-track"></div>
+            <div id="recentsEmpty" class="recents-empty hidden"><span>▢</span><b>沒有最近使用的 App</b><small>打開 App 後會出現在這裡。</small></div>
+          </section>
+
+          <section id="appScreen" class="phone-page app-screen hidden"><div id="appMount" class="app-mount"></div></section>
+
+          <nav class="phone-nav"><button id="navBack">‹</button><button id="navHome">●</button><button id="navRecents">▢</button></nav>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<template id="notesTemplate">
+  <div class="notes-app">
+    <header class="app-header"><button class="app-header-btn" data-app-back>‹</button><div><b>Notes</b><small>記事本</small></div><button class="app-header-btn" id="newNote">＋</button></header>
+    <div class="notes-body">
+      <aside class="note-list-pane"><div class="note-search-wrap"><input id="noteSearch" class="note-search" placeholder="搜尋筆記"></div><div id="noteList" class="note-list"></div></aside>
+      <section class="note-editor-pane">
+        <div id="emptyNote" class="empty-note"><span>▤</span><b>選擇一篇筆記</b><small>或按右上角 ＋ 建立新筆記</small></div>
+        <div id="noteEditor" class="note-editor hidden"><input id="noteTitle" class="note-title" placeholder="標題"><div class="note-meta"><span id="noteUpdated"></span><button id="deleteNote">刪除</button></div><textarea id="noteContent" class="note-content" placeholder="開始輸入…"></textarea></div>
+      </section>
+    </div>
+  </div>
+</template>
+
+<template id="settingsTemplate">
+  <div class="settings-app">
+    <header class="app-header"><button class="app-header-btn" data-app-back>‹</button><div><b>Settings</b><small>設定</small></div><span></span></header>
+    <div class="settings-body">
+      <section class="settings-hero"><div class="settings-avatar">A</div><div><b>Player Phone</b><small>世界內手機設定</small></div></section>
+      <section class="setting-group">
+        <h3>Display / 顯示</h3>
+        <label class="setting-row"><span><b>深色模式</b><small>黑／深灰色介面</small></span><input id="darkToggle" type="checkbox"></label>
+        <label class="setting-row"><span><b>顯示 App 名稱</b><small>Home 與 App Drawer 圖示名稱</small></span><input id="labelsToggle" type="checkbox"></label>
+      </section>
+      <section class="setting-group"><h3>Session / 工作階段</h3><div class="settings-info"><span>目前開啟中的 App</span><b id="sessionCount">0</b></div><p>Home 只離開 App；在 Recent Apps 向上滑掉卡片才結束該 Session。</p></section>
+    </div>
+  </div>
+</template>
+
+<script src="app.js"></script>
+</body>
+</html>

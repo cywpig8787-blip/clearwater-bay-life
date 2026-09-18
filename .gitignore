@@ -1,0 +1,12 @@
+# Godot
+.godot/
+.import/
+*.tmp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
