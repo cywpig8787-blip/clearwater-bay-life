@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <title>《人生》手機系統 v2</title>
-<link rel="stylesheet" href="style.css?v=20260919-zh1">
+<link rel="stylesheet" href="style.css?v=20260919-notify1">
 </head>
 <body>
 <div class="game">
@@ -27,15 +27,16 @@
           <div class="wallpaper"></div>
           <header class="statusbar">
             <span id="statusTime">22:45</span>
-            <div class="status-icons"><span>▮▮▮</span><span>⌁</span><span>87%</span><span class="battery"></span></div>
+            <div class="status-icons">
+  <button id="notificationHandle" class="notification-handle" aria-label="通知">●<em id="notificationBadge" class="hidden"></em></button>
+  <span>▮▮▮</span><span>⌁</span><span>87%</span><span class="battery"></span>
+</div>
           </header>
 
           <section id="lockScreen" class="phone-page lock-screen hidden">
             <div class="lock-content" id="lockContent">
               <div class="lock-time"><b id="lockTime">22:45</b><span id="lockDate"></span></div>
-              <div class="lock-notices">
-                <div class="lock-notice"><span class="app-mini">▤</span><div><b>記事本</b><small>你的筆記會保存在手機中。</small></div><time>剛剛</time></div>
-              </div>
+              <div class="lock-notices" id="lockNotices"></div>
               <div class="unlock-hint"><span>⌃</span><small>向上滑動解鎖</small></div>
             </div>
           </section>
@@ -50,6 +51,15 @@
             <div class="drawer-head"><button class="back-btn" data-home>‹</button><div><b>應用程式列表</b><small>所有已安裝應用程式</small></div></div>
             <input id="appSearch" class="app-search" placeholder="搜尋應用程式">
             <div id="drawerApps" class="drawer-grid"></div>
+          </section>
+
+          <section id="notificationScreen" class="phone-page notification-screen hidden">
+            <div class="notification-head">
+              <button class="back-btn" data-home>‹</button>
+              <div><b>通知</b><small>手機與世界事件通知</small></div>
+              <button id="clearNotifications" class="clear-all">全部清除</button>
+            </div>
+            <div id="notificationList" class="notification-list"></div>
           </section>
 
           <section id="recentsScreen" class="phone-page recents-screen hidden">
@@ -151,6 +161,6 @@
   </div>
 </template>
 
-<script src="app.js?v=20260919-zh1"></script>
+<script src="app.js?v=20260919-notify1"></script>
 </body>
 </html>
