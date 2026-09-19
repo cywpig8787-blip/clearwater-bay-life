@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <title>《人生》主遊戲畫面原型</title>
-<link rel="stylesheet" href="style.css?v=3">
+<link rel="stylesheet" href="style.css?v=4">
 </head>
 <body>
 <div class="game-shell">
@@ -80,20 +80,36 @@
     </section>
   </div>
 
-  <div class="phone-overlay hidden" id="phoneOverlay">
-    <div class="phone-preview">
-      <div class="phone-preview-bar">
-        <b>手機</b><button id="phoneClose">×</button>
-      </div>
-      <div class="phone-preview-body">
-        <div class="phone-preview-device">
-          <div class="phone-preview-screen">
-            <span>手機系統 v2</span>
-            <small>正式手機系統入口已保留</small>
-            <a href="../" target="_blank" rel="noopener">開啟目前手機系統</a>
-          </div>
+  <section class="phone-peek hidden" id="phonePeek" aria-label="手機快速預覽">
+    <button class="phone-peek-hide" id="phonePeekHide" aria-label="收起手機">×</button>
+    <button class="phone-peek-device" id="phonePeekOpen" aria-label="打開完整手機">
+      <div class="phone-peek-speaker"></div>
+      <div class="phone-peek-screen">
+        <div class="peek-status">
+          <b id="phonePeekTime">19:00</b>
+          <span>快速查看</span>
         </div>
+        <div class="peek-notifications">
+          <article>
+            <span class="peek-app">簡訊</span>
+            <b>NPC 訊息預覽</b>
+            <small>你收到一則新簡訊</small>
+          </article>
+          <article>
+            <span class="peek-app">通知</span>
+            <b>校園通知</b>
+            <small>新的通知會顯示在這裡</small>
+          </article>
+        </div>
+        <div class="peek-open-hint">再點一下打開手機</div>
       </div>
+    </button>
+  </section>
+
+  <div class="phone-full-overlay hidden" id="phoneFullOverlay">
+    <div class="phone-full-shell">
+      <button class="phone-full-close" id="phoneFullClose" aria-label="返回快速預覽">×</button>
+      <iframe id="phoneFrame" title="《人生》手機系統" src="../"></iframe>
     </div>
   </div>
   <div class="pause-lock hidden" id="pauseLock" aria-hidden="true">
@@ -103,6 +119,6 @@
     </div>
   </div>
 </div>
-<script src="app.js?v=3"></script>
+<script src="app.js?v=4"></script>
 </body>
 </html>
