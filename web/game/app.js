@@ -67,6 +67,7 @@ function renderWorldState(){
   $("#locationDisplay").textContent=currentScene().name;
   $("#pauseButton").classList.toggle("active",gameState.paused);
   $("#playButton").classList.toggle("active",!gameState.paused);
+  syncPhonePeek();
   const lock=$("#pauseLock");
   if(lock){
     lock.classList.toggle("hidden",!gameState.paused);
@@ -224,9 +225,41 @@ $("#rightDrawerToggle").onclick=()=>right.classList.toggle("open");
 $("[data-close='left']").onclick=()=>left.classList.remove("open");
 $("[data-close='right']").onclick=()=>right.classList.remove("open");
 
-$("#phoneButton").onclick=()=>$("#phoneOverlay").classList.remove("hidden");
-$("#phoneClose").onclick=()=>$("#phoneOverlay").classList.add("hidden");
-$("#phoneOverlay").onclick=e=>{if(e.target===$("#phoneOverlay"))$("#phoneOverlay").classList.add("hidden")};
+function syncPhonePeek(){
+ const h=Math.floor(gameState.minutes/60)%24,m=gameState.minutes%60;
+ const el=$("#phonePeekTime");
+ if(el)el.textContent=pad(h)+":"+pad(m);
+}
+function openPhonePeek(){
+ if(gameState.paused)return;
+ syncPhonePeek();
+ $("#phonePeek").classList.remove("hidden");
+}
+function hidePhonePeek(){
+ $("#phonePeek").classList.add("hidden");
+}
+function openFullPhone(){
+ if(gameState.paused)return;
+ syncPhonePeek();
+ $("#phoneFullOverlay").classList.remove("hidden");
+}
+function closeFullPhone(){
+ $("#phoneFullOverlay").classList.add("hidden");
+ $("#phonePeek").classList.remove("hidden");
+}
+function closeAllPhone(){
+ $("#phoneFullOverlay").classList.add("hidden");
+ $("#phonePeek").classList.add("hidden");
+}
+$("#phoneButton").onclick=()=>{
+ if(gameState.paused)return;
+ if($("#phonePeek").classList.contains("hidden"))openPhonePeek();
+ else openFullPhone();
+};
+$("#phonePeekOpen").onclick=openFullPhone;
+$("#phonePeekHide").onclick=e=>{e.stopPropagation();hidePhonePeek()};
+$("#phoneFullClose").onclick=closeFullPhone;
+$("#phoneFullOverlay").onclick=e=>{if(e.target===$("#phoneFullOverlay"))closeFullPhone()};
 
 document.addEventListener("keydown",e=>{
  if(gameState.paused){
@@ -234,7 +267,7 @@ document.addEventListener("keydown",e=>{
    return;
  }
  if(e.key==="Escape"){
-   closePanel();$("#phoneOverlay").classList.add("hidden");
+   closePanel();closeAllPhone();
    left.classList.remove("open");right.classList.remove("open");
  }
  if(e.code==="Space"&&![ "INPUT","TEXTAREA","SELECT" ].includes(document.activeElement.tagName)){
