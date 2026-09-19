@@ -27,7 +27,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .door{position:absolute;right:2%;top:17%;width:10%;height:42%;background:#715949;border:6px solid #4d3b31}
 .door:after{content:"";position:absolute;width:8px;height:8px;border-radius:50%;background:#d7b36c;left:14%;top:50%}
 .rug{position:absolute;left:42%;bottom:8%;width:20%;height:13%;border-radius:50%;background:#7b91aa55;border:4px solid #62768f77}
-.player{position:absolute;left:47%;bottom:18%;width:72px;height:150px;filter:drop-shadow(0 9px 10px #0003)}
+.player{position:absolute;left:50%;top:78%;bottom:auto;width:72px;height:150px;transform:translate(-50%,-100%);filter:drop-shadow(0 9px 10px #0003);z-index:8;will-change:left,top}
 .player .head{position:absolute;left:15px;top:0;width:42px;height:42px;border-radius:50%;background:#e9c6ad;border:3px solid #6a5147}
 .player .body{position:absolute;left:7px;top:39px;width:58px;height:98px;border-radius:20px 20px 12px 12px;background:#435f8d;border:3px solid #263950}
 .play-label{position:absolute;left:50%;top:49%;transform:translate(-50%,-50%);padding:7px 14px;border-radius:99px;background:#ffffff98;color:#516172;font-weight:700;letter-spacing:.16em;font-size:13px;backdrop-filter:blur(7px);pointer-events:none}
@@ -143,3 +143,14 @@ transform:rotate(-7deg);opacity:.8}
  .peek-status b{font-size:21px}.peek-notifications article:nth-child(2){display:none}
  .phone-full-shell{height:min(82vh,650px)}
 }
+
+/* Direct movement / proximity interaction prototype */
+.interactable.out-of-range:hover{filter:none;transform:none}
+.interactable.nearby{filter:brightness(1.06) drop-shadow(0 0 7px #ffe6a866)}
+.scene-actions button:disabled{opacity:.48;cursor:default;filter:saturate(.5)}
+.map-location-list{display:grid;gap:9px;margin-top:16px}
+.map-location{display:grid;grid-template-columns:18px 1fr;align-items:center;gap:9px;padding:11px 12px;border:1px solid #c9bda9;border-radius:11px;background:#f7f1e7}
+.map-location.current{border-color:#6d89aa;background:#edf3f9}
+.map-location .map-dot{width:11px;height:11px;border-radius:50%;background:#9aa5b2;box-shadow:0 0 0 4px #ffffff80}
+.map-location.current .map-dot{background:#456f9e}
+.map-location b{display:block;font-size:12px}.map-location small{display:block;font-size:9px;color:#7a8795;margin-top:2px}
