@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <title>《人生》手機系統 v2</title>
-<link rel="stylesheet" href="style.css?v=20260919-localwallpaper1">
+<link rel="stylesheet" href="style.css?v=20260919-market1">
 </head>
 <body>
 <div class="game">
@@ -157,6 +157,24 @@
   </div>
 </template>
 
+<template id="marketplaceTemplate">
+  <div class="marketplace-app">
+    <header class="app-header marketplace-header">
+      <button class="app-header-btn" data-app-back>‹</button>
+      <div><b>應用程式商店</b><small>安裝與管理手機 App</small></div>
+      <span></span>
+    </header>
+    <div class="marketplace-body">
+      <div class="marketplace-hero">
+        <div><small>APP MARKETPLACE</small><b>探索應用程式</b><span>世界內 App 與系統功能會依進度逐步開放。</span></div>
+      </div>
+      <input id="marketplaceSearch" class="marketplace-search" placeholder="搜尋應用程式">
+      <div id="marketplaceCategories" class="marketplace-categories"></div>
+      <div id="marketplaceList" class="marketplace-list"></div>
+    </div>
+  </div>
+</template>
+
 <template id="settingsTemplate">
   <div class="settings-app">
     <header class="app-header"><button class="app-header-btn" data-app-back>‹</button><div><b>設定</b><small>手機設定</small></div><span></span></header>
@@ -173,6 +191,6 @@
   </div>
 </template>
 
-<script src="app.js?v=20260919-localwallpaper1"></script>
+<script src="app.js?v=20260919-market1"></script>
 </body>
 </html>
