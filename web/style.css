@@ -80,3 +80,41 @@
 .screen.dark .mail-password-block>label:not(.mail-show-password){color:#93a1b0}
 .screen.dark .mail-password-block input[type="password"],.screen.dark .mail-password-block input[type="text"]{background:#111821;color:#edf2f7;border-color:#2b3848}
 .screen.dark .mail-show-password{color:#a7b5c4}
+
+/* Home customization mode */
+.home-edit-overlay{position:absolute;z-index:14;inset:0;background:#dfe7ec66;backdrop-filter:blur(1.5px);pointer-events:auto}
+.home-edit-done{position:absolute;z-index:3;right:16px;top:12px;border:0;border-radius:18px;background:#2784ed;color:white;padding:8px 16px;font-size:10px;font-weight:700;box-shadow:0 6px 14px #275f9d35}
+.home-edit-toolbar{position:absolute;left:10px;right:10px;bottom:55px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.home-edit-toolbar button{border:0;background:transparent;display:grid;justify-items:center;gap:5px;color:#425971}
+.home-edit-toolbar button span{width:50px;height:50px;border-radius:50%;display:grid;place-items:center;background:#6e7d80dd;color:white;font-size:20px;box-shadow:0 7px 16px #24334235}
+.home-edit-toolbar button small{font-size:8px;font-weight:700}
+.home-edit-panel{position:absolute;z-index:2;left:12px;right:12px;bottom:126px;max-height:48%;overflow:auto;border:1px solid #ffffffc0;border-radius:18px;background:#f7fafde8;box-shadow:0 15px 35px #24384f3d;padding:12px;backdrop-filter:blur(16px)}
+.home-edit-panel h3{margin:0 0 9px;font-size:13px}.home-edit-panel p{margin:0 0 10px;font-size:8px;line-height:1.5;color:#6e8094}
+.wallpaper-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.wallpaper-choice{border:2px solid transparent;border-radius:12px;padding:0;background:transparent;color:inherit}
+.wallpaper-choice.active{border-color:#3182d5}.wallpaper-thumb{display:block;height:76px;border-radius:9px;border:1px solid #ffffffaa}
+.wallpaper-choice small{display:block;font-size:8px;margin-top:4px}
+.wallpaper-thumb.pastel{background:radial-gradient(circle at 25% 25%,#ffd4e6 0 12%,transparent 12.5%),radial-gradient(circle at 75% 18%,#bce4ff 0 15%,transparent 15.5%),linear-gradient(145deg,#f4d8e8,#cce3f8 48%,#9abbe4)}
+.wallpaper-thumb.sky{background:linear-gradient(160deg,#c9ebff,#86b7e6 48%,#667da4)}
+.wallpaper-thumb.cream{background:linear-gradient(145deg,#fff2d7,#f0cfc1 50%,#d7bad9)}
+.wallpaper-thumb.night{background:radial-gradient(circle at 70% 20%,#eef4ff 0 5%,transparent 5.5%),linear-gradient(155deg,#1c2847,#35335b 55%,#151b31)}
+.wallpaper-thumb.green{background:linear-gradient(150deg,#d8f0df,#99c9af 50%,#668e7b)}
+.effect-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.effect-grid button{border:1px solid #cbd7e4;border-radius:10px;background:white;padding:9px 5px;font-size:9px;color:#526d88}
+.effect-grid button.active{background:#3475c5;border-color:#3475c5;color:white}
+.widget-placeholder{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.widget-card{border:1px solid #d3dde8;border-radius:11px;background:#fff;padding:12px;font-size:9px;color:#728399}
+.home-setting-list{display:grid;gap:8px}.home-setting-row{display:flex;justify-content:space-between;align-items:center;padding:9px 10px;border-radius:10px;background:#fff;border:1px solid #d9e1ea;font-size:9px}
+.setting-action-row{width:100%;border:0;border-top:1px solid #eef1f4;background:transparent;padding:10px 0;display:flex;justify-content:space-between;align-items:center;text-align:left;color:inherit}
+.setting-action-row b{display:block;font-size:11px}.setting-action-row small{display:block;font-size:8px;color:#8895a4}.setting-action-row strong{font-size:18px;color:#718195}
+.home-screen.editing .home-widget,.home-screen.editing #homeApps,.home-screen.editing .drawer-handle{opacity:.28;filter:saturate(.65);pointer-events:none}
+.screen.wallpaper-sky .wallpaper{background:linear-gradient(160deg,#c9ebff,#86b7e6 48%,#667da4)}
+.screen.wallpaper-cream .wallpaper{background:linear-gradient(145deg,#fff2d7,#f0cfc1 50%,#d7bad9)}
+.screen.wallpaper-night .wallpaper{background:radial-gradient(circle at 70% 20%,#eef4ff 0 5%,transparent 5.5%),linear-gradient(155deg,#1c2847,#35335b 55%,#151b31)}
+.screen.wallpaper-green .wallpaper{background:linear-gradient(150deg,#d8f0df,#99c9af 50%,#668e7b)}
+.screen.wallpaper-effect-soft .wallpaper{filter:saturate(.82) brightness(1.04)}
+.screen.wallpaper-effect-dim .wallpaper{filter:brightness(.68) saturate(.82)}
+.screen.wallpaper-effect-blur .wallpaper{filter:blur(7px) scale(1.04)}
+.screen.dark .home-edit-overlay{background:#0a101677}.screen.dark .home-edit-panel{background:#111923e8;border-color:#ffffff14}
+.screen.dark .home-edit-panel p{color:#93a2b2}.screen.dark .effect-grid button,.screen.dark .widget-card,.screen.dark .home-setting-row{background:#17212c;border-color:#2d3a48;color:#dce5ee}
+.screen.dark .setting-action-row{border-color:#293340}.screen.dark .setting-action-row small{color:#8f9baa}
