@@ -204,8 +204,9 @@ function populateMailAccountSelect(){
  if(!accounts.some(a=>a.id===state.mail.activeAccount))state.mail.activeAccount=accounts[0].id;
  sel.value=state.mail.activeAccount;
 }
-function createMailAccount(providerId,rawUsername){
+function createMailAccount(providerId,rawUsername,password){
  const check=validateMailUsername(rawUsername);if(!check.ok)return {ok:false,message:check.message};
+ if(!password||password.length<4)return {ok:false,message:"密碼至少需要 4 個字元。"};
  const provider=mailProvider(providerId),username=check.username;
  if(!mailNameAvailable(providerId,username))return {ok:false,message:"這個名稱已經被使用。"};
  const id="acct-player-"+Date.now();
@@ -214,6 +215,7 @@ function createMailAccount(providerId,rawUsername){
   id,accountId:id,serviceId:provider.serviceId,username,address,
   displayName:username+" · "+provider.displayName,
   boundEmail:null,boundPhone:null,loginState:"logged_in",
+  credentials:{password},
   metadata:{fictional:true,playerCreated:true,developmentProvider:!!provider.development,providerId:provider.id,createdAt:Date.now()}
  };
  state.accountRegistry.accounts.push(account);
@@ -267,25 +269,51 @@ function renderMailAccountCreate(){
  $("#mailAddress").textContent="建立新帳號";
  const selected=state.mail.pendingProvider||mailProviders[0].id;
  const provider=mailProvider(selected);
- $("#mailContent").innerHTML='<section class="mail-account-create"><h3>建立世界內 Email</h3><p>服務商名稱與網域目前都是開發測試占位，之後可以直接替換，不影響 Account Registry。</p><div class="mail-provider-list">'+mailProviders.map(p=>'<label class="mail-provider-card"><input type="radio" name="mailProvider" value="'+esc(p.id)+'" '+(p.id===selected?"checked":"")+'><span><b>'+esc(p.displayName)+'</b><small>@'+esc(p.domain)+' · '+esc(p.description)+'</small></span></label>').join("")+'</div><label class="mail-address-builder"><span>帳號名稱（只輸入 @ 前面的部分）</span><span class="mail-local-row"><input id="mailNewUsername" maxlength="24" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="playername"><strong id="mailDomain">@'+esc(provider.domain)+'</strong></span></label><div id="mailNameHint" class="mail-name-hint">請輸入 3–24 個字元。</div><div class="mail-account-actions"><button id="cancelMailAccount">取消</button><button class="create" id="createMailAccount" disabled>建立帳號</button></div></section>';
+ $("#mailContent").innerHTML='<section class="mail-account-create"><h3>建立世界內 Email</h3><p>服務商名稱與網域目前都是開發測試占位，之後可以直接替換，不影響 Account Registry。</p><div class="mail-provider-list">'+mailProviders.map(p=>'<label class="mail-provider-card"><input type="radio" name="mailProvider" value="'+esc(p.id)+'" '+(p.id===selected?"checked":"")+'><span><b>'+esc(p.displayName)+'</b><small>@'+esc(p.domain)+' · '+esc(p.description)+'</small></span></label>').join("")+'</div><label class="mail-address-builder"><span>帳號名稱（只輸入 @ 前面的部分）</span><span class="mail-local-row"><input id="mailNewUsername" maxlength="24" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="playername"><strong id="mailDomain">@'+esc(provider.domain)+'</strong></span></label><div id="mailNameHint" class="mail-name-hint">請輸入 3–24 個字元。</div><div class="mail-password-block"><label><span>密碼</span><input id="mailNewPassword" type="password" maxlength="32" autocomplete="new-password" placeholder="設定世界內密碼"></label><label><span>再次輸入密碼</span><input id="mailConfirmPassword" type="password" maxlength="32" autocomplete="new-password" placeholder="再輸入一次"></label><label class="mail-show-password"><input id="mailShowPassword" type="checkbox"><span>顯示密碼</span></label><small id="mailPasswordHint">請設定至少 4 個字元。不要使用真實世界正在使用的密碼。</small></div><div class="mail-account-actions"><button id="cancelMailAccount">取消</button><button class="create" id="createMailAccount" disabled>建立帳號</button></div></section>';
  const input=$("#mailNewUsername"),hint=$("#mailNameHint"),create=$("#createMailAccount");
+ const password=$("#mailNewPassword"),confirmPassword=$("#mailConfirmPassword"),passwordHint=$("#mailPasswordHint"),showPassword=$("#mailShowPassword");
  function evaluate(){
   input.value=input.value.toLowerCase().replace(/\s+/g,"");
   const p=mailProvider(state.mail.pendingProvider||selected);
   $("#mailDomain").textContent="@"+p.domain;
   const v=validateMailUsername(input.value);
-  if(!v.ok){hint.textContent=v.message;hint.className="mail-name-hint bad";create.disabled=true;return}
-  const available=mailNameAvailable(p.id,v.username);
-  hint.textContent=available?"這個名稱可以使用。":"這個名稱已經被使用。";
-  hint.className="mail-name-hint "+(available?"ok":"bad");
-  create.disabled=!available;
+  let usernameOk=false;
+  if(!v.ok){
+   hint.textContent=v.message;hint.className="mail-name-hint bad";
+  }else{
+   const available=mailNameAvailable(p.id,v.username);
+   hint.textContent=available?"這個名稱可以使用。":"這個名稱已經被使用。";
+   hint.className="mail-name-hint "+(available?"ok":"bad");
+   usernameOk=available;
+  }
+  const passwordOk=password.value.length>=4&&password.value===confirmPassword.value;
+  if(password.value.length<4){
+   passwordHint.textContent="請設定至少 4 個字元。不要使用真實世界正在使用的密碼。";
+   passwordHint.className="";
+  }else if(!confirmPassword.value){
+   passwordHint.textContent="請再輸入一次密碼確認。";
+   passwordHint.className="";
+  }else if(password.value!==confirmPassword.value){
+   passwordHint.textContent="兩次輸入的密碼不同。";
+   passwordHint.className="bad";
+  }else{
+   passwordHint.textContent="兩次密碼一致。";
+   passwordHint.className="ok";
+  }
+  create.disabled=!(usernameOk&&passwordOk);
  }
  $$('input[name="mailProvider"]').forEach(r=>r.onchange=()=>{state.mail.pendingProvider=r.value;save();renderMailAccountCreate()});
  input.oninput=evaluate;
+ password.oninput=evaluate;
+ confirmPassword.oninput=evaluate;
+ showPassword.onchange=()=>{
+  const type=showPassword.checked?"text":"password";
+  password.type=type;confirmPassword.type=type;
+ };
  $("#cancelMailAccount").onclick=()=>{state.mail.mode="list";delete state.mail.pendingProvider;save();renderMail()};
  create.onclick=()=>{
-  const result=createMailAccount(state.mail.pendingProvider||selected,input.value);
-  if(!result.ok){hint.textContent=result.message;hint.className="mail-name-hint bad";return}
+  const result=createMailAccount(state.mail.pendingProvider||selected,input.value,password.value);
+  if(!result.ok){passwordHint.textContent=result.message;passwordHint.className="bad";return}
   delete state.mail.pendingProvider;save();renderMail();
  };
  evaluate();
