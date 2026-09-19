@@ -3,6 +3,9 @@ const KEY="clearwater-life-phone-v2";
 let state=JSON.parse(localStorage.getItem(KEY)||"{}");
 state.phone=state.phone||{locked:true,open:false,currentView:"lock",currentApp:null,sessions:[],recents:[]};
 state.settings=state.settings||{dark:false,showLabels:true};
+state.settings.wallpaper=state.settings.wallpaper||"pastel";
+state.settings.wallpaperEffect=state.settings.wallpaperEffect||"none";
+state.homeCustomization=state.homeCustomization||{editing:false,panel:null};
 state.privacy=state.privacy||{mailAccepted:false};
 state.notes=state.notes||{activeId:null,search:"",items:[
 {id:"n1",title:"克萊爾灣",content:"開學前要確認的事情：\n\n・課表\n・宿舍用品\n・學校網站帳號",updated:Date.now()-3600000},
@@ -164,11 +167,74 @@ function openNotification(id){
 }
 function renderAppLists(){$("#homeApps").innerHTML=apps.filter(a=>a.home).map(appButton).join("");$("#drawerApps").innerHTML=apps.map(appButton).join("");bindAppButtons();applySettings()}
 function bindAppButtons(){$$("[data-app]").forEach(b=>b.onclick=()=>{const a=appById(b.dataset.app);if(!a.enabled){b.animate([{transform:"translateX(0)"},{transform:"translateX(-4px)"},{transform:"translateX(4px)"},{transform:"translateX(0)"}],{duration:220});return}openApp(a.id)})}
+const wallpaperCatalog=[
+ {id:"pastel",name:"粉彩",cls:"pastel"},
+ {id:"sky",name:"天空",cls:"sky"},
+ {id:"cream",name:"奶油",cls:"cream"},
+ {id:"night",name:"夜色",cls:"night"},
+ {id:"green",name:"綠意",cls:"green"}
+];
+function enterHomeEdit(panel=null){
+ state.phone.currentApp=null;
+ showView("home");
+ state.homeCustomization.editing=true;
+ state.homeCustomization.panel=panel;
+ $("#homeScreen").classList.add("editing");
+ $("#homeEditOverlay").classList.remove("hidden");
+ renderHomeEditPanel();
+ save();
+}
+function exitHomeEdit(){
+ state.homeCustomization.editing=false;state.homeCustomization.panel=null;
+ $("#homeScreen").classList.remove("editing");
+ $("#homeEditOverlay").classList.add("hidden");
+ $("#homeEditPanel").classList.add("hidden");
+ save();
+}
+function renderHomeEditPanel(){
+ const panel=$("#homeEditPanel");if(!panel)return;
+ const type=state.homeCustomization.panel;
+ panel.classList.toggle("hidden",!type);
+ if(!type)return;
+ if(type==="wallpaper"){
+  panel.innerHTML='<h3>桌布</h3><p>目前先放測試桌布；未來主題商店取得的桌布會一起出現在這裡。</p><div class="wallpaper-grid">'+wallpaperCatalog.map(w=>'<button class="wallpaper-choice '+(state.settings.wallpaper===w.id?"active":"")+'" data-wallpaper="'+w.id+'"><span class="wallpaper-thumb '+w.cls+'"></span><small>'+w.name+'</small></button>').join("")+'</div>';
+  $("[data-wallpaper]").forEach(b=>b.onclick=()=>{state.settings.wallpaper=b.dataset.wallpaper;save();applySettings();renderHomeEditPanel()});
+  return;
+ }
+ if(type==="effects"){
+  const effects=[["none","無效果"],["soft","柔和"],["dim","暗化"],["blur","模糊"]];
+  panel.innerHTML='<h3>桌布效果</h3><p>效果只改顯示，不會更換原始桌布。</p><div class="effect-grid">'+effects.map(([id,name])=>'<button class="'+(state.settings.wallpaperEffect===id?"active":"")+'" data-wallpaper-effect="'+id+'">'+name+'</button>').join("")+'</div>';
+  $("[data-wallpaper-effect]").forEach(b=>b.onclick=()=>{state.settings.wallpaperEffect=b.dataset.wallpaperEffect;save();applySettings();renderHomeEditPanel()});
+  return;
+ }
+ if(type==="widgets"){
+  panel.innerHTML='<h3>小工具</h3><p>先保留正式入口；後續會接世界時間、課表、行事曆等資料來源。</p><div class="widget-placeholder"><div class="widget-card">時鐘／日期</div><div class="widget-card">課表</div><div class="widget-card">行事曆</div><div class="widget-card">其他小工具</div></div>';
+  return;
+ }
+ if(type==="settings"){
+  panel.innerHTML='<h3>桌面設定</h3><div class="home-setting-list"><label class="home-setting-row"><span>顯示 App 名稱</span><input id="homeLabelsToggle" type="checkbox" '+(state.settings.showLabels!==false?"checked":"")+'></label><div class="home-setting-row"><span>圖示排列／網格</span><small>後續擴充</small></div></div>';
+  $("#homeLabelsToggle").onchange=()=>{state.settings.showLabels=$("#homeLabelsToggle").checked;save();applySettings()};
+ }
+}
 function showView(v){$("#lockScreen").classList.toggle("hidden",v!=="lock");$("#homeScreen").classList.toggle("hidden",v!=="home");$("#drawerScreen").classList.toggle("hidden",v!=="drawer");$("#notificationScreen").classList.toggle("hidden",v!=="notifications");$("#recentsScreen").classList.toggle("hidden",v!=="recents");$("#appScreen").classList.toggle("hidden",v!=="app");state.phone.currentView=v;if(v==="recents")renderRecents();if(v==="notifications")renderNotifications();save()}
 function openPhone(){state.phone.open=true;$("#phoneLayer").classList.remove("hidden");renderNotifications();if(state.phone.locked)showView("lock");else if(state.phone.currentApp&&state.phone.sessions.includes(state.phone.currentApp))openApp(state.phone.currentApp,false);else showView("home");save()}
 function closePhone(){state.phone.open=false;$("#phoneLayer").classList.add("hidden");save()}
 $("#phoneToggle").onclick=openPhone;$("#scrim").onclick=closePhone;$("#notificationHandle").onclick=()=>{if(!state.phone.locked)showView("notifications")};$("#clearNotifications").onclick=clearNotifications;$("#drawerHandle").onclick=()=>showView("drawer");$$("[data-home]").forEach(b=>b.onclick=()=>showView("home"));$("#navHome").onclick=()=>{state.phone.currentApp=null;showView("home")};$("#navBack").onclick=()=>{if(state.phone.currentView==="app"){state.phone.currentApp=null;showView("home")}else if(["drawer","recents","notifications"].includes(state.phone.currentView))showView("home");else if(state.phone.currentView==="home")closePhone()};$("#navRecents").onclick=()=>{state.phone.currentApp=null;showView("recents")};$("#clearAll").onclick=clearAllSessions;
 $("#appSearch").oninput=()=>{const q=$("#appSearch").value.trim().toLowerCase();$("#drawerApps").innerHTML=apps.filter(a=>!q||a.name.toLowerCase().includes(q)||a.zh.includes(q)).map(appButton).join("");bindAppButtons()};
+$("#homeEditDone").onclick=exitHomeEdit;
+$("[data-home-edit]").forEach(b=>b.onclick=()=>{state.homeCustomization.panel=b.dataset.homeEdit;save();renderHomeEditPanel()});
+let homeLongPressTimer=null,homeLongPressStart=null;
+$("#homeScreen").addEventListener("pointerdown",e=>{
+ if(state.phone.currentView!=="home"||state.homeCustomization.editing)return;
+ if(e.target.closest("button,input,select,textarea,.app-icon-btn,.home-widget"))return;
+ homeLongPressStart={x:e.clientX,y:e.clientY};
+ homeLongPressTimer=setTimeout(()=>enterHomeEdit(),620);
+});
+$("#homeScreen").addEventListener("pointermove",e=>{
+ if(!homeLongPressTimer||!homeLongPressStart)return;
+ if(Math.hypot(e.clientX-homeLongPressStart.x,e.clientY-homeLongPressStart.y)>12){clearTimeout(homeLongPressTimer);homeLongPressTimer=null}
+});
+["pointerup","pointercancel","pointerleave"].forEach(type=>$("#homeScreen").addEventListener(type,()=>{if(homeLongPressTimer)clearTimeout(homeLongPressTimer);homeLongPressTimer=null;homeLongPressStart=null}));
 (()=>{const surface=$("#lockScreen"),content=$("#lockContent");let tracking=false,startY=0,dy=0,pointerId=null;surface.addEventListener("pointerdown",e=>{if(state.phone.currentView!=="lock")return;tracking=true;startY=e.clientY;dy=0;pointerId=e.pointerId;surface.setPointerCapture(pointerId);surface.classList.add("dragging")});surface.addEventListener("pointermove",e=>{if(!tracking||e.pointerId!==pointerId)return;dy=Math.min(0,e.clientY-startY);content.style.transform="translateY("+dy+"px)";content.style.opacity=String(Math.max(.25,1-Math.abs(dy)/260))});const finish=()=>{if(!tracking)return;tracking=false;surface.classList.remove("dragging");if(dy<-75){content.style.transform="translateY(-120%)";content.style.opacity="0";setTimeout(()=>{state.phone.locked=false;content.style.transition="none";content.style.transform="";content.style.opacity="";requestAnimationFrame(()=>content.style.transition="");showView("home")},160)}else{content.style.transform="";content.style.opacity=""}};surface.addEventListener("pointerup",finish);surface.addEventListener("pointercancel",finish)})();
 function openApp(id,front=true){const a=appById(id);if(!a||!a.enabled)return;state.phone.currentApp=id;if(front)touchSession(id);showView("app");if(id==="notes")mountNotes();if(id==="mail")mountMail();if(id==="messages")mountMessages();if(id==="browser")mountBrowser();if(id==="settings")mountSettings();save()}
 function renderRecents(){const ids=state.phone.recents.filter(id=>state.phone.sessions.includes(id));state.phone.recents=ids;$("#recentsEmpty").classList.toggle("hidden",ids.length>0);$("#recentsTrack").classList.toggle("hidden",ids.length===0);$("#recentsTrack").innerHTML=ids.map(id=>{const a=appById(id);return '<button class="recent-card" data-recent="'+id+'"><div class="recent-card-head"><span class="mini-icon app-icon '+a.cls+'">'+a.icon+'</span><b>'+a.name+'</b></div><div class="recent-preview">'+recentPreview(id)+'</div></button>'}).join("");bindRecentGestures()}
@@ -475,6 +541,6 @@ function bindWorldLinks(){
  const f=$("#worldSearchForm");if(f)f.onsubmit=e=>{e.preventDefault();browserNavigate("search.local?q="+encodeURIComponent($("#worldSearchInput").value),true)};
 }
 
-function mountSettings(){$("#appMount").innerHTML="";$("#appMount").appendChild($("#settingsTemplate").content.cloneNode(true));$("[data-app-back]").onclick=()=>{state.phone.currentApp=null;showView("home")};$("#darkToggle").checked=!!state.settings.dark;$("#labelsToggle").checked=state.settings.showLabels!==false;$("#sessionCount").textContent=state.phone.sessions.length;$("#darkToggle").onchange=()=>{state.settings.dark=$("#darkToggle").checked;save();applySettings()};$("#labelsToggle").onchange=()=>{state.settings.showLabels=$("#labelsToggle").checked;save();applySettings()}}
-function applySettings(){$("#screen").classList.toggle("dark",!!state.settings.dark);$("#homeScreen").classList.toggle("hide-labels",state.settings.showLabels===false);$("#drawerScreen").classList.toggle("hide-labels",state.settings.showLabels===false)}
-renderAppLists();renderRecents();renderNotifications();applySettings();if(state.phone.open)openPhone();
+function mountSettings(){$("#appMount").innerHTML="";$("#appMount").appendChild($("#settingsTemplate").content.cloneNode(true));$("[data-app-back]").onclick=()=>{state.phone.currentApp=null;showView("home")};$("#darkToggle").checked=!!state.settings.dark;$("#labelsToggle").checked=state.settings.showLabels!==false;$("#sessionCount").textContent=state.phone.sessions.length;$("#darkToggle").onchange=()=>{state.settings.dark=$("#darkToggle").checked;save();applySettings()};$("#labelsToggle").onchange=()=>{state.settings.showLabels=$("#labelsToggle").checked;save();applySettings()};$("#openHomeCustomizer").onclick=()=>enterHomeEdit("wallpaper")}
+function applySettings(){const screen=$("#screen");screen.classList.toggle("dark",!!state.settings.dark);["pastel","sky","cream","night","green"].forEach(id=>screen.classList.toggle("wallpaper-"+id,state.settings.wallpaper===id&&id!=="pastel"));["soft","dim","blur"].forEach(id=>screen.classList.toggle("wallpaper-effect-"+id,state.settings.wallpaperEffect===id));$("#homeScreen").classList.toggle("hide-labels",state.settings.showLabels===false);$("#drawerScreen").classList.toggle("hide-labels",state.settings.showLabels===false)}
+state.homeCustomization.editing=false;state.homeCustomization.panel=null;renderAppLists();renderRecents();renderNotifications();applySettings();if(state.phone.open)openPhone();
