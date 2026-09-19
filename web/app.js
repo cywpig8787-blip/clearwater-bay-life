@@ -22,6 +22,20 @@ boxes:{
 {id:"cm1",folder:"inbox",from:"Campus Mail",to:"student@campus.local",subject:"校園郵箱測試訊息",body:"這個帳號只是 Campus Mail 測試帳號，不代表正式學校郵箱名稱或網域。",time:"今天 07:40",read:false}
 ]
 }};
+state.messages=state.messages||{
+activeThread:null,
+mode:"list",
+threads:[
+{id:"thread-a",name:"測試聯絡人 A",phone:"+1 555 010 2211",unread:1,messages:[
+{id:"sms-a1",from:"them",body:"到宿舍了嗎？",time:"09:12"},
+{id:"sms-a2",from:"me",body:"到了。",time:"09:13"},
+{id:"sms-a3",from:"them",body:"好，那晚點見。",time:"09:14"}
+]},
+{id:"thread-b",name:"測試聯絡人 B",phone:"+1 555 010 4186",unread:0,messages:[
+{id:"sms-b1",from:"them",body:"明天記得帶東西。",time:"昨天"},
+{id:"sms-b2",from:"me",body:"好。",time:"昨天"}
+]}
+]};
 state.browser=state.browser||{
 activeTab:"tab-1",
 tabs:[{id:"tab-1",url:"home.local",history:["home.local"],historyIndex:0}],
@@ -32,6 +46,7 @@ panelOpen:false
 const apps=[
 {id:"notes",name:"Notes",zh:"記事本",icon:"▤",cls:"notes",home:true,enabled:true},
 {id:"mail",name:"Mail",zh:"信箱",icon:"✉",cls:"mail",home:true,enabled:true},
+{id:"messages",name:"Messages",zh:"訊息",icon:"●",cls:"messages",home:true,enabled:true},
 {id:"browser",name:"Browser",zh:"瀏覽器",icon:"◎",cls:"browser",home:true,enabled:true},
 {id:"school",name:"School",zh:"學校",icon:"◆",cls:"school",home:false,enabled:false},
 {id:"rpg",name:"RPG",zh:"遊戲",icon:"♜",cls:"rpg",home:false,enabled:false},
@@ -45,7 +60,8 @@ function touchSession(id){if(!state.phone.sessions.includes(id))state.phone.sess
 function closeSession(id){state.phone.sessions=state.phone.sessions.filter(x=>x!==id);state.phone.recents=state.phone.recents.filter(x=>x!==id);if(state.phone.currentApp===id)state.phone.currentApp=null;save();renderRecents()}
 function clearAllSessions(){state.phone.sessions=[];state.phone.recents=[];state.phone.currentApp=null;save();renderRecents()}
 function mailUnread(){return Object.values(state.mail.boxes||{}).flat().filter(m=>m.folder==="inbox"&&!m.read).length}
-function appButton(a){const badge=a.id==="mail"&&mailUnread()?'<span class="app-badge">'+mailUnread()+'</span>':"";return '<button class="app-icon-btn" data-app="'+a.id+'"><span class="app-icon '+a.cls+'">'+a.icon+'</span>'+badge+'<small>'+a.name+'</small></button>'}
+function messagesUnread(){return (state.messages.threads||[]).reduce((n,t)=>n+(Number(t.unread)||0),0)}
+function appButton(a){const count=a.id==="mail"?mailUnread():a.id==="messages"?messagesUnread():0;const badge=count?'<span class="app-badge">'+count+'</span>':"";return '<button class="app-icon-btn" data-app="'+a.id+'"><span class="app-icon '+a.cls+'">'+a.icon+'</span>'+badge+'<small>'+a.name+'</small></button>'}
 function renderAppLists(){$("#homeApps").innerHTML=apps.filter(a=>a.home).map(appButton).join("");$("#drawerApps").innerHTML=apps.map(appButton).join("");bindAppButtons();applySettings()}
 function bindAppButtons(){$$("[data-app]").forEach(b=>b.onclick=()=>{const a=appById(b.dataset.app);if(!a.enabled){b.animate([{transform:"translateX(0)"},{transform:"translateX(-4px)"},{transform:"translateX(4px)"},{transform:"translateX(0)"}],{duration:220});return}openApp(a.id)})}
 function showView(v){$("#lockScreen").classList.toggle("hidden",v!=="lock");$("#homeScreen").classList.toggle("hidden",v!=="home");$("#drawerScreen").classList.toggle("hidden",v!=="drawer");$("#recentsScreen").classList.toggle("hidden",v!=="recents");$("#appScreen").classList.toggle("hidden",v!=="app");state.phone.currentView=v;if(v==="recents")renderRecents();save()}
@@ -54,9 +70,9 @@ function closePhone(){state.phone.open=false;$("#phoneLayer").classList.add("hid
 $("#phoneToggle").onclick=openPhone;$("#scrim").onclick=closePhone;$("#drawerHandle").onclick=()=>showView("drawer");$$("[data-home]").forEach(b=>b.onclick=()=>showView("home"));$("#navHome").onclick=()=>{state.phone.currentApp=null;showView("home")};$("#navBack").onclick=()=>{if(state.phone.currentView==="app"){state.phone.currentApp=null;showView("home")}else if(["drawer","recents"].includes(state.phone.currentView))showView("home");else if(state.phone.currentView==="home")closePhone()};$("#navRecents").onclick=()=>{state.phone.currentApp=null;showView("recents")};$("#clearAll").onclick=clearAllSessions;
 $("#appSearch").oninput=()=>{const q=$("#appSearch").value.trim().toLowerCase();$("#drawerApps").innerHTML=apps.filter(a=>!q||a.name.toLowerCase().includes(q)||a.zh.includes(q)).map(appButton).join("");bindAppButtons()};
 (()=>{const surface=$("#lockScreen"),content=$("#lockContent");let tracking=false,startY=0,dy=0,pointerId=null;surface.addEventListener("pointerdown",e=>{if(state.phone.currentView!=="lock")return;tracking=true;startY=e.clientY;dy=0;pointerId=e.pointerId;surface.setPointerCapture(pointerId);surface.classList.add("dragging")});surface.addEventListener("pointermove",e=>{if(!tracking||e.pointerId!==pointerId)return;dy=Math.min(0,e.clientY-startY);content.style.transform="translateY("+dy+"px)";content.style.opacity=String(Math.max(.25,1-Math.abs(dy)/260))});const finish=()=>{if(!tracking)return;tracking=false;surface.classList.remove("dragging");if(dy<-75){content.style.transform="translateY(-120%)";content.style.opacity="0";setTimeout(()=>{state.phone.locked=false;content.style.transition="none";content.style.transform="";content.style.opacity="";requestAnimationFrame(()=>content.style.transition="");showView("home")},160)}else{content.style.transform="";content.style.opacity=""}};surface.addEventListener("pointerup",finish);surface.addEventListener("pointercancel",finish)})();
-function openApp(id,front=true){const a=appById(id);if(!a||!a.enabled)return;state.phone.currentApp=id;if(front)touchSession(id);showView("app");if(id==="notes")mountNotes();if(id==="mail")mountMail();if(id==="browser")mountBrowser();if(id==="settings")mountSettings();save()}
+function openApp(id,front=true){const a=appById(id);if(!a||!a.enabled)return;state.phone.currentApp=id;if(front)touchSession(id);showView("app");if(id==="notes")mountNotes();if(id==="mail")mountMail();if(id==="messages")mountMessages();if(id==="browser")mountBrowser();if(id==="settings")mountSettings();save()}
 function renderRecents(){const ids=state.phone.recents.filter(id=>state.phone.sessions.includes(id));state.phone.recents=ids;$("#recentsEmpty").classList.toggle("hidden",ids.length>0);$("#recentsTrack").classList.toggle("hidden",ids.length===0);$("#recentsTrack").innerHTML=ids.map(id=>{const a=appById(id);return '<button class="recent-card" data-recent="'+id+'"><div class="recent-card-head"><span class="mini-icon app-icon '+a.cls+'">'+a.icon+'</span><b>'+a.name+'</b></div><div class="recent-preview">'+recentPreview(id)+'</div></button>'}).join("");bindRecentGestures()}
-function recentPreview(id){if(id==="notes"){const n=state.notes.items.find(x=>x.id===state.notes.activeId);return '<b>'+esc(n?.title||"Notes")+'</b><p>'+esc((n?.content||"尚未選擇筆記。").slice(0,120)).replace(/\n/g,"<br>")+'</p>'}if(id==="mail"){const acct=mailAccount(),msgs=mailBox().filter(m=>m.folder==="inbox");const unread=msgs.filter(m=>!m.read).length;return '<b>'+esc(acct?.displayName||"Mail")+'</b><p>收件匣 '+msgs.length+' 封<br>未讀 '+unread+' 封</p>'}if(id==="browser"){const t=browserTab();return '<b>Browser</b><p>'+esc(t?.url||"home.local")+'</p>'}if(id==="settings")return '<b>Phone Settings</b><p>深色模式：'+(state.settings.dark?"開":"關")+'<br>App 名稱：'+(state.settings.showLabels?"顯示":"隱藏")+'</p>';return ""}
+function recentPreview(id){if(id==="notes"){const n=state.notes.items.find(x=>x.id===state.notes.activeId);return '<b>'+esc(n?.title||"Notes")+'</b><p>'+esc((n?.content||"尚未選擇筆記。").slice(0,120)).replace(/\n/g,"<br>")+'</p>'}if(id==="mail"){const acct=mailAccount(),msgs=mailBox().filter(m=>m.folder==="inbox");const unread=msgs.filter(m=>!m.read).length;return '<b>'+esc(acct?.displayName||"Mail")+'</b><p>收件匣 '+msgs.length+' 封<br>未讀 '+unread+' 封</p>'}if(id==="messages"){const t=state.messages.threads.find(x=>x.id===state.messages.activeThread)||state.messages.threads[0];return '<b>Messages</b><p>'+(t?esc(t.name)+'<br>'+esc(t.messages[t.messages.length-1]?.body||""):"尚無對話")+'</p>'}if(id==="browser"){const t=browserTab();return '<b>Browser</b><p>'+esc(t?.url||"home.local")+'</p>'}if(id==="settings")return '<b>Phone Settings</b><p>深色模式：'+(state.settings.dark?"開":"關")+'<br>App 名稱：'+(state.settings.showLabels?"顯示":"隱藏")+'</p>';return ""}
 function bindRecentGestures(){$$("[data-recent]").forEach(card=>{let tracking=false,startX=0,startY=0,dy=0,dx=0,pid=null,dragged=false;card.addEventListener("pointerdown",e=>{tracking=true;pid=e.pointerId;startX=e.clientX;startY=e.clientY;dy=dx=0;dragged=false;card.setPointerCapture(pid)});card.addEventListener("pointermove",e=>{if(!tracking||e.pointerId!==pid)return;dx=e.clientX-startX;dy=e.clientY-startY;if(Math.abs(dy)>10&&Math.abs(dy)>Math.abs(dx)){dragged=true;const moveY=Math.min(0,dy);card.classList.add("dragging");card.style.transform="translateY("+moveY+"px) rotate("+(moveY/80)+"deg)";card.style.opacity=String(Math.max(.2,1-Math.abs(moveY)/220));e.preventDefault()}});const finish=()=>{if(!tracking)return;tracking=false;card.classList.remove("dragging");if(dragged&&dy<-85){const id=card.dataset.recent;card.style.transform="translateY(-130%)";card.style.opacity="0";setTimeout(()=>closeSession(id),160)}else{card.style.transform="";card.style.opacity="";if(!dragged)openApp(card.dataset.recent,true)}};card.addEventListener("pointerup",finish);card.addEventListener("pointercancel",finish)})}
 function mountNotes(){$("#appMount").innerHTML="";$("#appMount").appendChild($("#notesTemplate").content.cloneNode(true));$("[data-app-back]").onclick=()=>{state.phone.currentApp=null;showView("home")};$("#newNote").onclick=()=>{const id="n"+Date.now();state.notes.items.unshift({id,title:"新筆記",content:"",updated:Date.now()});state.notes.activeId=id;save();renderNotes()};$("#noteSearch").value=state.notes.search||"";$("#noteSearch").oninput=()=>{state.notes.search=$("#noteSearch").value;save();renderNotes()};renderNotes()}
 function renderNotes(){const q=(state.notes.search||"").trim().toLowerCase();const items=state.notes.items.filter(n=>!q||n.title.toLowerCase().includes(q)||n.content.toLowerCase().includes(q));$("#noteList").innerHTML=items.map(n=>'<div class="note-row '+(state.notes.activeId===n.id?"active":"")+'" data-note="'+n.id+'"><b>'+esc(n.title||"未命名筆記")+'</b><small>'+esc((n.content||"沒有內容").replace(/\n/g," ").slice(0,34))+'</small></div>').join("");$$("[data-note]").forEach(r=>r.onclick=()=>{state.notes.activeId=r.dataset.note;save();renderNotes()});const active=state.notes.items.find(n=>n.id===state.notes.activeId);$("#emptyNote").classList.toggle("hidden",!!active);$("#noteEditor").classList.toggle("hidden",!active);if(active){$("#noteTitle").value=active.title;$("#noteContent").value=active.content;$("#noteUpdated").textContent="最後更新 "+new Date(active.updated).toLocaleString("zh-TW",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"});$("#noteTitle").oninput=()=>{active.title=$("#noteTitle").value;active.updated=Date.now();save()};$("#noteContent").oninput=()=>{active.content=$("#noteContent").value;active.updated=Date.now();save()};$("#deleteNote").onclick=()=>{state.notes.items=state.notes.items.filter(n=>n.id!==active.id);state.notes.activeId=null;save();renderNotes()}}}
@@ -117,6 +133,40 @@ function renderMailCompose(){
 }
 
 
+
+function messageThread(id){return state.messages.threads.find(t=>t.id===id)}
+function messageStamp(){return new Date().toLocaleTimeString("zh-TW",{hour:"2-digit",minute:"2-digit",hour12:false})}
+function mountMessages(){
+ $("#appMount").innerHTML="";$("#appMount").appendChild($("#messagesTemplate").content.cloneNode(true));
+ $("[data-app-back]").onclick=()=>{state.phone.currentApp=null;showView("home")};
+ $("#newMessageThread").onclick=()=>{state.messages.mode="new";state.messages.activeThread=null;save();renderMessages()};
+ renderMessages();
+}
+function renderMessages(){
+ const mount=$("#messagesMount");if(!mount)return;
+ if(state.messages.mode==="new"){renderNewMessageThread();return}
+ const active=state.messages.activeThread?messageThread(state.messages.activeThread):null;
+ if(active){renderConversation(active);return}
+ mount.innerHTML='<div class="thread-list">'+state.messages.threads.map(t=>{
+  const last=t.messages[t.messages.length-1];
+  return '<button class="thread-row '+(t.unread?"unread":"")+'" data-thread="'+t.id+'"><span class="thread-avatar">'+esc((t.name||"?").slice(0,1))+'</span><span class="thread-main"><b>'+esc(t.name)+'</b><span>'+esc(last?.body||"尚無訊息")+'</span></span><span><time>'+esc(last?.time||"")+'</time>'+(t.unread?'<span class="thread-unread">'+t.unread+'</span>':"")+'</span></button>';
+ }).join("")+'</div>';
+ $("[data-thread]").forEach(b=>b.onclick=()=>{const t=messageThread(b.dataset.thread);if(!t)return;t.unread=0;state.messages.activeThread=t.id;state.messages.mode="list";save();renderMessages();renderAppLists()});
+}
+function renderConversation(t){
+ const mount=$("#messagesMount");
+ mount.innerHTML='<div class="conversation"><div class="conversation-head"><button id="threadBack">‹</button><div><b>'+esc(t.name)+'</b><small>'+esc(t.phone)+'</small></div><span></span></div><div class="message-stream" id="messageStream">'+t.messages.map(m=>'<div class="bubble '+(m.from==="me"?"me":"them")+'">'+esc(m.body)+'<time>'+esc(m.time||"")+'</time></div>').join("")+'</div><form class="message-compose" id="messageCompose"><input id="messageInput" autocomplete="off" placeholder="輸入訊息"><button>➤</button></form></div>';
+ $("#threadBack").onclick=()=>{state.messages.activeThread=null;save();renderMessages()};
+ $("#messageCompose").onsubmit=e=>{e.preventDefault();const input=$("#messageInput"),body=input.value.trim();if(!body)return;t.messages.push({id:"sms-"+Date.now(),from:"me",body,time:messageStamp()});input.value="";save();renderConversation(t)};
+ const stream=$("#messageStream");stream.scrollTop=stream.scrollHeight;
+}
+function renderNewMessageThread(){
+ const mount=$("#messagesMount");
+ mount.innerHTML='<div class="new-thread"><div class="message-warning">這是《人生》世界內的虛構簡訊系統。電話號碼與聯絡人資料不連接真實服務。</div><label>Contact Name / 聯絡人名稱<input id="newThreadName" placeholder="測試聯絡人"></label><label>Phone Number / 電話號碼<input id="newThreadPhone" placeholder="+1 555 ..."></label><label>First Message / 第一則訊息<input id="newThreadBody" placeholder="輸入訊息"></label><div class="new-thread-actions"><button id="cancelNewThread">取消</button><button class="start" id="startNewThread">開始對話</button></div></div>';
+ $("#cancelNewThread").onclick=()=>{state.messages.mode="list";save();renderMessages()};
+ $("#startNewThread").onclick=()=>{const name=$("#newThreadName").value.trim()||"未命名聯絡人",phone=$("#newThreadPhone").value.trim(),body=$("#newThreadBody").value.trim();if(!phone){$("#newThreadPhone").focus();return}const id="thread-"+Date.now();const messages=body?[{id:"sms-"+Date.now(),from:"me",body,time:messageStamp()}]:[];state.messages.threads.unshift({id,name,phone,unread:0,messages});state.messages.mode="list";state.messages.activeThread=id;save();renderMessages();renderAppLists()};
+}
+
 const WorldWebRegistry={
 "home.local":{title:"World Browser",subtitle:"世界網路測試首頁"},
 "school.local":{title:"School Web Directory",subtitle:"校園網站測試"},
@@ -127,7 +177,7 @@ function browserTab(){return state.browser.tabs.find(t=>t.id===state.browser.act
 function normalizeWorldUrl(raw){
  raw=(raw||"").trim();
  if(!raw)return "home.local";
- if(raw.startsWith("mail://"))return raw;
+ if(raw.startsWith("mail://")||raw.startsWith("message://"))return raw;
  raw=raw.replace(/^https?:\/\//i,"").replace(/\/$/,"");
  if(raw.includes(".")||raw.includes("?"))return raw;
  return "search.local?q="+encodeURIComponent(raw);
@@ -138,7 +188,7 @@ function browserTitle(url){
 }
 function browserNavigate(raw,push=true){
  const url=normalizeWorldUrl(raw);
- if(url.startsWith("mail://")){openDeepLink(url);return}
+ if(url.startsWith("mail://")||url.startsWith("message://")){openDeepLink(url);return}
  const t=browserTab();if(!t)return;
  if(push){
   t.history=t.history.slice(0,t.historyIndex+1);
@@ -149,6 +199,12 @@ function browserNavigate(raw,push=true){
  t.url=url;save();renderBrowser();
 }
 function openDeepLink(uri){
+ if(uri.startsWith("message://")){
+  const threadId=uri.slice(10);
+  const t=messageThread(threadId);
+  if(t){t.unread=0;state.messages.activeThread=t.id;state.messages.mode="list";openApp("messages",true);renderAppLists()}
+  return;
+ }
  if(uri.startsWith("mail://")){
   const parts=uri.slice(7).split("/");
   const accountId=parts[0],messageId=parts[1];
