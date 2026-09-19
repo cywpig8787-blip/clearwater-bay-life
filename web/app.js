@@ -7,6 +7,11 @@ state.settings.wallpaper=state.settings.wallpaper||"pastel";
 state.settings.wallpaperEffect=state.settings.wallpaperEffect||"none";
 state.settings.customWallpaper=state.settings.customWallpaper||null;
 state.homeCustomization=state.homeCustomization||{editing:false,panel:null};
+state.appRegistry=state.appRegistry||{
+ installed:["notes","mail","messages","browser","marketplace","settings"],
+ home:["notes","mail","messages","browser","marketplace","settings"]
+};
+state.marketplace=state.marketplace||{search:"",category:"all"};
 state.privacy=state.privacy||{mailAccepted:false};
 state.notes=state.notes||{activeId:null,search:"",items:[
 {id:"n1",title:"克萊爾灣",content:"開學前要確認的事情：\n\n・課表\n・宿舍用品\n・學校網站帳號",updated:Date.now()-3600000},
@@ -76,16 +81,48 @@ const mailProviders=[
 {id:"mail.world-b",serviceId:"mail.world-b",displayName:"世界郵箱 B（測試）",domain:"post.local",description:"第二個世界內 Email 服務商占位。",development:true}
 ];
 const apps=[
-{id:"notes",name:"記事本",zh:"記事本",icon:"▤",cls:"notes",home:true,enabled:true},
-{id:"mail",name:"郵件",zh:"郵件",icon:"✉",cls:"mail",home:true,enabled:true},
-{id:"messages",name:"簡訊",zh:"簡訊",icon:"💬",cls:"messages",home:true,enabled:true},
-{id:"browser",name:"瀏覽器",zh:"瀏覽器",icon:"◎",cls:"browser",home:true,enabled:true},
-{id:"school",name:"學校",zh:"學校",icon:"◆",cls:"school",home:false,enabled:false},
-{id:"rpg",name:"遊戲",zh:"遊戲",icon:"♜",cls:"rpg",home:false,enabled:false},
-{id:"settings",name:"設定",zh:"設定",icon:"⚙",cls:"settings",home:true,enabled:true}
-];
+{id:"notes",name:"記事本",zh:"記事本",icon:"▤",cls:"notes",home:true,enabled:true,category:"tools",description:"建立、搜尋與保存多篇筆記。",system:false},
+{id:"mail",name:"郵件",zh:"郵件",icon:"✉",cls:"mail",home:true,enabled:true,category:"communication",description:"世界內 Email、帳號與郵件管理。",system:false},
+{id:"messages",name:"簡訊",zh:"簡訊",icon:"💬",cls:"messages",home:true,enabled:true,category:"communication",description:"與 NPC 和世界內聯絡人收發簡訊。",system:false},
+{id:"browser",name:"瀏覽器",zh:"瀏覽器",icon:"◎",cls:"browser",home:true,enabled:true,category:"internet",description:"瀏覽《人生》世界內網站與服務。",system:false},
+{id:"marketplace",name:"應用程式商店",zh:"應用程式商店",icon:"▰",cls:"marketplace",home:true,enabled:true,category:"system",description:"安裝、移除與管理世界內 App。",system:true},
+{id:"school",name:"學校",zh:"學校",icon:"◆",cls:"school",home:false,enabled:false,category:"school",description:"校園服務與學生功能入口。",system:false,gated:true,gateLabel:"需由學校／劇情條件解鎖"},
+{id:"rpg",name:"遊戲",zh:"遊戲",icon:"♜",cls:"rpg",home:false,enabled:false,category:"games",description:"遊戲內容入口。",system:false,gated:true,gateLabel:"目前尚未解鎖"},
+{id:"settings",name:"設定",zh:"設定",icon:"⚙",cls:"settings",home:true,enabled:true,category:"system",description:"手機顯示、桌面與系統設定。",system:true}
+]
 const save=()=>localStorage.setItem(KEY,JSON.stringify(state));
 const appById=id=>apps.find(a=>a.id===id);
+function normalizeAppRegistry(){
+ const valid=new Set(apps.map(a=>a.id));
+ state.appRegistry.installed=[...new Set(state.appRegistry.installed||[])].filter(id=>valid.has(id));
+ state.appRegistry.home=[...new Set(state.appRegistry.home||[])].filter(id=>valid.has(id));
+ for(const id of ["marketplace","settings"]){
+  if(!state.appRegistry.installed.includes(id))state.appRegistry.installed.push(id);
+ }
+ state.appRegistry.home=state.appRegistry.home.filter(id=>state.appRegistry.installed.includes(id));
+ save();
+}
+function isAppInstalled(id){return state.appRegistry.installed.includes(id)}
+function isAppOnHome(id){return state.appRegistry.home.includes(id)}
+function installApp(id){
+ const a=appById(id);if(!a||a.gated)return false;
+ if(!isAppInstalled(id))state.appRegistry.installed.push(id);
+ if(a.home&&!isAppOnHome(id))state.appRegistry.home.push(id);
+ save();renderAppLists();renderMarketplace();return true;
+}
+function uninstallApp(id){
+ const a=appById(id);if(!a||a.system)return false;
+ state.appRegistry.installed=state.appRegistry.installed.filter(x=>x!==id);
+ state.appRegistry.home=state.appRegistry.home.filter(x=>x!==id);
+ closeSession(id);
+ save();renderAppLists();renderMarketplace();return true;
+}
+function addAppToHome(id){
+ if(isAppInstalled(id)&&!isAppOnHome(id)){state.appRegistry.home.push(id);save();renderAppLists()}
+}
+function removeAppFromHome(id){
+ state.appRegistry.home=state.appRegistry.home.filter(x=>x!==id);save();renderAppLists()
+}
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const WORLD_TIME_KEY="clearwater-life-game-v1";
 function getWorldTime(){
@@ -192,11 +229,12 @@ function openNotification(id){
 }
 function renderAppLists(){
  const home=$("#homeApps"),drawer=$("#drawerApps");
- if(home)home.innerHTML=apps.filter(a=>a.home).map(appButton).join("");
- if(drawer)drawer.innerHTML=apps.map(appButton).join("");
+ const installed=apps.filter(a=>isAppInstalled(a.id));
+ if(home)home.innerHTML=installed.filter(a=>isAppOnHome(a.id)).map(appButton).join("");
+ if(drawer)drawer.innerHTML=installed.map(appButton).join("");
  bindAppButtons();applySettings();
 }
-function bindAppButtons(){$$("[data-app]").forEach(b=>b.onclick=()=>{const a=appById(b.dataset.app);if(!a.enabled){b.animate([{transform:"translateX(0)"},{transform:"translateX(-4px)"},{transform:"translateX(4px)"},{transform:"translateX(0)"}],{duration:220});return}openApp(a.id)})}
+function bindAppButtons(){$("[data-app]").forEach(b=>b.onclick=()=>{const a=appById(b.dataset.app);if(!a||!isAppInstalled(a.id)||!a.enabled){b.animate([{transform:"translateX(0)"},{transform:"translateX(-4px)"},{transform:"translateX(4px)"},{transform:"translateX(0)"}],{duration:220});return}openApp(a.id)})}
 const wallpaperCatalog=[
  {id:"pastel",name:"粉彩",cls:"pastel"},
  {id:"sky",name:"天空",cls:"sky"},
@@ -287,7 +325,7 @@ function showView(v){$("#lockScreen").classList.toggle("hidden",v!=="lock");$("#
 function openPhone(){state.phone.open=true;$("#phoneLayer").classList.remove("hidden");renderNotifications();if(state.phone.locked)showView("lock");else if(state.phone.currentApp&&state.phone.sessions.includes(state.phone.currentApp))openApp(state.phone.currentApp,false);else showView("home");save()}
 function closePhone(){state.phone.open=false;$("#phoneLayer").classList.add("hidden");save()}
 $("#phoneToggle").onclick=openPhone;$("#scrim").onclick=closePhone;$("#notificationHandle").onclick=()=>{if(!state.phone.locked)showView("notifications")};$("#clearNotifications").onclick=clearNotifications;$("#drawerHandle").onclick=()=>showView("drawer");$$("[data-home]").forEach(b=>b.onclick=()=>showView("home"));$("#navHome").onclick=()=>{state.phone.currentApp=null;showView("home")};$("#navBack").onclick=()=>{if(state.phone.currentView==="app"){state.phone.currentApp=null;showView("home")}else if(["drawer","recents","notifications"].includes(state.phone.currentView))showView("home");else if(state.phone.currentView==="home")closePhone()};$("#navRecents").onclick=()=>{state.phone.currentApp=null;showView("recents")};$("#clearAll").onclick=clearAllSessions;
-$("#appSearch").oninput=()=>{const q=$("#appSearch").value.trim().toLowerCase();$("#drawerApps").innerHTML=apps.filter(a=>!q||a.name.toLowerCase().includes(q)||a.zh.includes(q)).map(appButton).join("");bindAppButtons()};
+$("#appSearch").oninput=()=>{const q=$("#appSearch").value.trim().toLowerCase();$("#drawerApps").innerHTML=apps.filter(a=>isAppInstalled(a.id)&&(!q||a.name.toLowerCase().includes(q)||a.zh.includes(q))).map(appButton).join("");bindAppButtons()};
 $("#homeEditDone").onclick=exitHomeEdit;
 $$("[data-home-edit]").forEach(b=>b.onclick=()=>{state.homeCustomization.panel=b.dataset.homeEdit;save();renderHomeEditPanel()});
 let homeLongPressTimer=null,homeLongPressStart=null;
@@ -303,9 +341,9 @@ $("#homeScreen").addEventListener("pointermove",e=>{
 });
 ["pointerup","pointercancel","pointerleave"].forEach(type=>$("#homeScreen").addEventListener(type,()=>{if(homeLongPressTimer)clearTimeout(homeLongPressTimer);homeLongPressTimer=null;homeLongPressStart=null}));
 (()=>{const surface=$("#lockScreen"),content=$("#lockContent");let tracking=false,startY=0,dy=0,pointerId=null;surface.addEventListener("pointerdown",e=>{if(state.phone.currentView!=="lock")return;tracking=true;startY=e.clientY;dy=0;pointerId=e.pointerId;surface.setPointerCapture(pointerId);surface.classList.add("dragging")});surface.addEventListener("pointermove",e=>{if(!tracking||e.pointerId!==pointerId)return;dy=Math.min(0,e.clientY-startY);content.style.transform="translateY("+dy+"px)";content.style.opacity=String(Math.max(.25,1-Math.abs(dy)/260))});const finish=()=>{if(!tracking)return;tracking=false;surface.classList.remove("dragging");if(dy<-75){content.style.transform="translateY(-120%)";content.style.opacity="0";setTimeout(()=>{state.phone.locked=false;content.style.transition="none";content.style.transform="";content.style.opacity="";requestAnimationFrame(()=>content.style.transition="");showView("home")},160)}else{content.style.transform="";content.style.opacity=""}};surface.addEventListener("pointerup",finish);surface.addEventListener("pointercancel",finish)})();
-function openApp(id,front=true){const a=appById(id);if(!a||!a.enabled)return;state.phone.currentApp=id;if(front)touchSession(id);showView("app");if(id==="notes")mountNotes();if(id==="mail")mountMail();if(id==="messages")mountMessages();if(id==="browser")mountBrowser();if(id==="settings")mountSettings();save()}
-function renderRecents(){const ids=state.phone.recents.filter(id=>state.phone.sessions.includes(id));state.phone.recents=ids;$("#recentsEmpty").classList.toggle("hidden",ids.length>0);$("#recentsTrack").classList.toggle("hidden",ids.length===0);$("#recentsTrack").innerHTML=ids.map(id=>{const a=appById(id);return '<button class="recent-card" data-recent="'+id+'"><div class="recent-card-head"><span class="mini-icon app-icon '+a.cls+'">'+a.icon+'</span><b>'+a.name+'</b></div><div class="recent-preview">'+recentPreview(id)+'</div></button>'}).join("");bindRecentGestures()}
-function recentPreview(id){if(id==="notes"){const n=state.notes.items.find(x=>x.id===state.notes.activeId);return '<b>'+esc(n?.title||"記事本")+'</b><p>'+esc((n?.content||"尚未選擇筆記。").slice(0,120)).replace(/\n/g,"<br>")+'</p>'}if(id==="mail"){const acct=mailAccount(),msgs=mailBox().filter(m=>m.folder==="inbox");const unread=msgs.filter(m=>!m.read).length;return '<b>'+esc(acct?.displayName||"郵件")+'</b><p>收件匣 '+msgs.length+' 封<br>未讀 '+unread+' 封</p>'}if(id==="messages"){const t=state.messages.threads.find(x=>x.id===state.messages.activeThread)||state.messages.threads[0];return '<b>簡訊</b><p>'+(t?esc(t.name)+'<br>'+esc(t.messages[t.messages.length-1]?.body||""):"尚無對話")+'</p>'}if(id==="browser"){const t=browserTab();return '<b>瀏覽器</b><p>'+esc(t?.url||"home.local")+'</p>'}if(id==="settings")return '<b>手機設定</b><p>深色模式：'+(state.settings.dark?"開":"關")+'<br>應用程式名稱：'+(state.settings.showLabels?"顯示":"隱藏")+'</p>';return ""}
+function openApp(id,front=true){const a=appById(id);if(!a||!a.enabled||!isAppInstalled(id))return;state.phone.currentApp=id;if(front)touchSession(id);showView("app");if(id==="notes")mountNotes();if(id==="mail")mountMail();if(id==="messages")mountMessages();if(id==="browser")mountBrowser();if(id==="marketplace")mountMarketplace();if(id==="settings")mountSettings();save()}
+function renderRecents(){const ids=state.phone.recents.filter(id=>state.phone.sessions.includes(id)&&isAppInstalled(id)&&appById(id));state.phone.recents=ids;$("#recentsEmpty").classList.toggle("hidden",ids.length>0);$("#recentsTrack").classList.toggle("hidden",ids.length===0);$("#recentsTrack").innerHTML=ids.map(id=>{const a=appById(id);return '<button class="recent-card" data-recent="'+id+'"><div class="recent-card-head"><span class="mini-icon app-icon '+a.cls+'">'+a.icon+'</span><b>'+a.name+'</b></div><div class="recent-preview">'+recentPreview(id)+'</div></button>'}).join("");bindRecentGestures()}
+function recentPreview(id){if(id==="notes"){const n=state.notes.items.find(x=>x.id===state.notes.activeId);return '<b>'+esc(n?.title||"記事本")+'</b><p>'+esc((n?.content||"尚未選擇筆記。").slice(0,120)).replace(/\n/g,"<br>")+'</p>'}if(id==="mail"){const acct=mailAccount(),msgs=mailBox().filter(m=>m.folder==="inbox");const unread=msgs.filter(m=>!m.read).length;return '<b>'+esc(acct?.displayName||"郵件")+'</b><p>收件匣 '+msgs.length+' 封<br>未讀 '+unread+' 封</p>'}if(id==="messages"){const t=state.messages.threads.find(x=>x.id===state.messages.activeThread)||state.messages.threads[0];return '<b>簡訊</b><p>'+(t?esc(t.name)+'<br>'+esc(t.messages[t.messages.length-1]?.body||""):"尚無對話")+'</p>'}if(id==="browser"){const t=browserTab();return '<b>瀏覽器</b><p>'+esc(t?.url||"home.local")+'</p>'}if(id==="marketplace")return '<b>應用程式商店</b><p>已安裝 '+state.appRegistry.installed.length+' 個 App</p>';if(id==="settings")return '<b>手機設定</b><p>深色模式：'+(state.settings.dark?"開":"關")+'<br>應用程式名稱：'+(state.settings.showLabels?"顯示":"隱藏")+'</p>';return ""}
 function bindRecentGestures(){$$("[data-recent]").forEach(card=>{let tracking=false,startX=0,startY=0,dy=0,dx=0,pid=null,dragged=false;card.addEventListener("pointerdown",e=>{tracking=true;pid=e.pointerId;startX=e.clientX;startY=e.clientY;dy=dx=0;dragged=false;card.setPointerCapture(pid)});card.addEventListener("pointermove",e=>{if(!tracking||e.pointerId!==pid)return;dx=e.clientX-startX;dy=e.clientY-startY;if(Math.abs(dy)>10&&Math.abs(dy)>Math.abs(dx)){dragged=true;const moveY=Math.min(0,dy);card.classList.add("dragging");card.style.transform="translateY("+moveY+"px) rotate("+(moveY/80)+"deg)";card.style.opacity=String(Math.max(.2,1-Math.abs(moveY)/220));e.preventDefault()}});const finish=()=>{if(!tracking)return;tracking=false;card.classList.remove("dragging");if(dragged&&dy<-85){const id=card.dataset.recent;card.style.transform="translateY(-130%)";card.style.opacity="0";setTimeout(()=>closeSession(id),160)}else{card.style.transform="";card.style.opacity="";if(!dragged)openApp(card.dataset.recent,true)}};card.addEventListener("pointerup",finish);card.addEventListener("pointercancel",finish)})}
 function mountNotes(){$("#appMount").innerHTML="";$("#appMount").appendChild($("#notesTemplate").content.cloneNode(true));$("[data-app-back]").onclick=()=>{state.phone.currentApp=null;showView("home")};$("#newNote").onclick=()=>{const id="n"+Date.now();state.notes.items.unshift({id,title:"新筆記",content:"",updated:Date.now()});state.notes.activeId=id;save();renderNotes()};$("#noteSearch").value=state.notes.search||"";$("#noteSearch").oninput=()=>{state.notes.search=$("#noteSearch").value;save();renderNotes()};renderNotes()}
 function renderNotes(){const q=(state.notes.search||"").trim().toLowerCase();const items=state.notes.items.filter(n=>!q||n.title.toLowerCase().includes(q)||n.content.toLowerCase().includes(q));$("#noteList").innerHTML=items.map(n=>'<div class="note-row '+(state.notes.activeId===n.id?"active":"")+'" data-note="'+n.id+'"><b>'+esc(n.title||"未命名筆記")+'</b><small>'+esc((n.content||"沒有內容").replace(/\n/g," ").slice(0,34))+'</small></div>').join("");$$("[data-note]").forEach(r=>r.onclick=()=>{state.notes.activeId=r.dataset.note;save();renderNotes()});const active=state.notes.items.find(n=>n.id===state.notes.activeId);$("#emptyNote").classList.toggle("hidden",!!active);$("#noteEditor").classList.toggle("hidden",!active);if(active){$("#noteTitle").value=active.title;$("#noteContent").value=active.content;$("#noteUpdated").textContent="最後更新 "+new Date(active.updated).toLocaleString("zh-TW",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"});$("#noteTitle").oninput=()=>{active.title=$("#noteTitle").value;active.updated=Date.now();save()};$("#noteContent").oninput=()=>{active.content=$("#noteContent").value;active.updated=Date.now();save()};$("#deleteNote").onclick=()=>{state.notes.items=state.notes.items.filter(n=>n.id!==active.id);state.notes.activeId=null;save();renderNotes()}}}
@@ -608,6 +646,35 @@ function bindWorldLinks(){
  const f=$("#worldSearchForm");if(f)f.onsubmit=e=>{e.preventDefault();browserNavigate("search.local?q="+encodeURIComponent($("#worldSearchInput").value),true)};
 }
 
+const marketplaceCategories=[
+ ["all","全部"],["communication","通訊"],["tools","工具"],["internet","網路"],["games","遊戲"],["school","校園"]
+];
+function mountMarketplace(){
+ $("#appMount").innerHTML="";$("#appMount").appendChild($("#marketplaceTemplate").content.cloneNode(true));
+ $("[data-app-back]").onclick=()=>{state.phone.currentApp=null;showView("home")};
+ $("#marketplaceSearch").value=state.marketplace.search||"";
+ $("#marketplaceSearch").oninput=()=>{state.marketplace.search=$("#marketplaceSearch").value;save();renderMarketplace()};
+ renderMarketplace();
+}
+function renderMarketplace(){
+ const list=$("#marketplaceList"),cats=$("#marketplaceCategories");if(!list||!cats)return;
+ cats.innerHTML=marketplaceCategories.map(([id,label])=>'<button class="'+(state.marketplace.category===id?"active":"")+'" data-market-category="'+id+'">'+label+'</button>').join("");
+ $("[data-market-category]").forEach(b=>b.onclick=()=>{state.marketplace.category=b.dataset.marketCategory;save();renderMarketplace()});
+ const q=(state.marketplace.search||"").trim().toLowerCase();
+ const items=apps.filter(a=>a.id!=="marketplace"&&(state.marketplace.category==="all"||a.category===state.marketplace.category)&&(!q||a.name.toLowerCase().includes(q)||a.zh.includes(q)||(a.description||"").toLowerCase().includes(q)));
+ list.innerHTML=items.length?items.map(a=>{
+  const installed=isAppInstalled(a.id),locked=!!a.gated;
+  let action="";
+  if(locked)action='<button class="market-action locked" disabled>尚未解鎖</button>';
+  else if(a.system)action='<button class="market-action system" disabled>系統 App</button>';
+  else if(installed)action='<div class="market-actions"><button class="market-open" data-market-open="'+a.id+'">開啟</button><button class="market-remove" data-market-remove="'+a.id+'">解除安裝</button></div>';
+  else action='<button class="market-action install" data-market-install="'+a.id+'">安裝</button>';
+  return '<article class="market-card '+(locked?"locked":"")+'"><span class="market-icon app-icon '+a.cls+'">'+a.icon+'</span><div class="market-copy"><b>'+esc(a.name)+'</b><small>'+esc(a.description||"")+'</small>'+(locked?'<em>'+esc(a.gateLabel||"尚未解鎖")+'</em>':installed?'<em>已安裝</em>':'<em>可安裝</em>')+'</div>'+action+'</article>';
+ }).join(""):'<div class="market-empty">沒有符合條件的應用程式。</div>';
+ $("[data-market-install]").forEach(b=>b.onclick=()=>installApp(b.dataset.marketInstall));
+ $("[data-market-remove]").forEach(b=>b.onclick=()=>uninstallApp(b.dataset.marketRemove));
+ $("[data-market-open]").forEach(b=>b.onclick=()=>openApp(b.dataset.marketOpen,true));
+}
 function mountSettings(){$("#appMount").innerHTML="";$("#appMount").appendChild($("#settingsTemplate").content.cloneNode(true));$("[data-app-back]").onclick=()=>{state.phone.currentApp=null;showView("home")};$("#darkToggle").checked=!!state.settings.dark;$("#labelsToggle").checked=state.settings.showLabels!==false;$("#sessionCount").textContent=state.phone.sessions.length;$("#darkToggle").onchange=()=>{state.settings.dark=$("#darkToggle").checked;save();applySettings()};$("#labelsToggle").onchange=()=>{state.settings.showLabels=$("#labelsToggle").checked;save();applySettings()};$("#openHomeCustomizer").onclick=()=>enterHomeEdit("wallpaper")}
 function applySettings(){const screen=$("#screen"),wallpaper=screen.querySelector(".wallpaper");screen.classList.toggle("dark",!!state.settings.dark);["pastel","sky","cream","night","green"].forEach(id=>screen.classList.toggle("wallpaper-"+id,state.settings.wallpaper===id&&id!=="pastel"));["soft","dim","blur"].forEach(id=>screen.classList.toggle("wallpaper-effect-"+id,state.settings.wallpaperEffect===id));if(wallpaper){if(state.settings.wallpaper==="custom"&&state.settings.customWallpaper){wallpaper.style.backgroundImage='url("'+state.settings.customWallpaper+'")';wallpaper.style.backgroundSize="cover";wallpaper.style.backgroundPosition="center"}else{wallpaper.style.backgroundImage="";wallpaper.style.backgroundSize="";wallpaper.style.backgroundPosition=""}}$("#homeScreen").classList.toggle("hide-labels",state.settings.showLabels===false);$("#drawerScreen").classList.toggle("hide-labels",state.settings.showLabels===false)}
-state.homeCustomization.editing=false;state.homeCustomization.panel=null;renderAppLists();renderRecents();renderNotifications();applySettings();if(state.phone.open)openPhone();
+normalizeAppRegistry();state.homeCustomization.editing=false;state.homeCustomization.panel=null;renderAppLists();renderRecents();renderNotifications();applySettings();if(state.phone.open)openPhone();
