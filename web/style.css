@@ -127,3 +127,38 @@
 .wallpaper-thumb.custom{background-size:cover;background-position:center;background-repeat:no-repeat}
 .screen.dark .wallpaper-import{background:#151f2a;border-color:#41556b;color:#dce7f2}
 .screen.dark .wallpaper-import small,.screen.dark .wallpaper-import-status{color:#93a4b6}
+
+/* App Marketplace */
+.app-icon.marketplace{background:linear-gradient(145deg,#62a8ef,#4f6fd4)}
+.marketplace-app{height:100%;display:flex;flex-direction:column;background:#f4f7fb}
+.marketplace-header{flex:0 0 55px}
+.marketplace-body{flex:1;min-height:0;overflow:auto;padding:11px}
+.marketplace-hero{border-radius:16px;padding:14px 15px;background:linear-gradient(145deg,#d8eaff,#eadff7);border:1px solid #ffffffa8;margin-bottom:10px}
+.marketplace-hero small{display:block;font-size:7px;letter-spacing:1.5px;color:#66809d}
+.marketplace-hero b{display:block;font-size:17px;margin:3px 0}
+.marketplace-hero span{display:block;font-size:8px;line-height:1.45;color:#6f8093}
+.marketplace-search{width:100%;height:35px;border:1px solid #cbd7e4;border-radius:11px;background:#fff;padding:0 10px;color:#24415e;font-size:10px}
+.marketplace-categories{display:flex;gap:6px;overflow-x:auto;padding:9px 0}
+.marketplace-categories button{flex:0 0 auto;border:1px solid #ccd8e5;border-radius:99px;background:#fff;padding:6px 10px;color:#657a91;font-size:8px}
+.marketplace-categories button.active{background:#3b78bd;border-color:#3b78bd;color:#fff}
+.marketplace-list{display:grid;gap:8px;padding-bottom:12px}
+.market-card{display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:9px;align-items:center;border:1px solid #dce4ed;border-radius:13px;background:#fff;padding:10px}
+.market-card.locked{opacity:.66}
+.market-icon{width:46px;height:46px;border-radius:13px;font-size:20px}
+.market-copy{min-width:0}.market-copy b{display:block;font-size:11px}
+.market-copy small{display:block;font-size:8px;color:#76879a;line-height:1.4;margin-top:3px}
+.market-copy em{display:block;font-style:normal;font-size:7px;color:#3c7d58;margin-top:4px}
+.market-card.locked .market-copy em{color:#9a6f45}
+.market-action,.market-open,.market-remove{border:0;border-radius:9px;padding:7px 9px;font-size:8px;white-space:nowrap}
+.market-action.install,.market-open{background:#3477c5;color:#fff}
+.market-action.locked,.market-action.system{background:#e9eef4;color:#7a8999}
+.market-actions{display:grid;gap:4px}
+.market-remove{background:#f4e7ea;color:#af5361}
+.market-empty{padding:28px;text-align:center;font-size:9px;color:#8291a2}
+.screen.dark .marketplace-app{background:#0f151d}
+.screen.dark .marketplace-hero{background:linear-gradient(145deg,#172638,#272039);border-color:#ffffff14}
+.screen.dark .marketplace-hero small,.screen.dark .marketplace-hero span{color:#96a5b6}
+.screen.dark .marketplace-search,.screen.dark .marketplace-categories button,.screen.dark .market-card{background:#151d27;border-color:#2b3847;color:#edf2f7}
+.screen.dark .marketplace-categories button{color:#9cabbc}.screen.dark .marketplace-categories button.active{background:#316cac;color:#fff}
+.screen.dark .market-copy small{color:#95a3b3}.screen.dark .market-action.locked,.screen.dark .market-action.system{background:#202b37;color:#93a1b1}
+.screen.dark .market-remove{background:#352129;color:#e08a96}
