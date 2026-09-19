@@ -94,3 +94,17 @@ transform:rotate(-7deg);opacity:.8}
   .time-cluster{left:8px;top:120px}.world-tag{right:8px;top:8px;width:220px;min-height:86px}.world-tag b{font-size:19px}.world-tag strong{font-size:14px}
   .phone-button{right:8px;width:150px;height:92px}.drawer{width:230px}
 }
+
+/* 功能骨架：第二場景只作為場景切換測試，不是正式美術 */
+.hall-backdrop{position:absolute;inset:0;background:linear-gradient(#c4d1dc 0 48%,#9b8c79 48% 100%)}
+.hall-backdrop:after{content:"";position:absolute;left:0;right:0;top:48%;height:9px;background:#817462}
+.hall-door{position:absolute;bottom:24%;width:12%;height:38%;background:#715949;border:6px solid #4d3b31}
+.hall-door.left{left:8%}.hall-door.right{right:8%}
+.hall-door:after{content:"";position:absolute;width:8px;height:8px;border-radius:50%;background:#d7b36c;right:14%;top:50%}
+.notice-board{position:absolute;left:38%;top:16%;width:24%;height:18%;background:#bb9463;border:7px solid #745b3f;box-shadow:0 8px 18px #0002}
+.notice-board:before{content:"公告";position:absolute;inset:0;display:grid;place-items:center;font-weight:700;color:#5b452f}
+.stairs{position:absolute;left:35%;bottom:8%;width:30%;height:20%;background:repeating-linear-gradient(to bottom,#8a7863 0 18%,#6f604f 18% 23%);border:5px solid #5d5043;transform:perspective(400px) rotateX(28deg);transform-origin:bottom}
+.scene-transition{position:absolute;z-index:70;inset:0;background:#162230;color:white;display:grid;place-items:center;font-weight:700;letter-spacing:.12em;opacity:0;pointer-events:none;transition:opacity .18s ease}
+.scene-transition.show{opacity:1}
+.fake-list button{width:100%;text-align:left;padding:10px 12px;border:1px solid #c9bda9;border-radius:10px;background:#f7f1e7}
+.fake-list button:hover{background:#eee3d3}
