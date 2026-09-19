@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>《人生》主遊戲畫面原型</title>
+<link rel="stylesheet" href="style.css?v=1">
+</head>
+<body>
+<div class="game-shell">
+  <main class="play-area" id="playArea" aria-label="可遊玩區域">
+    <div class="room-backdrop">
+      <div class="window"><span></span><span></span><span></span><span></span></div>
+      <div class="bed interactable" data-name="床"></div>
+      <div class="desk interactable" data-name="書桌"><div class="lamp"></div></div>
+      <div class="wardrobe interactable" data-name="衣櫃"></div>
+      <div class="door interactable" data-name="房門"></div>
+      <div class="rug"></div>
+      <div class="player" aria-label="玩家角色"><div class="head"></div><div class="body"></div></div>
+    </div>
+    <div class="play-label">可遊玩區域</div>
+    <div class="interaction-tip hidden" id="interactionTip"></div>
+  </main>
+
+  <section class="hud">
+    <button class="ornament map-button" id="mapButton" aria-label="地圖">
+      <span class="map-grid"></span>
+      <b>地圖</b>
+    </button>
+
+    <section class="time-cluster">
+      <div class="time-tag" id="timeDisplay">19:00</div>
+      <div class="time-controls">
+        <button id="pauseButton" class="time-btn active" aria-label="暫停">Ⅱ</button>
+        <button id="playButton" class="time-btn" aria-label="播放">▶</button>
+      </div>
+    </section>
+
+    <section class="world-tag">
+      <span class="hanger left"></span><span class="hanger right"></span>
+      <b id="dateDisplay">9 月 3 日</b>
+      <small id="weekdayDisplay">星期二</small>
+      <strong id="locationDisplay">宿舍房間</strong>
+    </section>
+
+    <button class="side-tab side-tab-left" id="leftDrawerToggle" aria-label="玩家工具">›</button>
+    <button class="side-tab side-tab-right" id="rightDrawerToggle" aria-label="場景功能">‹</button>
+
+    <button class="ornament phone-button" id="phoneButton" aria-label="手機">
+      <span class="phone-shape">▯</span>
+      <b>手機</b>
+    </button>
+  </section>
+
+  <aside class="drawer drawer-left" id="leftDrawer">
+    <header><b>玩家工具</b><button data-close="left">×</button></header>
+    <div class="drawer-grid">
+      <button data-panel="inventory"><span>🎒</span><b>背包</b></button>
+      <button data-panel="character"><span>👤</span><b>人物</b></button>
+      <button data-panel="quests"><span>📌</span><b>任務</b></button>
+      <button data-panel="settings"><span>⚙</span><b>設定</b></button>
+    </div>
+  </aside>
+
+  <aside class="drawer drawer-right" id="rightDrawer">
+    <header><b>目前場景</b><button data-close="right">×</button></header>
+    <div class="scene-actions">
+      <button data-scene-action="床"><span>床</span><small>休息／睡覺</small></button>
+      <button data-scene-action="書桌"><span>書桌</span><small>坐下／查看桌面</small></button>
+      <button data-scene-action="衣櫃"><span>衣櫃</span><small>整理衣物</small></button>
+      <button data-scene-action="房門"><span>房門</span><small>離開房間</small></button>
+    </div>
+  </aside>
+
+  <div class="overlay hidden" id="panelOverlay">
+    <section class="overlay-card">
+      <button class="overlay-close" id="panelClose">×</button>
+      <div id="panelContent"></div>
+    </section>
+  </div>
+
+  <div class="phone-overlay hidden" id="phoneOverlay">
+    <div class="phone-preview">
+      <div class="phone-preview-bar">
+        <b>手機</b><button id="phoneClose">×</button>
+      </div>
+      <div class="phone-preview-body">
+        <div class="phone-preview-device">
+          <div class="phone-preview-screen">
+            <span>手機系統 v2</span>
+            <small>正式手機系統入口已保留</small>
+            <a href="../" target="_blank" rel="noopener">開啟目前手機系統</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="app.js?v=1"></script>
+</body>
+</html>
