@@ -5,6 +5,7 @@ state.phone=state.phone||{locked:true,open:false,currentView:"lock",currentApp:n
 state.settings=state.settings||{dark:false,showLabels:true};
 state.settings.wallpaper=state.settings.wallpaper||"pastel";
 state.settings.wallpaperEffect=state.settings.wallpaperEffect||"none";
+state.settings.customWallpaper=state.settings.customWallpaper||null;
 state.homeCustomization=state.homeCustomization||{editing:false,panel:null};
 state.privacy=state.privacy||{mailAccepted:false};
 state.notes=state.notes||{activeId:null,search:"",items:[
@@ -203,6 +204,29 @@ const wallpaperCatalog=[
  {id:"night",name:"夜色",cls:"night"},
  {id:"green",name:"綠意",cls:"green"}
 ];
+function importWallpaperImage(file){
+ return new Promise((resolve,reject)=>{
+  if(!file||!file.type.startsWith("image/")){reject(new Error("not image"));return}
+  const reader=new FileReader();
+  reader.onerror=()=>reject(reader.error||new Error("read failed"));
+  reader.onload=()=>{
+   const img=new Image();
+   img.onerror=()=>reject(new Error("decode failed"));
+   img.onload=()=>{
+    const maxW=720,maxH=1280;
+    const scale=Math.min(1,maxW/img.naturalWidth,maxH/img.naturalHeight);
+    const w=Math.max(1,Math.round(img.naturalWidth*scale));
+    const h=Math.max(1,Math.round(img.naturalHeight*scale));
+    const canvas=document.createElement("canvas");canvas.width=w;canvas.height=h;
+    const ctx=canvas.getContext("2d");
+    ctx.drawImage(img,0,0,w,h);
+    resolve(canvas.toDataURL("image/jpeg",0.78));
+   };
+   img.src=reader.result;
+  };
+  reader.readAsDataURL(file);
+ });
+}
 function enterHomeEdit(panel=null){
  state.phone.currentApp=null;
  showView("home");
@@ -226,8 +250,22 @@ function renderHomeEditPanel(){
  panel.classList.toggle("hidden",!type);
  if(!type)return;
  if(type==="wallpaper"){
-  panel.innerHTML='<h3>桌布</h3><p>目前先放測試桌布；未來主題商店取得的桌布會一起出現在這裡。</p><div class="wallpaper-grid">'+wallpaperCatalog.map(w=>'<button class="wallpaper-choice '+(state.settings.wallpaper===w.id?"active":"")+'" data-wallpaper="'+w.id+'"><span class="wallpaper-thumb '+w.cls+'"></span><small>'+w.name+'</small></button>').join("")+'</div>';
-  $$("[data-wallpaper]").forEach(b=>b.onclick=()=>{state.settings.wallpaper=b.dataset.wallpaper;save();applySettings();renderHomeEditPanel()});
+  const custom=state.settings.customWallpaper;
+  panel.innerHTML='<h3>桌布</h3><p>可以直接從裝置相簿／檔案選擇圖片。主題商店取得的桌布之後也會一起出現在這裡。</p><label class="wallpaper-import"><input id="wallpaperFileInput" type="file" accept="image/*"><span>＋ 從裝置選擇圖片</span><small>目前測試版會縮小後儲存在本機遊戲資料中。</small></label><div id="wallpaperImportStatus" class="wallpaper-import-status"></div><div class="wallpaper-grid">'+(custom?'<button class="wallpaper-choice '+(state.settings.wallpaper==="custom"?"active":"")+'" data-wallpaper="custom"><span class="wallpaper-thumb custom" style="background-image:url('+esc(custom)+')"></span><small>我的圖片</small></button>':"")+wallpaperCatalog.map(w=>'<button class="wallpaper-choice '+(state.settings.wallpaper===w.id?"active":"")+'" data-wallpaper="'+w.id+'"><span class="wallpaper-thumb '+w.cls+'"></span><small>'+w.name+'</small></button>').join("")+'</div>';
+  $("[data-wallpaper]").forEach(b=>b.onclick=()=>{state.settings.wallpaper=b.dataset.wallpaper;save();applySettings();renderHomeEditPanel()});
+  $("#wallpaperFileInput").onchange=async e=>{
+   const file=e.target.files?.[0];if(!file)return;
+   const status=$("#wallpaperImportStatus");
+   status.textContent="正在處理圖片…";
+   try{
+    const dataUrl=await importWallpaperImage(file);
+    state.settings.customWallpaper=dataUrl;
+    state.settings.wallpaper="custom";
+    save();applySettings();renderHomeEditPanel();
+   }catch(err){
+    status.textContent="圖片無法匯入，請換一張較小的圖片再試。";
+   }
+  };
   return;
  }
  if(type==="effects"){
@@ -571,5 +609,5 @@ function bindWorldLinks(){
 }
 
 function mountSettings(){$("#appMount").innerHTML="";$("#appMount").appendChild($("#settingsTemplate").content.cloneNode(true));$("[data-app-back]").onclick=()=>{state.phone.currentApp=null;showView("home")};$("#darkToggle").checked=!!state.settings.dark;$("#labelsToggle").checked=state.settings.showLabels!==false;$("#sessionCount").textContent=state.phone.sessions.length;$("#darkToggle").onchange=()=>{state.settings.dark=$("#darkToggle").checked;save();applySettings()};$("#labelsToggle").onchange=()=>{state.settings.showLabels=$("#labelsToggle").checked;save();applySettings()};$("#openHomeCustomizer").onclick=()=>enterHomeEdit("wallpaper")}
-function applySettings(){const screen=$("#screen");screen.classList.toggle("dark",!!state.settings.dark);["pastel","sky","cream","night","green"].forEach(id=>screen.classList.toggle("wallpaper-"+id,state.settings.wallpaper===id&&id!=="pastel"));["soft","dim","blur"].forEach(id=>screen.classList.toggle("wallpaper-effect-"+id,state.settings.wallpaperEffect===id));$("#homeScreen").classList.toggle("hide-labels",state.settings.showLabels===false);$("#drawerScreen").classList.toggle("hide-labels",state.settings.showLabels===false)}
+function applySettings(){const screen=$("#screen"),wallpaper=screen.querySelector(".wallpaper");screen.classList.toggle("dark",!!state.settings.dark);["pastel","sky","cream","night","green"].forEach(id=>screen.classList.toggle("wallpaper-"+id,state.settings.wallpaper===id&&id!=="pastel"));["soft","dim","blur"].forEach(id=>screen.classList.toggle("wallpaper-effect-"+id,state.settings.wallpaperEffect===id));if(wallpaper){if(state.settings.wallpaper==="custom"&&state.settings.customWallpaper){wallpaper.style.backgroundImage='url("'+state.settings.customWallpaper+'")';wallpaper.style.backgroundSize="cover";wallpaper.style.backgroundPosition="center"}else{wallpaper.style.backgroundImage="";wallpaper.style.backgroundSize="";wallpaper.style.backgroundPosition=""}}$("#homeScreen").classList.toggle("hide-labels",state.settings.showLabels===false);$("#drawerScreen").classList.toggle("hide-labels",state.settings.showLabels===false)}
 state.homeCustomization.editing=false;state.homeCustomization.panel=null;renderAppLists();renderRecents();renderNotifications();applySettings();if(state.phone.open)openPhone();
