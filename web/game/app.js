@@ -67,6 +67,11 @@ function renderWorldState(){
   $("#locationDisplay").textContent=currentScene().name;
   $("#pauseButton").classList.toggle("active",gameState.paused);
   $("#playButton").classList.toggle("active",!gameState.paused);
+  const lock=$("#pauseLock");
+  if(lock){
+    lock.classList.toggle("hidden",!gameState.paused);
+    lock.setAttribute("aria-hidden",String(!gameState.paused));
+  }
 }
 function addDays(days){
   const d=worldDate();d.setDate(d.getDate()+days);
@@ -82,6 +87,7 @@ setInterval(()=>{if(!gameState.paused)advanceMinutes(1)},1800);
 
 $("#pauseButton").onclick=()=>{gameState.paused=true;save();renderWorldState()};
 $("#playButton").onclick=()=>{gameState.paused=false;save();renderWorldState()};
+$("#resumeButton").onclick=()=>{gameState.paused=false;save();renderWorldState()};
 
 function sceneMarkup(scene){
  if(scene.type==="hall"){
@@ -223,12 +229,16 @@ $("#phoneClose").onclick=()=>$("#phoneOverlay").classList.add("hidden");
 $("#phoneOverlay").onclick=e=>{if(e.target===$("#phoneOverlay"))$("#phoneOverlay").classList.add("hidden")};
 
 document.addEventListener("keydown",e=>{
+ if(gameState.paused){
+   e.preventDefault();
+   return;
+ }
  if(e.key==="Escape"){
    closePanel();$("#phoneOverlay").classList.add("hidden");
    left.classList.remove("open");right.classList.remove("open");
  }
  if(e.code==="Space"&&![ "INPUT","TEXTAREA","SELECT" ].includes(document.activeElement.tagName)){
-   e.preventDefault();gameState.paused=!gameState.paused;save();renderWorldState();
+   e.preventDefault();gameState.paused=true;save();renderWorldState();
  }
 });
 
