@@ -99,6 +99,28 @@
   </div>
 </template>
 
+
+<template id="browserTemplate">
+  <div class="browser-app">
+    <header class="app-header browser-header">
+      <button class="app-header-btn" data-app-back>‹</button>
+      <div><b>Browser</b><small>世界內瀏覽器</small></div>
+      <button class="app-header-btn" id="newBrowserTab">＋</button>
+    </header>
+    <div class="browser-tabs" id="browserTabs"></div>
+    <div class="browser-toolbar">
+      <button id="browserBack">‹</button>
+      <button id="browserForward">›</button>
+      <button id="browserReload">↻</button>
+      <form id="browserAddressForm"><input id="browserAddress" autocomplete="off" placeholder="輸入世界內網址或搜尋"></form>
+      <button id="browserStar">☆</button>
+      <button id="browserPanel">☰</button>
+    </div>
+    <div id="browserPanelView" class="browser-panel hidden"></div>
+    <div id="browserContent" class="browser-content"></div>
+  </div>
+</template>
+
 <template id="settingsTemplate">
   <div class="settings-app">
     <header class="app-header"><button class="app-header-btn" data-app-back>‹</button><div><b>Settings</b><small>設定</small></div><span></span></header>
