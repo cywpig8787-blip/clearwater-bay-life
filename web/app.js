@@ -180,7 +180,7 @@ function renderNotifications(){
    return '<button class="notification-row '+meta.cls+' '+(!n.read?"unread":"")+'" data-notification="'+esc(n.id)+'"><span class="notification-icon">'+esc(meta.icon)+'</span><span><b>'+esc(n.title)+'</b><small>'+esc(n.body)+'</small></span><time>'+esc(n.time||"")+'</time></button>';
   }).join(""):'<div class="notification-empty"><span>◌</span><b>目前沒有通知</b><small>新的簡訊、郵件與世界事件會顯示在這裡。</small></div>';
  }
- $("[data-notification]").forEach(b=>b.onclick=()=>openNotification(b.dataset.notification));
+ $$("[data-notification]").forEach(b=>b.onclick=()=>openNotification(b.dataset.notification));
 }
 function openNotification(id){
  const n=(state.notifications.items||[]).find(x=>x.id===id);if(!n)return;
@@ -227,13 +227,13 @@ function renderHomeEditPanel(){
  if(!type)return;
  if(type==="wallpaper"){
   panel.innerHTML='<h3>桌布</h3><p>目前先放測試桌布；未來主題商店取得的桌布會一起出現在這裡。</p><div class="wallpaper-grid">'+wallpaperCatalog.map(w=>'<button class="wallpaper-choice '+(state.settings.wallpaper===w.id?"active":"")+'" data-wallpaper="'+w.id+'"><span class="wallpaper-thumb '+w.cls+'"></span><small>'+w.name+'</small></button>').join("")+'</div>';
-  $("[data-wallpaper]").forEach(b=>b.onclick=()=>{state.settings.wallpaper=b.dataset.wallpaper;save();applySettings();renderHomeEditPanel()});
+  $$("[data-wallpaper]").forEach(b=>b.onclick=()=>{state.settings.wallpaper=b.dataset.wallpaper;save();applySettings();renderHomeEditPanel()});
   return;
  }
  if(type==="effects"){
   const effects=[["none","無效果"],["soft","柔和"],["dim","暗化"],["blur","模糊"]];
   panel.innerHTML='<h3>桌布效果</h3><p>效果只改顯示，不會更換原始桌布。</p><div class="effect-grid">'+effects.map(([id,name])=>'<button class="'+(state.settings.wallpaperEffect===id?"active":"")+'" data-wallpaper-effect="'+id+'">'+name+'</button>').join("")+'</div>';
-  $("[data-wallpaper-effect]").forEach(b=>b.onclick=()=>{state.settings.wallpaperEffect=b.dataset.wallpaperEffect;save();applySettings();renderHomeEditPanel()});
+  $$("[data-wallpaper-effect]").forEach(b=>b.onclick=()=>{state.settings.wallpaperEffect=b.dataset.wallpaperEffect;save();applySettings();renderHomeEditPanel()});
   return;
  }
  if(type==="widgets"){
@@ -251,7 +251,7 @@ function closePhone(){state.phone.open=false;$("#phoneLayer").classList.add("hid
 $("#phoneToggle").onclick=openPhone;$("#scrim").onclick=closePhone;$("#notificationHandle").onclick=()=>{if(!state.phone.locked)showView("notifications")};$("#clearNotifications").onclick=clearNotifications;$("#drawerHandle").onclick=()=>showView("drawer");$$("[data-home]").forEach(b=>b.onclick=()=>showView("home"));$("#navHome").onclick=()=>{state.phone.currentApp=null;showView("home")};$("#navBack").onclick=()=>{if(state.phone.currentView==="app"){state.phone.currentApp=null;showView("home")}else if(["drawer","recents","notifications"].includes(state.phone.currentView))showView("home");else if(state.phone.currentView==="home")closePhone()};$("#navRecents").onclick=()=>{state.phone.currentApp=null;showView("recents")};$("#clearAll").onclick=clearAllSessions;
 $("#appSearch").oninput=()=>{const q=$("#appSearch").value.trim().toLowerCase();$("#drawerApps").innerHTML=apps.filter(a=>!q||a.name.toLowerCase().includes(q)||a.zh.includes(q)).map(appButton).join("");bindAppButtons()};
 $("#homeEditDone").onclick=exitHomeEdit;
-$("[data-home-edit]").forEach(b=>b.onclick=()=>{state.homeCustomization.panel=b.dataset.homeEdit;save();renderHomeEditPanel()});
+$$("[data-home-edit]").forEach(b=>b.onclick=()=>{state.homeCustomization.panel=b.dataset.homeEdit;save();renderHomeEditPanel()});
 let homeLongPressTimer=null,homeLongPressStart=null;
 $("#homeScreen").addEventListener("pointerdown",e=>{
  if(state.phone.currentView!=="home"||state.homeCustomization.editing)return;
@@ -350,7 +350,7 @@ function renderMail(){
  if(!acct){state.mail.mode="accountCreate";renderMailAccountCreate();return}
  populateMailAccountSelect();
  $("#mailAddress").textContent=acct.address;
- $("#mailFolders [data-folder]").forEach(b=>{b.classList.toggle("active",b.dataset.folder===state.mail.folder);b.onclick=()=>{state.mail.folder=b.dataset.folder;state.mail.activeMessage=null;state.mail.mode="list";save();renderMail()}});
+ $$("#mailFolders [data-folder]").forEach(b=>{b.classList.toggle("active",b.dataset.folder===state.mail.folder);b.onclick=()=>{state.mail.folder=b.dataset.folder;state.mail.activeMessage=null;state.mail.mode="list";save();renderMail()}});
  if(state.mail.mode==="compose"){renderMailCompose();return}
  if(state.mail.activeMessage){renderMailMessage();return}
  const msgs=mailBox().filter(m=>m.folder===state.mail.folder).slice().reverse();
@@ -358,7 +358,7 @@ function renderMail(){
   $("#mailContent").innerHTML='<div class="mail-empty"><span>✉</span><b>這裡還沒有郵件</b><small>所有內容都是《人生》世界內的虛構資料。</small></div>';return;
  }
  $("#mailContent").innerHTML=msgs.map(m=>'<button class="mail-row '+(!m.read&&m.folder==="inbox"?"unread":"")+'" data-mail="'+m.id+'"><div class="mail-row-main"><b>'+esc(m.folder==="sent"||m.folder==="drafts"?"給："+(m.to||"—"):m.from||"—")+'</b><span>'+esc(m.subject||"（無主旨）")+'</span><small>'+esc((m.body||"").replace(/\n/g," ").slice(0,70))+'</small></div><time>'+esc(m.time||"")+'</time></button>').join("");
- $("[data-mail]").forEach(r=>r.onclick=()=>{const m=mailMessage(r.dataset.mail);if(!m)return;if(m.folder==="drafts"){state.mail.mode="compose";state.mail.activeMessage=m.id}else{state.mail.activeMessage=m.id;m.read=true}save();renderMail();renderAppLists()});
+ $$("[data-mail]").forEach(r=>r.onclick=()=>{const m=mailMessage(r.dataset.mail);if(!m)return;if(m.folder==="drafts"){state.mail.mode="compose";state.mail.activeMessage=m.id}else{state.mail.activeMessage=m.id;m.read=true}save();renderMail();renderAppLists()});
 }
 function renderMailAccountCreate(){
  $("#mailAddress").textContent="建立新帳號";
@@ -458,7 +458,7 @@ function renderMessages(){
   const last=t.messages[t.messages.length-1];
   return '<button class="thread-row '+(t.unread?"unread":"")+'" data-thread="'+t.id+'"><span class="thread-avatar">'+esc((t.name||"?").slice(0,1))+'</span><span class="thread-main"><b>'+esc(t.name)+'</b><span>'+esc(last?.body||"尚無訊息")+'</span></span><span><time>'+esc(last?.time||"")+'</time>'+(t.unread?'<span class="thread-unread">'+t.unread+'</span>':"")+'</span></button>';
  }).join("")+'</div>';
- $("[data-thread]").forEach(b=>b.onclick=()=>{const t=messageThread(b.dataset.thread);if(!t)return;t.unread=0;state.messages.activeThread=t.id;state.messages.mode="list";save();renderMessages();renderAppLists()});
+ $$("[data-thread]").forEach(b=>b.onclick=()=>{const t=messageThread(b.dataset.thread);if(!t)return;t.unread=0;state.messages.activeThread=t.id;state.messages.mode="list";save();renderMessages();renderAppLists()});
 }
 function renderConversation(t){
  const mount=$("#messagesMount");
@@ -545,7 +545,7 @@ function renderBrowser(){
  $("#browserForward").disabled=t.historyIndex>=t.history.length-1;
  $("#browserStar").textContent=state.browser.bookmarks.includes(t.url)?"★":"☆";
  $("#browserTabs").innerHTML=state.browser.tabs.map(x=>'<button class="browser-tab '+(x.id===state.browser.activeTab?"active":"")+'" data-tab="'+x.id+'">'+esc(browserTitle(x.url))+'</button>').join("");
- $("#browserTabs [data-tab]").forEach(b=>b.onclick=()=>{state.browser.activeTab=b.dataset.tab;save();renderBrowser()});
+ $$("#browserTabs [data-tab]").forEach(b=>b.onclick=()=>{state.browser.activeTab=b.dataset.tab;save();renderBrowser()});
  renderBrowserPanel();
  $("#browserContent").innerHTML=renderWorldPage(t.url);
  bindWorldLinks();
@@ -555,7 +555,7 @@ function renderBrowserPanel(){
  panel.classList.toggle("hidden",!state.browser.panelOpen);
  if(!state.browser.panelOpen)return;
  panel.innerHTML='<h4>書籤</h4>'+(state.browser.bookmarks.length?state.browser.bookmarks.map(u=>'<button data-browser-go="'+esc(u)+'">★ '+esc(u)+'</button>').join(""):'<button disabled>尚無書籤</button>')+'<h4>瀏覽紀錄</h4>'+state.browser.pageHistory.slice(0,10).map(u=>'<button data-browser-go="'+esc(u)+'">'+esc(u)+'</button>').join("");
- $("[data-browser-go]").forEach(b=>b.onclick=()=>{state.browser.panelOpen=false;browserNavigate(b.dataset.browserGo,true)});
+ $$("[data-browser-go]").forEach(b=>b.onclick=()=>{state.browser.panelOpen=false;browserNavigate(b.dataset.browserGo,true)});
 }
 function renderWorldPage(url){
  const [base,qs]=url.split("?");const params=new URLSearchParams(qs||"");
@@ -566,7 +566,7 @@ function renderWorldPage(url){
  return '<section class="web-page"><span class="web-kicker">找不到頁面</span><h2>找不到這個世界內網址</h2><p>'+esc(url)+'</p><button class="web-link" data-world-url="home.local">回到首頁</button></section>';
 }
 function bindWorldLinks(){
- $("[data-world-url]").forEach(b=>b.onclick=()=>browserNavigate(b.dataset.worldUrl,true));
+ $$("[data-world-url]").forEach(b=>b.onclick=()=>browserNavigate(b.dataset.worldUrl,true));
  const f=$("#worldSearchForm");if(f)f.onsubmit=e=>{e.preventDefault();browserNavigate("search.local?q="+encodeURIComponent($("#worldSearchInput").value),true)};
 }
 
