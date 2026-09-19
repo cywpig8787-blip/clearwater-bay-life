@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <title>《人生》手機系統 v2</title>
-<link rel="stylesheet" href="style.css?v=20260919-password1">
+<link rel="stylesheet" href="style.css?v=20260919-homeedit1">
 </head>
 <body>
 <div class="game">
@@ -45,6 +45,16 @@
             <div class="home-widget"><small>克萊爾灣</small><b id="homeClock">22:45</b><span id="homeDate"></span></div>
             <div id="homeApps" class="app-grid"></div>
             <button id="drawerHandle" class="drawer-handle"><span>⌃</span><small>所有應用程式</small></button>
+            <div id="homeEditOverlay" class="home-edit-overlay hidden">
+              <button id="homeEditDone" class="home-edit-done">完成</button>
+              <div id="homeEditPanel" class="home-edit-panel hidden"></div>
+              <div class="home-edit-toolbar">
+                <button data-home-edit="wallpaper"><span>▣</span><small>桌布</small></button>
+                <button data-home-edit="effects"><span>◌</span><small>桌布效果</small></button>
+                <button data-home-edit="widgets"><span>▦</span><small>小工具</small></button>
+                <button data-home-edit="settings"><span>⚙</span><small>桌面設定</small></button>
+              </div>
+            </div>
           </section>
 
           <section id="drawerScreen" class="phone-page drawer-screen hidden">
@@ -156,12 +166,13 @@
         <h3>顯示</h3>
         <label class="setting-row"><span><b>深色模式</b><small>黑／深灰色介面</small></span><input id="darkToggle" type="checkbox"></label>
         <label class="setting-row"><span><b>顯示應用程式名稱</b><small>主畫面與應用程式列表的圖示名稱</small></span><input id="labelsToggle" type="checkbox"></label>
+        <button class="setting-action-row" id="openHomeCustomizer"><span><b>主畫面與桌布</b><small>桌布、效果、小工具與桌面設定</small></span><strong>›</strong></button>
       </section>
       <section class="setting-group"><h3>工作階段</h3><div class="settings-info"><span>目前開啟中的應用程式</span><b id="sessionCount">0</b></div><p>主畫面只會離開應用程式；在最近使用畫面向上滑掉卡片才會結束該工作階段。</p></section>
     </div>
   </div>
 </template>
 
-<script src="app.js?v=20260919-password1"></script>
+<script src="app.js?v=20260919-homeedit1"></script>
 </body>
 </html>
