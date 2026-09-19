@@ -77,6 +77,28 @@
   </div>
 </template>
 
+
+<template id="mailTemplate">
+  <div class="mail-app">
+    <header class="app-header mail-header">
+      <button class="app-header-btn" data-app-back>‹</button>
+      <div><b>Mail</b><small>信箱</small></div>
+      <button class="app-header-btn" id="composeMail">＋</button>
+    </header>
+    <div class="mail-account-bar">
+      <select id="mailAccount"></select>
+      <span id="mailAddress"></span>
+    </div>
+    <div class="mail-folders" id="mailFolders">
+      <button data-folder="inbox">收件匣</button>
+      <button data-folder="sent">已寄出</button>
+      <button data-folder="drafts">草稿</button>
+      <button data-folder="trash">垃圾桶</button>
+    </div>
+    <div id="mailContent" class="mail-content"></div>
+  </div>
+</template>
+
 <template id="settingsTemplate">
   <div class="settings-app">
     <header class="app-header"><button class="app-header-btn" data-app-back>‹</button><div><b>Settings</b><small>設定</small></div><span></span></header>
