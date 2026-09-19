@@ -46,7 +46,7 @@ panelOpen:false
 const apps=[
 {id:"notes",name:"Notes",zh:"記事本",icon:"▤",cls:"notes",home:true,enabled:true},
 {id:"mail",name:"Mail",zh:"信箱",icon:"✉",cls:"mail",home:true,enabled:true},
-{id:"messages",name:"Messages",zh:"訊息",icon:"●",cls:"messages",home:true,enabled:true},
+{id:"messages",name:"Messages",zh:"簡訊",icon:"💬",cls:"messages",home:true,enabled:true},
 {id:"browser",name:"Browser",zh:"瀏覽器",icon:"◎",cls:"browser",home:true,enabled:true},
 {id:"school",name:"School",zh:"學校",icon:"◆",cls:"school",home:false,enabled:false},
 {id:"rpg",name:"RPG",zh:"遊戲",icon:"♜",cls:"rpg",home:false,enabled:false},
