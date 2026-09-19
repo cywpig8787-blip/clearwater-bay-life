@@ -108,3 +108,9 @@ transform:rotate(-7deg);opacity:.8}
 .scene-transition.show{opacity:1}
 .fake-list button{width:100%;text-align:left;padding:10px 12px;border:1px solid #c9bda9;border-radius:10px;background:#f7f1e7}
 .fake-list button:hover{background:#eee3d3}
+
+.pause-lock{position:absolute;z-index:100;inset:0;background:#16223066;backdrop-filter:blur(2px);display:grid;place-items:center;pointer-events:auto}
+.pause-card{display:grid;justify-items:center;gap:12px;padding:18px 24px;border:2px solid #3e4650;border-radius:16px;background:#fff9ef;box-shadow:0 18px 44px #0004}
+.pause-card b{font-size:18px;letter-spacing:.12em}
+.pause-card button{min-width:120px;border:2px solid #3c4f66;border-radius:12px;background:#526c8c;color:white;padding:10px 18px;font-weight:700}
+.pause-card button:hover{filter:brightness(1.06)}
