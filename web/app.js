@@ -3,6 +3,7 @@ const KEY="clearwater-life-phone-v2";
 let state=JSON.parse(localStorage.getItem(KEY)||"{}");
 state.phone=state.phone||{locked:true,open:false,currentView:"lock",currentApp:null,sessions:[],recents:[]};
 state.settings=state.settings||{dark:false,showLabels:true};
+state.privacy=state.privacy||{mailAccepted:false};
 state.notes=state.notes||{activeId:null,search:"",items:[
 {id:"n1",title:"克萊爾灣",content:"開學前要確認的事情：\n\n・課表\n・宿舍用品\n・學校網站帳號",updated:Date.now()-3600000},
 {id:"n2",title:"買東西",content:"衛生紙\n飲料\n新的筆記本",updated:Date.now()-7200000}
@@ -66,6 +67,10 @@ for(const box of Object.values(state.mail.boxes||{})){
  }
 }
 for(const n of state.notes.items||[]){if(n.title==="Clearwater Bay")n.title="克萊爾灣";}
+const mailProviders=[
+{id:"mail.world-a",serviceId:"mail.world-a",displayName:"世界郵箱 A（測試）",domain:"mailbox.local",description:"一般世界內 Email 服務商占位。",development:true},
+{id:"mail.world-b",serviceId:"mail.world-b",displayName:"世界郵箱 B（測試）",domain:"post.local",description:"第二個世界內 Email 服務商占位。",development:true}
+];
 const apps=[
 {id:"notes",name:"記事本",zh:"記事本",icon:"▤",cls:"notes",home:true,enabled:true},
 {id:"mail",name:"郵件",zh:"郵件",icon:"✉",cls:"mail",home:true,enabled:true},
@@ -177,20 +182,77 @@ function mailAccount(){return mailAccounts().find(a=>a.id===state.mail.activeAcc
 function mailBox(){const id=mailAccount()?.id;if(!id)return[];state.mail.boxes[id]=state.mail.boxes[id]||[];return state.mail.boxes[id]}
 function mailMessage(id){return mailBox().find(m=>m.id===id)}
 function mailStamp(){return new Date().toLocaleTimeString("zh-TW",{hour:"2-digit",minute:"2-digit",hour12:false})}
-
+function mailProvider(id){return mailProviders.find(p=>p.id===id)||mailProviders[0]}
+function validateMailUsername(raw){
+ const username=(raw||"").trim().toLowerCase();
+ if(username.length<3)return {ok:false,username,message:"至少輸入 3 個字元。"};
+ if(username.length>24)return {ok:false,username,message:"最多 24 個字元。"};
+ if(!/^[a-z0-9][a-z0-9._-]*[a-z0-9]$/.test(username))return {ok:false,username,message:"只能使用英文字母、數字、句點、底線與連字號，開頭和結尾需為英數字。"};
+ return {ok:true,username,message:"名稱格式可以使用。"};
+}
+function mailNameAvailable(providerId,username){
+ const provider=mailProvider(providerId);
+ const address=username+"@"+provider.domain;
+ return !(state.accountRegistry.accounts||[]).some(a=>(a.serviceId===provider.serviceId&&String(a.username).toLowerCase()===username)||String(a.address).toLowerCase()===address);
+}
+function populateMailAccountSelect(){
+ const sel=$("#mailAccount");if(!sel)return;
+ const accounts=mailAccounts();
+ sel.innerHTML=accounts.map(a=>'<option value="'+esc(a.id)+'">'+esc(a.displayName||a.address)+'</option>').join("");
+ if(!accounts.length){sel.innerHTML='<option>尚無帳號</option>';sel.disabled=true;return}
+ sel.disabled=false;
+ if(!accounts.some(a=>a.id===state.mail.activeAccount))state.mail.activeAccount=accounts[0].id;
+ sel.value=state.mail.activeAccount;
+}
+function createMailAccount(providerId,rawUsername){
+ const check=validateMailUsername(rawUsername);if(!check.ok)return {ok:false,message:check.message};
+ const provider=mailProvider(providerId),username=check.username;
+ if(!mailNameAvailable(providerId,username))return {ok:false,message:"這個名稱已經被使用。"};
+ const id="acct-player-"+Date.now();
+ const address=username+"@"+provider.domain;
+ const account={
+  id,accountId:id,serviceId:provider.serviceId,username,address,
+  displayName:username+" · "+provider.displayName,
+  boundEmail:null,boundPhone:null,loginState:"logged_in",
+  metadata:{fictional:true,playerCreated:true,developmentProvider:!!provider.development,providerId:provider.id,createdAt:Date.now()}
+ };
+ state.accountRegistry.accounts.push(account);
+ const welcomeId="welcome-"+Date.now();
+ state.mail.boxes[id]=[{
+  id:welcomeId,folder:"inbox",from:provider.displayName,to:address,
+  subject:"你的世界內郵箱已建立",
+  body:"這是《人生》世界內的虛構郵箱。\n\n帳號 "+address+" 已建立完成。這個服務不會連接任何真實 Email 系統。",
+  time:"剛剛",read:false
+ }];
+ state.mail.activeAccount=id;state.mail.folder="inbox";state.mail.activeMessage=null;state.mail.mode="list";
+ pushNotification({appId:"mail",title:provider.displayName,body:"郵箱 "+address+" 已建立完成。",deepLink:"mail://"+id+"/"+welcomeId});
+ save();renderAppLists();
+ return {ok:true,account};
+}
+function renderMailPrivacyGate(){
+ $("#mailAccountBar").classList.add("hidden");$("#mailFolders").classList.add("hidden");$("#composeMail").classList.add("hidden");
+ $("#mailContent").innerHTML='<section class="mail-privacy"><div class="privacy-icon">✉</div><h2>世界內郵件</h2><p>郵件、帳號、服務商與地址都只存在於《人生》的虛構世界中，不會連接真實 Email 服務。</p><div class="privacy-note">請不要輸入真實 Email、密碼、電話號碼或其他私人資料。</div><button id="acceptMailPrivacy">我知道了，進入郵件</button></section>';
+ $("#acceptMailPrivacy").onclick=()=>{state.privacy.mailAccepted=true;save();mountMail()};
+}
 function mountMail(){
  $("#appMount").innerHTML="";$("#appMount").appendChild($("#mailTemplate").content.cloneNode(true));
  $("[data-app-back]").onclick=()=>{state.phone.currentApp=null;showView("home")};
+ if(!state.privacy.mailAccepted){renderMailPrivacyGate();return}
+ $("#mailAccountBar").classList.remove("hidden");$("#mailFolders").classList.remove("hidden");$("#composeMail").classList.remove("hidden");
+ populateMailAccountSelect();
  const sel=$("#mailAccount");
- sel.innerHTML=mailAccounts().map(a=>'<option value="'+a.id+'">'+esc(a.displayName)+'</option>').join("");
- sel.value=state.mail.activeAccount;
  sel.onchange=()=>{state.mail.activeAccount=sel.value;state.mail.folder="inbox";state.mail.activeMessage=null;state.mail.mode="list";save();renderMail();renderAppLists()};
- $("#composeMail").onclick=()=>{state.mail.mode="compose";state.mail.activeMessage=null;save();renderMail()};
+ $("#composeMail").onclick=()=>{if(!mailAccounts().length){state.mail.mode="accountCreate"}else{state.mail.mode="compose";state.mail.activeMessage=null}save();renderMail()};
+ $("#addMailAccount").onclick=()=>{state.mail.mode="accountCreate";state.mail.activeMessage=null;save();renderMail()};
  renderMail();
 }
 function renderMail(){
- const acct=mailAccount();if(!acct)return;
- $("#mailAccount").value=acct.id;$("#mailAddress").textContent=acct.address;
+ if(!state.privacy.mailAccepted){renderMailPrivacyGate();return}
+ if(state.mail.mode==="accountCreate"){renderMailAccountCreate();return}
+ const acct=mailAccount();
+ if(!acct){state.mail.mode="accountCreate";renderMailAccountCreate();return}
+ populateMailAccountSelect();
+ $("#mailAddress").textContent=acct.address;
  $("#mailFolders [data-folder]").forEach(b=>{b.classList.toggle("active",b.dataset.folder===state.mail.folder);b.onclick=()=>{state.mail.folder=b.dataset.folder;state.mail.activeMessage=null;state.mail.mode="list";save();renderMail()}});
  if(state.mail.mode==="compose"){renderMailCompose();return}
  if(state.mail.activeMessage){renderMailMessage();return}
@@ -200,6 +262,33 @@ function renderMail(){
  }
  $("#mailContent").innerHTML=msgs.map(m=>'<button class="mail-row '+(!m.read&&m.folder==="inbox"?"unread":"")+'" data-mail="'+m.id+'"><div class="mail-row-main"><b>'+esc(m.folder==="sent"||m.folder==="drafts"?"給："+(m.to||"—"):m.from||"—")+'</b><span>'+esc(m.subject||"（無主旨）")+'</span><small>'+esc((m.body||"").replace(/\n/g," ").slice(0,70))+'</small></div><time>'+esc(m.time||"")+'</time></button>').join("");
  $("[data-mail]").forEach(r=>r.onclick=()=>{const m=mailMessage(r.dataset.mail);if(!m)return;if(m.folder==="drafts"){state.mail.mode="compose";state.mail.activeMessage=m.id}else{state.mail.activeMessage=m.id;m.read=true}save();renderMail();renderAppLists()});
+}
+function renderMailAccountCreate(){
+ $("#mailAddress").textContent="建立新帳號";
+ const selected=state.mail.pendingProvider||mailProviders[0].id;
+ const provider=mailProvider(selected);
+ $("#mailContent").innerHTML='<section class="mail-account-create"><h3>建立世界內 Email</h3><p>服務商名稱與網域目前都是開發測試占位，之後可以直接替換，不影響 Account Registry。</p><div class="mail-provider-list">'+mailProviders.map(p=>'<label class="mail-provider-card"><input type="radio" name="mailProvider" value="'+esc(p.id)+'" '+(p.id===selected?"checked":"")+'><span><b>'+esc(p.displayName)+'</b><small>@'+esc(p.domain)+' · '+esc(p.description)+'</small></span></label>').join("")+'</div><label class="mail-address-builder"><span>帳號名稱（只輸入 @ 前面的部分）</span><span class="mail-local-row"><input id="mailNewUsername" maxlength="24" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="playername"><strong id="mailDomain">@'+esc(provider.domain)+'</strong></span></label><div id="mailNameHint" class="mail-name-hint">請輸入 3–24 個字元。</div><div class="mail-account-actions"><button id="cancelMailAccount">取消</button><button class="create" id="createMailAccount" disabled>建立帳號</button></div></section>';
+ const input=$("#mailNewUsername"),hint=$("#mailNameHint"),create=$("#createMailAccount");
+ function evaluate(){
+  input.value=input.value.toLowerCase().replace(/\s+/g,"");
+  const p=mailProvider(state.mail.pendingProvider||selected);
+  $("#mailDomain").textContent="@"+p.domain;
+  const v=validateMailUsername(input.value);
+  if(!v.ok){hint.textContent=v.message;hint.className="mail-name-hint bad";create.disabled=true;return}
+  const available=mailNameAvailable(p.id,v.username);
+  hint.textContent=available?"這個名稱可以使用。":"這個名稱已經被使用。";
+  hint.className="mail-name-hint "+(available?"ok":"bad");
+  create.disabled=!available;
+ }
+ $$('input[name="mailProvider"]').forEach(r=>r.onchange=()=>{state.mail.pendingProvider=r.value;save();renderMailAccountCreate()});
+ input.oninput=evaluate;
+ $("#cancelMailAccount").onclick=()=>{state.mail.mode="list";delete state.mail.pendingProvider;save();renderMail()};
+ create.onclick=()=>{
+  const result=createMailAccount(state.mail.pendingProvider||selected,input.value);
+  if(!result.ok){hint.textContent=result.message;hint.className="mail-name-hint bad";return}
+  delete state.mail.pendingProvider;save();renderMail();
+ };
+ evaluate();
 }
 function renderMailMessage(){
  const m=mailMessage(state.mail.activeMessage);if(!m){state.mail.activeMessage=null;renderMail();return}
