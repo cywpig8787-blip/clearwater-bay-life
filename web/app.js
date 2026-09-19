@@ -86,7 +86,31 @@ const apps=[
 const save=()=>localStorage.setItem(KEY,JSON.stringify(state));
 const appById=id=>apps.find(a=>a.id===id);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-function refreshClock(){const d=new Date(),t=d.toLocaleTimeString("zh-TW",{hour:"2-digit",minute:"2-digit",hour12:false});$("#statusTime").textContent=t;$("#lockTime").textContent=t;$("#homeClock").textContent=t;$("#lockDate").textContent=d.toLocaleDateString("zh-TW",{month:"long",day:"numeric",weekday:"long"});$("#homeDate").textContent=d.toLocaleDateString("zh-TW",{month:"long",day:"numeric",weekday:"long"})}setInterval(refreshClock,30000);refreshClock();
+const WORLD_TIME_KEY="clearwater-life-game-v1";
+function getWorldTime(){
+ let game={};
+ try{game=JSON.parse(localStorage.getItem(WORLD_TIME_KEY)||"{}")}catch(e){}
+ const date=game.date||{year:2026,month:9,day:3};
+ const minutes=Number.isFinite(Number(game.minutes))?Number(game.minutes):19*60;
+ return {date,minutes};
+}
+function worldClockText(){
+ const w=getWorldTime(),h=Math.floor(w.minutes/60)%24,m=((w.minutes%60)+60)%60;
+ return String(h).padStart(2,"0")+":"+String(m).padStart(2,"0");
+}
+function worldDateObject(){
+ const w=getWorldTime();
+ return new Date(w.date.year,w.date.month-1,w.date.day);
+}
+function worldDateText(){
+ return worldDateObject().toLocaleDateString("zh-TW",{month:"long",day:"numeric",weekday:"long"});
+}
+function refreshClock(){
+ const t=worldClockText(),d=worldDateText();
+ $("#statusTime").textContent=t;$("#lockTime").textContent=t;$("#homeClock").textContent=t;
+ $("#lockDate").textContent=d;$("#homeDate").textContent=d;
+}
+setInterval(refreshClock,1000);window.addEventListener("storage",e=>{if(e.key===WORLD_TIME_KEY)refreshClock()});refreshClock();
 function touchSession(id){if(!state.phone.sessions.includes(id))state.phone.sessions.push(id);state.phone.recents=state.phone.recents.filter(x=>x!==id);state.phone.recents.unshift(id);save()}
 function closeSession(id){state.phone.sessions=state.phone.sessions.filter(x=>x!==id);state.phone.recents=state.phone.recents.filter(x=>x!==id);if(state.phone.currentApp===id)state.phone.currentApp=null;save();renderRecents()}
 function clearAllSessions(){state.phone.sessions=[];state.phone.recents=[];state.phone.currentApp=null;save();renderRecents()}
@@ -165,7 +189,12 @@ function openNotification(id){
  if(n.deepLink){openDeepLink(n.deepLink);return}
  showView("notifications");
 }
-function renderAppLists(){$("#homeApps").innerHTML=apps.filter(a=>a.home).map(appButton).join("");$("#drawerApps").innerHTML=apps.map(appButton).join("");bindAppButtons();applySettings()}
+function renderAppLists(){
+ const home=$("#homeApps"),drawer=$("#drawerApps");
+ if(home)home.innerHTML=apps.filter(a=>a.home).map(appButton).join("");
+ if(drawer)drawer.innerHTML=apps.map(appButton).join("");
+ bindAppButtons();applySettings();
+}
 function bindAppButtons(){$$("[data-app]").forEach(b=>b.onclick=()=>{const a=appById(b.dataset.app);if(!a.enabled){b.animate([{transform:"translateX(0)"},{transform:"translateX(-4px)"},{transform:"translateX(4px)"},{transform:"translateX(0)"}],{duration:220});return}openApp(a.id)})}
 const wallpaperCatalog=[
  {id:"pastel",name:"粉彩",cls:"pastel"},
@@ -216,7 +245,7 @@ function renderHomeEditPanel(){
   $("#homeLabelsToggle").onchange=()=>{state.settings.showLabels=$("#homeLabelsToggle").checked;save();applySettings()};
  }
 }
-function showView(v){$("#lockScreen").classList.toggle("hidden",v!=="lock");$("#homeScreen").classList.toggle("hidden",v!=="home");$("#drawerScreen").classList.toggle("hidden",v!=="drawer");$("#notificationScreen").classList.toggle("hidden",v!=="notifications");$("#recentsScreen").classList.toggle("hidden",v!=="recents");$("#appScreen").classList.toggle("hidden",v!=="app");state.phone.currentView=v;if(v==="recents")renderRecents();if(v==="notifications")renderNotifications();save()}
+function showView(v){$("#lockScreen").classList.toggle("hidden",v!=="lock");$("#homeScreen").classList.toggle("hidden",v!=="home");$("#drawerScreen").classList.toggle("hidden",v!=="drawer");$("#notificationScreen").classList.toggle("hidden",v!=="notifications");$("#recentsScreen").classList.toggle("hidden",v!=="recents");$("#appScreen").classList.toggle("hidden",v!=="app");state.phone.currentView=v;if(v==="drawer")renderAppLists();if(v==="recents")renderRecents();if(v==="notifications")renderNotifications();save()}
 function openPhone(){state.phone.open=true;$("#phoneLayer").classList.remove("hidden");renderNotifications();if(state.phone.locked)showView("lock");else if(state.phone.currentApp&&state.phone.sessions.includes(state.phone.currentApp))openApp(state.phone.currentApp,false);else showView("home");save()}
 function closePhone(){state.phone.open=false;$("#phoneLayer").classList.add("hidden");save()}
 $("#phoneToggle").onclick=openPhone;$("#scrim").onclick=closePhone;$("#notificationHandle").onclick=()=>{if(!state.phone.locked)showView("notifications")};$("#clearNotifications").onclick=clearNotifications;$("#drawerHandle").onclick=()=>showView("drawer");$$("[data-home]").forEach(b=>b.onclick=()=>showView("home"));$("#navHome").onclick=()=>{state.phone.currentApp=null;showView("home")};$("#navBack").onclick=()=>{if(state.phone.currentView==="app"){state.phone.currentApp=null;showView("home")}else if(["drawer","recents","notifications"].includes(state.phone.currentView))showView("home");else if(state.phone.currentView==="home")closePhone()};$("#navRecents").onclick=()=>{state.phone.currentApp=null;showView("recents")};$("#clearAll").onclick=clearAllSessions;
@@ -247,7 +276,7 @@ function mailAccounts(){return state.accountRegistry.accounts.filter(a=>a.servic
 function mailAccount(){return mailAccounts().find(a=>a.id===state.mail.activeAccount)||mailAccounts()[0]}
 function mailBox(){const id=mailAccount()?.id;if(!id)return[];state.mail.boxes[id]=state.mail.boxes[id]||[];return state.mail.boxes[id]}
 function mailMessage(id){return mailBox().find(m=>m.id===id)}
-function mailStamp(){return new Date().toLocaleTimeString("zh-TW",{hour:"2-digit",minute:"2-digit",hour12:false})}
+function mailStamp(){return worldClockText()}
 function mailProvider(id){return mailProviders.find(p=>p.id===id)||mailProviders[0]}
 function validateMailUsername(raw){
  const username=(raw||"").trim().toLowerCase();
@@ -413,7 +442,7 @@ function renderMailCompose(){
 
 
 function messageThread(id){return state.messages.threads.find(t=>t.id===id)}
-function messageStamp(){return new Date().toLocaleTimeString("zh-TW",{hour:"2-digit",minute:"2-digit",hour12:false})}
+function messageStamp(){return worldClockText()}
 function mountMessages(){
  $("#appMount").innerHTML="";$("#appMount").appendChild($("#messagesTemplate").content.cloneNode(true));
  $("[data-app-back]").onclick=()=>{state.phone.currentApp=null;showView("home")};
