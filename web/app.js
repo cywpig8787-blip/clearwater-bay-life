@@ -36,6 +36,13 @@ threads:[
 {id:"sms-b2",from:"me",body:"好。",time:"昨天"}
 ]}
 ]};
+state.notifications=state.notifications||{
+items:[
+{id:"notif-msg-a",appId:"messages",title:"測試聯絡人 A",body:"好，那晚點見。",time:"剛剛",deepLink:"message://thread-a",read:false,createdAt:Date.now()-120000},
+{id:"notif-mail-1",appId:"mail",title:"世界內郵箱",body:"你有一封未讀郵件。",time:"今天",deepLink:"mail://acct-test/tm1",read:false,createdAt:Date.now()-240000},
+{id:"notif-school-1",appId:"school",title:"校園通知",body:"新的校園通知會顯示在這裡。",time:"今天",deepLink:null,read:true,createdAt:Date.now()-600000}
+]
+};
 state.browser=state.browser||{
 activeTab:"tab-1",
 tabs:[{id:"tab-1",url:"home.local",history:["home.local"],historyIndex:0}],
@@ -77,13 +84,85 @@ function closeSession(id){state.phone.sessions=state.phone.sessions.filter(x=>x!
 function clearAllSessions(){state.phone.sessions=[];state.phone.recents=[];state.phone.currentApp=null;save();renderRecents()}
 function mailUnread(){return Object.values(state.mail.boxes||{}).flat().filter(m=>m.folder==="inbox"&&!m.read).length}
 function messagesUnread(){return (state.messages.threads||[]).reduce((n,t)=>n+(Number(t.unread)||0),0)}
+function notificationUnread(){return (state.notifications.items||[]).filter(n=>!n.read).length}
+function notificationIcon(n){
+ const a=appById(n.appId);
+ if(a)return {icon:a.icon,cls:a.cls,name:a.name};
+ if(n.appId==="school")return {icon:"◆",cls:"school",name:"學校"};
+ return {icon:"●",cls:"system",name:"系統"};
+}
+function pushNotification(data){
+ const n={
+  id:data.id||("notif-"+Date.now()+"-"+Math.random().toString(36).slice(2,7)),
+  appId:data.appId||"system",
+  title:data.title||"新通知",
+  body:data.body||"",
+  time:data.time||"剛剛",
+  deepLink:data.deepLink||null,
+  read:false,
+  createdAt:data.createdAt||Date.now()
+ };
+ state.notifications.items.unshift(n);
+ state.notifications.items=state.notifications.items.slice(0,80);
+ save();renderNotifications();
+ return n.id;
+}
+function markNotificationRead(id){
+ const n=(state.notifications.items||[]).find(x=>x.id===id);
+ if(n)n.read=true;
+ save();renderNotifications();
+}
+function removeNotification(id){
+ state.notifications.items=(state.notifications.items||[]).filter(n=>n.id!==id);
+ save();renderNotifications();
+}
+function clearNotifications(){
+ state.notifications.items=[];
+ save();renderNotifications();
+}
+window.PhoneNotificationService={
+ push:pushNotification,
+ markRead:markNotificationRead,
+ remove:removeNotification,
+ clear:clearNotifications,
+ list:()=>JSON.parse(JSON.stringify(state.notifications.items||[]))
+};
 function appButton(a){const count=a.id==="mail"?mailUnread():a.id==="messages"?messagesUnread():0;const badge=count?'<span class="app-badge">'+count+'</span>':"";return '<button class="app-icon-btn" data-app="'+a.id+'"><span class="app-icon '+a.cls+'">'+a.icon+'</span>'+badge+'<small>'+a.name+'</small></button>'}
+function renderNotifications(){
+ const items=(state.notifications.items||[]).slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+ const unread=notificationUnread();
+ const badge=$("#notificationBadge");
+ if(badge){badge.textContent=unread>9?"9+":String(unread);badge.classList.toggle("hidden",unread===0)}
+ const lock=$("#lockNotices");
+ if(lock){
+  const visible=items.slice(0,3);
+  lock.innerHTML=visible.length?visible.map(n=>{
+   const meta=notificationIcon(n);
+   return '<button class="lock-notice '+meta.cls+'" data-notification="'+esc(n.id)+'"><span class="app-mini">'+esc(meta.icon)+'</span><div><b>'+esc(n.title)+'</b><small>'+esc(n.body)+'</small></div><time>'+esc(n.time||"")+'</time></button>';
+  }).join(""):'';
+ }
+ const list=$("#notificationList");
+ if(list){
+  list.innerHTML=items.length?items.map(n=>{
+   const meta=notificationIcon(n);
+   return '<button class="notification-row '+meta.cls+' '+(!n.read?"unread":"")+'" data-notification="'+esc(n.id)+'"><span class="notification-icon">'+esc(meta.icon)+'</span><span><b>'+esc(n.title)+'</b><small>'+esc(n.body)+'</small></span><time>'+esc(n.time||"")+'</time></button>';
+  }).join(""):'<div class="notification-empty"><span>◌</span><b>目前沒有通知</b><small>新的簡訊、郵件與世界事件會顯示在這裡。</small></div>';
+ }
+ $("[data-notification]").forEach(b=>b.onclick=()=>openNotification(b.dataset.notification));
+}
+function openNotification(id){
+ const n=(state.notifications.items||[]).find(x=>x.id===id);if(!n)return;
+ n.read=true;save();renderNotifications();
+ if(state.phone.locked)state.phone.locked=false;
+ if(n.deepLink){openDeepLink(n.deepLink);return}
+ showView("notifications");
+}
 function renderAppLists(){$("#homeApps").innerHTML=apps.filter(a=>a.home).map(appButton).join("");$("#drawerApps").innerHTML=apps.map(appButton).join("");bindAppButtons();applySettings()}
 function bindAppButtons(){$$("[data-app]").forEach(b=>b.onclick=()=>{const a=appById(b.dataset.app);if(!a.enabled){b.animate([{transform:"translateX(0)"},{transform:"translateX(-4px)"},{transform:"translateX(4px)"},{transform:"translateX(0)"}],{duration:220});return}openApp(a.id)})}
-function showView(v){$("#lockScreen").classList.toggle("hidden",v!=="lock");$("#homeScreen").classList.toggle("hidden",v!=="home");$("#drawerScreen").classList.toggle("hidden",v!=="drawer");$("#recentsScreen").classList.toggle("hidden",v!=="recents");$("#appScreen").classList.toggle("hidden",v!=="app");state.phone.currentView=v;if(v==="recents")renderRecents();save()}
-function openPhone(){state.phone.open=true;$("#phoneLayer").classList.remove("hidden");if(state.phone.locked)showView("lock");else if(state.phone.currentApp&&state.phone.sessions.includes(state.phone.currentApp))openApp(state.phone.currentApp,false);else showView("home");save()}
+function showView(v){$("#lockScreen").classList.toggle("hidden",v!=="lock");$("#homeScreen").classList.toggle("hidden",v!=="home");$("#drawerScreen").classList.toggle("hidden",v!=="drawer");$("#notificationScreen").classList.toggle("hidden",v!=="notifications");$("#recentsScreen").classList.toggle("hidden",v!=="recents");$("#appScreen").classList.toggle("hidden",v!=="app");state.phone.currentView=v;if(v==="recents")renderRecents();if(v==="notifications")renderNotifications();save()}
+function openPhone(){state.phone.open=true;$("#phoneLayer").classList.remove("hidden");renderNotifications();if(state.phone.locked)showView("lock");else if(state.phone.currentApp&&state.phone.sessions.includes(state.phone.currentApp))openApp(state.phone.currentApp,false);else showView("home");save()}
 function closePhone(){state.phone.open=false;$("#phoneLayer").classList.add("hidden");save()}
-$("#phoneToggle").onclick=openPhone;$("#scrim").onclick=closePhone;$("#drawerHandle").onclick=()=>showView("drawer");$$("[data-home]").forEach(b=>b.onclick=()=>showView("home"));$("#navHome").onclick=()=>{state.phone.currentApp=null;showView("home")};$("#navBack").onclick=()=>{if(state.phone.currentView==="app"){state.phone.currentApp=null;showView("home")}else if(["drawer","recents"].includes(state.phone.currentView))showView("home");else if(state.phone.currentView==="home")closePhone()};$("#navRecents").onclick=()=>{state.phone.currentApp=null;showView("recents")};$("#clearAll").onclick=clearAllSessions;
+$("#phoneToggle").onclick=openPhone;$("#scrim").onclick=closePhone;$("#notificationHandle").onclick=()=>{if(!state.phone.locked)showView("notifications")};$("#clearNotifications").onclick=clearNotifications;$("#drawerHandle").onclick=()=>showView("drawer");$$("[data-home]").forEach(b=>b.onclick=()=>showView("home"));$("#navHome").onclick=()=>{state.phone.currentApp=null;showView("home")};$("#navBack").onclick=()=>{if(state.phone.currentView==="app"){state.phone.currentApp=null;showView("home")}else if(["drawer","recents","notifications"].includes(state.phone.currentView))showView("home");else if(state.phone.currentView==="home")closePhone()};$("#navRecents").onclick=()=>{state.phone.currentApp=null;showView("recents")};$("#clearAll").onclick=clearAllSessions;
 $("#appSearch").oninput=()=>{const q=$("#appSearch").value.trim().toLowerCase();$("#drawerApps").innerHTML=apps.filter(a=>!q||a.name.toLowerCase().includes(q)||a.zh.includes(q)).map(appButton).join("");bindAppButtons()};
 (()=>{const surface=$("#lockScreen"),content=$("#lockContent");let tracking=false,startY=0,dy=0,pointerId=null;surface.addEventListener("pointerdown",e=>{if(state.phone.currentView!=="lock")return;tracking=true;startY=e.clientY;dy=0;pointerId=e.pointerId;surface.setPointerCapture(pointerId);surface.classList.add("dragging")});surface.addEventListener("pointermove",e=>{if(!tracking||e.pointerId!==pointerId)return;dy=Math.min(0,e.clientY-startY);content.style.transform="translateY("+dy+"px)";content.style.opacity=String(Math.max(.25,1-Math.abs(dy)/260))});const finish=()=>{if(!tracking)return;tracking=false;surface.classList.remove("dragging");if(dy<-75){content.style.transform="translateY(-120%)";content.style.opacity="0";setTimeout(()=>{state.phone.locked=false;content.style.transition="none";content.style.transform="";content.style.opacity="";requestAnimationFrame(()=>content.style.transition="");showView("home")},160)}else{content.style.transform="";content.style.opacity=""}};surface.addEventListener("pointerup",finish);surface.addEventListener("pointercancel",finish)})();
 function openApp(id,front=true){const a=appById(id);if(!a||!a.enabled)return;state.phone.currentApp=id;if(front)touchSession(id);showView("app");if(id==="notes")mountNotes();if(id==="mail")mountMail();if(id==="messages")mountMessages();if(id==="browser")mountBrowser();if(id==="settings")mountSettings();save()}
@@ -281,4 +360,4 @@ function bindWorldLinks(){
 
 function mountSettings(){$("#appMount").innerHTML="";$("#appMount").appendChild($("#settingsTemplate").content.cloneNode(true));$("[data-app-back]").onclick=()=>{state.phone.currentApp=null;showView("home")};$("#darkToggle").checked=!!state.settings.dark;$("#labelsToggle").checked=state.settings.showLabels!==false;$("#sessionCount").textContent=state.phone.sessions.length;$("#darkToggle").onchange=()=>{state.settings.dark=$("#darkToggle").checked;save();applySettings()};$("#labelsToggle").onchange=()=>{state.settings.showLabels=$("#labelsToggle").checked;save();applySettings()}}
 function applySettings(){$("#screen").classList.toggle("dark",!!state.settings.dark);$("#homeScreen").classList.toggle("hide-labels",state.settings.showLabels===false);$("#drawerScreen").classList.toggle("hide-labels",state.settings.showLabels===false)}
-renderAppLists();renderRecents();applySettings();if(state.phone.open)openPhone();
+renderAppLists();renderRecents();renderNotifications();applySettings();if(state.phone.open)openPhone();
