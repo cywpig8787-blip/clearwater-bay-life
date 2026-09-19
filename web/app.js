@@ -7,9 +7,24 @@ state.notes=state.notes||{activeId:null,search:"",items:[
 {id:"n1",title:"Clearwater Bay",content:"開學前要確認的事情：\n\n・課表\n・宿舍用品\n・學校網站帳號",updated:Date.now()-3600000},
 {id:"n2",title:"買東西",content:"衛生紙\n飲料\n新的筆記本",updated:Date.now()-7200000}
 ]};
+state.accountRegistry=state.accountRegistry||{accounts:[
+{id:"acct-test",serviceId:"mail.test",username:"player",address:"player@testmail.local",displayName:"Test Mail",metadata:{fictional:true}},
+{id:"acct-campus",serviceId:"mail.campus",username:"student",address:"student@campus.local",displayName:"Campus Mail",metadata:{fictional:true}}
+]};
+state.mail=state.mail||{
+activeAccount:"acct-test",folder:"inbox",activeMessage:null,mode:"list",
+boxes:{
+"acct-test":[
+{id:"tm1",folder:"inbox",from:"Test Mail Team",to:"player@testmail.local",subject:"歡迎使用世界內郵箱",body:"這是《人生》世界內的虛構郵件。\n\n目前這個 Mail App 只用來測試遊戲內郵件、通知與帳號系統，不會連接任何真實郵件服務。",time:"今天 08:15",read:false},
+{id:"tm2",folder:"inbox",from:"System Tester",to:"player@testmail.local",subject:"多工測試",body:"你可以讀到一半回 Home，再從 Recent Apps 回來。Mail 的目前帳號、資料夾與郵件都會保留。",time:"昨天",read:true}
+],
+"acct-campus":[
+{id:"cm1",folder:"inbox",from:"Campus Mail",to:"student@campus.local",subject:"校園郵箱測試訊息",body:"這個帳號只是 Campus Mail 測試帳號，不代表正式學校郵箱名稱或網域。",time:"今天 07:40",read:false}
+]
+}};
 const apps=[
 {id:"notes",name:"Notes",zh:"記事本",icon:"▤",cls:"notes",home:true,enabled:true},
-{id:"mail",name:"Mail",zh:"信箱",icon:"✉",cls:"mail",home:true,enabled:false},
+{id:"mail",name:"Mail",zh:"信箱",icon:"✉",cls:"mail",home:true,enabled:true},
 {id:"browser",name:"Browser",zh:"瀏覽器",icon:"◎",cls:"browser",home:true,enabled:false},
 {id:"school",name:"School",zh:"學校",icon:"◆",cls:"school",home:false,enabled:false},
 {id:"rpg",name:"RPG",zh:"遊戲",icon:"♜",cls:"rpg",home:false,enabled:false},
@@ -22,7 +37,8 @@ function refreshClock(){const d=new Date(),t=d.toLocaleTimeString("zh-TW",{hour:
 function touchSession(id){if(!state.phone.sessions.includes(id))state.phone.sessions.push(id);state.phone.recents=state.phone.recents.filter(x=>x!==id);state.phone.recents.unshift(id);save()}
 function closeSession(id){state.phone.sessions=state.phone.sessions.filter(x=>x!==id);state.phone.recents=state.phone.recents.filter(x=>x!==id);if(state.phone.currentApp===id)state.phone.currentApp=null;save();renderRecents()}
 function clearAllSessions(){state.phone.sessions=[];state.phone.recents=[];state.phone.currentApp=null;save();renderRecents()}
-function appButton(a){return '<button class="app-icon-btn" data-app="'+a.id+'"><span class="app-icon '+a.cls+'">'+a.icon+'</span><small>'+a.name+'</small></button>'}
+function mailUnread(){return Object.values(state.mail.boxes||{}).flat().filter(m=>m.folder==="inbox"&&!m.read).length}
+function appButton(a){const badge=a.id==="mail"&&mailUnread()?'<span class="app-badge">'+mailUnread()+'</span>':"";return '<button class="app-icon-btn" data-app="'+a.id+'"><span class="app-icon '+a.cls+'">'+a.icon+'</span>'+badge+'<small>'+a.name+'</small></button>'}
 function renderAppLists(){$("#homeApps").innerHTML=apps.filter(a=>a.home).map(appButton).join("");$("#drawerApps").innerHTML=apps.map(appButton).join("");bindAppButtons();applySettings()}
 function bindAppButtons(){$$("[data-app]").forEach(b=>b.onclick=()=>{const a=appById(b.dataset.app);if(!a.enabled){b.animate([{transform:"translateX(0)"},{transform:"translateX(-4px)"},{transform:"translateX(4px)"},{transform:"translateX(0)"}],{duration:220});return}openApp(a.id)})}
 function showView(v){$("#lockScreen").classList.toggle("hidden",v!=="lock");$("#homeScreen").classList.toggle("hidden",v!=="home");$("#drawerScreen").classList.toggle("hidden",v!=="drawer");$("#recentsScreen").classList.toggle("hidden",v!=="recents");$("#appScreen").classList.toggle("hidden",v!=="app");state.phone.currentView=v;if(v==="recents")renderRecents();save()}
@@ -31,12 +47,68 @@ function closePhone(){state.phone.open=false;$("#phoneLayer").classList.add("hid
 $("#phoneToggle").onclick=openPhone;$("#scrim").onclick=closePhone;$("#drawerHandle").onclick=()=>showView("drawer");$$("[data-home]").forEach(b=>b.onclick=()=>showView("home"));$("#navHome").onclick=()=>{state.phone.currentApp=null;showView("home")};$("#navBack").onclick=()=>{if(state.phone.currentView==="app"){state.phone.currentApp=null;showView("home")}else if(["drawer","recents"].includes(state.phone.currentView))showView("home");else if(state.phone.currentView==="home")closePhone()};$("#navRecents").onclick=()=>{state.phone.currentApp=null;showView("recents")};$("#clearAll").onclick=clearAllSessions;
 $("#appSearch").oninput=()=>{const q=$("#appSearch").value.trim().toLowerCase();$("#drawerApps").innerHTML=apps.filter(a=>!q||a.name.toLowerCase().includes(q)||a.zh.includes(q)).map(appButton).join("");bindAppButtons()};
 (()=>{const surface=$("#lockScreen"),content=$("#lockContent");let tracking=false,startY=0,dy=0,pointerId=null;surface.addEventListener("pointerdown",e=>{if(state.phone.currentView!=="lock")return;tracking=true;startY=e.clientY;dy=0;pointerId=e.pointerId;surface.setPointerCapture(pointerId);surface.classList.add("dragging")});surface.addEventListener("pointermove",e=>{if(!tracking||e.pointerId!==pointerId)return;dy=Math.min(0,e.clientY-startY);content.style.transform="translateY("+dy+"px)";content.style.opacity=String(Math.max(.25,1-Math.abs(dy)/260))});const finish=()=>{if(!tracking)return;tracking=false;surface.classList.remove("dragging");if(dy<-75){content.style.transform="translateY(-120%)";content.style.opacity="0";setTimeout(()=>{state.phone.locked=false;content.style.transition="none";content.style.transform="";content.style.opacity="";requestAnimationFrame(()=>content.style.transition="");showView("home")},160)}else{content.style.transform="";content.style.opacity=""}};surface.addEventListener("pointerup",finish);surface.addEventListener("pointercancel",finish)})();
-function openApp(id,front=true){const a=appById(id);if(!a||!a.enabled)return;state.phone.currentApp=id;if(front)touchSession(id);showView("app");if(id==="notes")mountNotes();if(id==="settings")mountSettings();save()}
+function openApp(id,front=true){const a=appById(id);if(!a||!a.enabled)return;state.phone.currentApp=id;if(front)touchSession(id);showView("app");if(id==="notes")mountNotes();if(id==="mail")mountMail();if(id==="settings")mountSettings();save()}
 function renderRecents(){const ids=state.phone.recents.filter(id=>state.phone.sessions.includes(id));state.phone.recents=ids;$("#recentsEmpty").classList.toggle("hidden",ids.length>0);$("#recentsTrack").classList.toggle("hidden",ids.length===0);$("#recentsTrack").innerHTML=ids.map(id=>{const a=appById(id);return '<button class="recent-card" data-recent="'+id+'"><div class="recent-card-head"><span class="mini-icon app-icon '+a.cls+'">'+a.icon+'</span><b>'+a.name+'</b></div><div class="recent-preview">'+recentPreview(id)+'</div></button>'}).join("");bindRecentGestures()}
-function recentPreview(id){if(id==="notes"){const n=state.notes.items.find(x=>x.id===state.notes.activeId);return '<b>'+esc(n?.title||"Notes")+'</b><p>'+esc((n?.content||"尚未選擇筆記。").slice(0,120)).replace(/\n/g,"<br>")+'</p>'}if(id==="settings")return '<b>Phone Settings</b><p>深色模式：'+(state.settings.dark?"開":"關")+'<br>App 名稱：'+(state.settings.showLabels?"顯示":"隱藏")+'</p>';return ""}
+function recentPreview(id){if(id==="notes"){const n=state.notes.items.find(x=>x.id===state.notes.activeId);return '<b>'+esc(n?.title||"Notes")+'</b><p>'+esc((n?.content||"尚未選擇筆記。").slice(0,120)).replace(/\n/g,"<br>")+'</p>'}if(id==="mail"){const acct=mailAccount(),msgs=mailBox().filter(m=>m.folder==="inbox");const unread=msgs.filter(m=>!m.read).length;return '<b>'+esc(acct?.displayName||"Mail")+'</b><p>收件匣 '+msgs.length+' 封<br>未讀 '+unread+' 封</p>'}if(id==="settings")return '<b>Phone Settings</b><p>深色模式：'+(state.settings.dark?"開":"關")+'<br>App 名稱：'+(state.settings.showLabels?"顯示":"隱藏")+'</p>';return ""}
 function bindRecentGestures(){$$("[data-recent]").forEach(card=>{let tracking=false,startX=0,startY=0,dy=0,dx=0,pid=null,dragged=false;card.addEventListener("pointerdown",e=>{tracking=true;pid=e.pointerId;startX=e.clientX;startY=e.clientY;dy=dx=0;dragged=false;card.setPointerCapture(pid)});card.addEventListener("pointermove",e=>{if(!tracking||e.pointerId!==pid)return;dx=e.clientX-startX;dy=e.clientY-startY;if(Math.abs(dy)>10&&Math.abs(dy)>Math.abs(dx)){dragged=true;const moveY=Math.min(0,dy);card.classList.add("dragging");card.style.transform="translateY("+moveY+"px) rotate("+(moveY/80)+"deg)";card.style.opacity=String(Math.max(.2,1-Math.abs(moveY)/220));e.preventDefault()}});const finish=()=>{if(!tracking)return;tracking=false;card.classList.remove("dragging");if(dragged&&dy<-85){const id=card.dataset.recent;card.style.transform="translateY(-130%)";card.style.opacity="0";setTimeout(()=>closeSession(id),160)}else{card.style.transform="";card.style.opacity="";if(!dragged)openApp(card.dataset.recent,true)}};card.addEventListener("pointerup",finish);card.addEventListener("pointercancel",finish)})}
 function mountNotes(){$("#appMount").innerHTML="";$("#appMount").appendChild($("#notesTemplate").content.cloneNode(true));$("[data-app-back]").onclick=()=>{state.phone.currentApp=null;showView("home")};$("#newNote").onclick=()=>{const id="n"+Date.now();state.notes.items.unshift({id,title:"新筆記",content:"",updated:Date.now()});state.notes.activeId=id;save();renderNotes()};$("#noteSearch").value=state.notes.search||"";$("#noteSearch").oninput=()=>{state.notes.search=$("#noteSearch").value;save();renderNotes()};renderNotes()}
 function renderNotes(){const q=(state.notes.search||"").trim().toLowerCase();const items=state.notes.items.filter(n=>!q||n.title.toLowerCase().includes(q)||n.content.toLowerCase().includes(q));$("#noteList").innerHTML=items.map(n=>'<div class="note-row '+(state.notes.activeId===n.id?"active":"")+'" data-note="'+n.id+'"><b>'+esc(n.title||"未命名筆記")+'</b><small>'+esc((n.content||"沒有內容").replace(/\n/g," ").slice(0,34))+'</small></div>').join("");$$("[data-note]").forEach(r=>r.onclick=()=>{state.notes.activeId=r.dataset.note;save();renderNotes()});const active=state.notes.items.find(n=>n.id===state.notes.activeId);$("#emptyNote").classList.toggle("hidden",!!active);$("#noteEditor").classList.toggle("hidden",!active);if(active){$("#noteTitle").value=active.title;$("#noteContent").value=active.content;$("#noteUpdated").textContent="最後更新 "+new Date(active.updated).toLocaleString("zh-TW",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"});$("#noteTitle").oninput=()=>{active.title=$("#noteTitle").value;active.updated=Date.now();save()};$("#noteContent").oninput=()=>{active.content=$("#noteContent").value;active.updated=Date.now();save()};$("#deleteNote").onclick=()=>{state.notes.items=state.notes.items.filter(n=>n.id!==active.id);state.notes.activeId=null;save();renderNotes()}}}
+
+function mailAccounts(){return state.accountRegistry.accounts.filter(a=>a.serviceId.startsWith("mail."))}
+function mailAccount(){return mailAccounts().find(a=>a.id===state.mail.activeAccount)||mailAccounts()[0]}
+function mailBox(){const id=mailAccount()?.id;if(!id)return[];state.mail.boxes[id]=state.mail.boxes[id]||[];return state.mail.boxes[id]}
+function mailMessage(id){return mailBox().find(m=>m.id===id)}
+function mailStamp(){return new Date().toLocaleTimeString("zh-TW",{hour:"2-digit",minute:"2-digit",hour12:false})}
+
+function mountMail(){
+ $("#appMount").innerHTML="";$("#appMount").appendChild($("#mailTemplate").content.cloneNode(true));
+ $("[data-app-back]").onclick=()=>{state.phone.currentApp=null;showView("home")};
+ const sel=$("#mailAccount");
+ sel.innerHTML=mailAccounts().map(a=>'<option value="'+a.id+'">'+esc(a.displayName)+'</option>').join("");
+ sel.value=state.mail.activeAccount;
+ sel.onchange=()=>{state.mail.activeAccount=sel.value;state.mail.folder="inbox";state.mail.activeMessage=null;state.mail.mode="list";save();renderMail();renderAppLists()};
+ $("#composeMail").onclick=()=>{state.mail.mode="compose";state.mail.activeMessage=null;save();renderMail()};
+ renderMail();
+}
+function renderMail(){
+ const acct=mailAccount();if(!acct)return;
+ $("#mailAccount").value=acct.id;$("#mailAddress").textContent=acct.address;
+ $("#mailFolders [data-folder]").forEach(b=>{b.classList.toggle("active",b.dataset.folder===state.mail.folder);b.onclick=()=>{state.mail.folder=b.dataset.folder;state.mail.activeMessage=null;state.mail.mode="list";save();renderMail()}});
+ if(state.mail.mode==="compose"){renderMailCompose();return}
+ if(state.mail.activeMessage){renderMailMessage();return}
+ const msgs=mailBox().filter(m=>m.folder===state.mail.folder).slice().reverse();
+ if(!msgs.length){
+  $("#mailContent").innerHTML='<div class="mail-empty"><span>✉</span><b>這裡還沒有郵件</b><small>所有內容都是《人生》世界內的虛構資料。</small></div>';return;
+ }
+ $("#mailContent").innerHTML=msgs.map(m=>'<button class="mail-row '+(!m.read&&m.folder==="inbox"?"unread":"")+'" data-mail="'+m.id+'"><div class="mail-row-main"><b>'+esc(m.folder==="sent"||m.folder==="drafts"?"給："+(m.to||"—"):m.from||"—")+'</b><span>'+esc(m.subject||"（無主旨）")+'</span><small>'+esc((m.body||"").replace(/\n/g," ").slice(0,70))+'</small></div><time>'+esc(m.time||"")+'</time></button>').join("");
+ $("[data-mail]").forEach(r=>r.onclick=()=>{const m=mailMessage(r.dataset.mail);if(!m)return;if(m.folder==="drafts"){state.mail.mode="compose";state.mail.activeMessage=m.id}else{state.mail.activeMessage=m.id;m.read=true}save();renderMail();renderAppLists()});
+}
+function renderMailMessage(){
+ const m=mailMessage(state.mail.activeMessage);if(!m){state.mail.activeMessage=null;renderMail();return}
+ $("#mailContent").innerHTML='<article class="mail-message"><div class="mail-message-head"><button id="mailBack">‹ 返回</button><h3>'+esc(m.subject||"（無主旨）")+'</h3><div class="mail-address-line">寄件人：'+esc(m.from||"—")+'<br>收件人：'+esc(m.to||"—")+'<br>'+esc(m.time||"")+'</div></div><div class="mail-message-body">'+esc(m.body||"")+'</div><div class="mail-message-actions"><button class="danger" id="trashMail">移到垃圾桶</button></div></article>';
+ $("#mailBack").onclick=()=>{state.mail.activeMessage=null;save();renderMail()};
+ $("#trashMail").onclick=()=>{m.folder="trash";state.mail.activeMessage=null;save();renderMail();renderAppLists()};
+}
+function renderMailCompose(){
+ const editing=state.mail.activeMessage?mailMessage(state.mail.activeMessage):null;
+ const draft=editing&&editing.folder==="drafts"?editing:{to:"",subject:"",body:""};
+ $("#mailContent").innerHTML='<div class="mail-compose"><div class="mail-warning">世界內虛構郵箱：不要輸入真實帳號、密碼或私人資料。</div><label>From / 寄件人<input id="mailFrom" disabled value="'+esc(mailAccount().address)+'"></label><label>To / 收件人<input id="mailTo" value="'+esc(draft.to||"")+'" placeholder="name@example.local"></label><label>Subject / 主旨<input id="mailSubject" value="'+esc(draft.subject||"")+'"></label><label>Message / 內容<textarea id="mailBody">'+esc(draft.body||"")+'</textarea></label><div class="mail-compose-actions"><button id="cancelCompose">取消</button><button id="saveDraft">存草稿</button><button class="send" id="sendMail">寄出</button></div></div>';
+ $("#cancelCompose").onclick=()=>{state.mail.mode="list";state.mail.activeMessage=null;save();renderMail()};
+ $("#saveDraft").onclick=()=>{
+  const data={to:$("#mailTo").value,subject:$("#mailSubject").value,body:$("#mailBody").value};
+  if(editing&&editing.folder==="drafts"){Object.assign(editing,data,{time:"草稿 · "+mailStamp()})}
+  else{const id="draft-"+Date.now();mailBox().push({id,folder:"drafts",from:mailAccount().address,...data,time:"草稿 · "+mailStamp(),read:true})}
+  state.mail.folder="drafts";state.mail.mode="list";state.mail.activeMessage=null;save();renderMail()
+ };
+ $("#sendMail").onclick=()=>{
+  const to=$("#mailTo").value.trim(),subject=$("#mailSubject").value.trim(),body=$("#mailBody").value;
+  if(!to){$("#mailTo").focus();return}
+  if(editing&&editing.folder==="drafts")editing.folder="trash";
+  mailBox().push({id:"sent-"+Date.now(),folder:"sent",from:mailAccount().address,to,subject,body,time:"剛剛",read:true});
+  state.mail.folder="sent";state.mail.mode="list";state.mail.activeMessage=null;save();renderMail()
+ };
+}
+
 function mountSettings(){$("#appMount").innerHTML="";$("#appMount").appendChild($("#settingsTemplate").content.cloneNode(true));$("[data-app-back]").onclick=()=>{state.phone.currentApp=null;showView("home")};$("#darkToggle").checked=!!state.settings.dark;$("#labelsToggle").checked=state.settings.showLabels!==false;$("#sessionCount").textContent=state.phone.sessions.length;$("#darkToggle").onchange=()=>{state.settings.dark=$("#darkToggle").checked;save();applySettings()};$("#labelsToggle").onchange=()=>{state.settings.showLabels=$("#labelsToggle").checked;save();applySettings()}}
 function applySettings(){$("#screen").classList.toggle("dark",!!state.settings.dark);$("#homeScreen").classList.toggle("hide-labels",state.settings.showLabels===false);$("#drawerScreen").classList.toggle("hide-labels",state.settings.showLabels===false)}
 renderAppLists();renderRecents();applySettings();if(state.phone.open)openPhone();
