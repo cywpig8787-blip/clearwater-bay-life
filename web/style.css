@@ -118,3 +118,12 @@
 .screen.dark .home-edit-overlay{background:#0a101677}.screen.dark .home-edit-panel{background:#111923e8;border-color:#ffffff14}
 .screen.dark .home-edit-panel p{color:#93a2b2}.screen.dark .effect-grid button,.screen.dark .widget-card,.screen.dark .home-setting-row{background:#17212c;border-color:#2d3a48;color:#dce5ee}
 .screen.dark .setting-action-row{border-color:#293340}.screen.dark .setting-action-row small{color:#8f9baa}
+
+.wallpaper-import{display:grid;gap:3px;margin-bottom:11px;border:1px dashed #9fb4ca;border-radius:12px;background:#ffffffa8;padding:10px 12px;cursor:pointer;color:#43617f}
+.wallpaper-import input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.wallpaper-import span{font-size:10px;font-weight:700}
+.wallpaper-import small{font-size:8px;color:#7a8ca0;line-height:1.4}
+.wallpaper-import-status{min-height:0;margin:-4px 0 8px;font-size:8px;color:#73859a}
+.wallpaper-thumb.custom{background-size:cover;background-position:center;background-repeat:no-repeat}
+.screen.dark .wallpaper-import{background:#151f2a;border-color:#41556b;color:#dce7f2}
+.screen.dark .wallpaper-import small,.screen.dark .wallpaper-import-status{color:#93a4b6}
