@@ -68,3 +68,15 @@
 .screen.dark .mail-provider-card{background:#151d27;border-color:#2b3847}.screen.dark .mail-provider-card small{color:#95a3b3}
 .screen.dark .mail-local-row{background:#111821;border-color:#2b3848}.screen.dark .mail-local-row input{color:#edf2f7}.screen.dark .mail-local-row strong{background:#1a2430;color:#a7b5c4}
 .screen.dark .mail-account-actions button{background:#19232e;border-color:#2b3948;color:#dce5ee}.screen.dark .mail-account-actions .create{background:#2f6cb5;color:#fff}
+
+.mail-password-block{display:grid;gap:7px;padding:10px;border:1px solid #d8e1eb;border-radius:11px;background:#f9fbfd}
+.mail-password-block>label:not(.mail-show-password){display:grid;gap:4px;font-size:9px;color:#74859a}
+.mail-password-block input[type="password"],.mail-password-block input[type="text"]{width:100%;height:35px;border:1px solid #c7d4e2;border-radius:8px;background:#fff;padding:0 9px;color:#203a57;font-size:10px}
+.mail-show-password{display:flex;align-items:center;gap:7px;font-size:9px;color:#526b85;cursor:pointer}
+.mail-show-password input{width:15px;height:15px}
+.mail-password-block>small{font-size:8px;line-height:1.45;color:#7d8b9a}
+.mail-password-block>small.ok{color:#318657}.mail-password-block>small.bad{color:#c34e5e}
+.screen.dark .mail-password-block{background:#121a24;border-color:#2b3847}
+.screen.dark .mail-password-block>label:not(.mail-show-password){color:#93a1b0}
+.screen.dark .mail-password-block input[type="password"],.screen.dark .mail-password-block input[type="text"]{background:#111821;color:#edf2f7;border-color:#2b3848}
+.screen.dark .mail-show-password{color:#a7b5c4}
