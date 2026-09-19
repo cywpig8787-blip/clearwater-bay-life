@@ -229,7 +229,26 @@ function syncPhonePeek(){
  const h=Math.floor(gameState.minutes/60)%24,m=gameState.minutes%60;
  const el=$("#phonePeekTime");
  if(el)el.textContent=pad(h)+":"+pad(m);
+ const mount=$("#phonePeekNotifications");
+ if(!mount)return;
+ let phoneState={};
+ try{phoneState=JSON.parse(localStorage.getItem("clearwater-life-phone-v2")||"{}")}catch(e){}
+ let items=(phoneState.notifications?.items||[]).slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)).slice(0,2);
+ if(!items.length){
+   const thread=(phoneState.messages?.threads||[]).find(t=>Number(t.unread)>0);
+   const unreadMail=Object.entries(phoneState.mail?.boxes||{}).flatMap(([accountId,box])=>(box||[]).filter(m=>m.folder==="inbox"&&!m.read).map(m=>({accountId,...m})));
+   if(thread){
+     const last=thread.messages?.[thread.messages.length-1];
+     items.push({appId:"messages",title:thread.name||"簡訊",body:last?.body||"你收到一則新簡訊"});
+   }
+   if(unreadMail[0])items.push({appId:"mail",title:unreadMail[0].from||"郵件",body:unreadMail[0].subject||"你有一封未讀郵件"});
+ }
+ mount.innerHTML=items.length?items.map(n=>{
+   const label=n.appId==="messages"?"簡訊":n.appId==="mail"?"郵件":n.appId==="school"?"學校":"通知";
+   return '<article><span class="peek-app">'+label+'</span><b>'+escapePeek(n.title||"新通知")+'</b><small>'+escapePeek(n.body||"")+'</small></article>';
+ }).join(""):'<article><span class="peek-app">通知</span><b>目前沒有新通知</b><small>NPC 訊息與世界通知會顯示在這裡</small></article>';
 }
+function escapePeek(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function openPhonePeek(){
  if(gameState.paused)return;
  syncPhonePeek();
@@ -260,6 +279,9 @@ $("#phonePeekOpen").onclick=openFullPhone;
 $("#phonePeekHide").onclick=e=>{e.stopPropagation();hidePhonePeek()};
 $("#phoneFullClose").onclick=closeFullPhone;
 $("#phoneFullOverlay").onclick=e=>{if(e.target===$("#phoneFullOverlay"))closeFullPhone()};
+window.addEventListener("storage",syncPhonePeek);
+$("#phoneFrame")?.addEventListener("load",()=>setTimeout(syncPhonePeek,120));
+setTimeout(syncPhonePeek,350);
 
 document.addEventListener("keydown",e=>{
  if(gameState.paused){
