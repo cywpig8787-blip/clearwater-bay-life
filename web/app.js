@@ -22,10 +22,17 @@ boxes:{
 {id:"cm1",folder:"inbox",from:"Campus Mail",to:"student@campus.local",subject:"校園郵箱測試訊息",body:"這個帳號只是 Campus Mail 測試帳號，不代表正式學校郵箱名稱或網域。",time:"今天 07:40",read:false}
 ]
 }};
+state.browser=state.browser||{
+activeTab:"tab-1",
+tabs:[{id:"tab-1",url:"home.local",history:["home.local"],historyIndex:0}],
+bookmarks:["home.local"],
+pageHistory:["home.local"],
+panelOpen:false
+};
 const apps=[
 {id:"notes",name:"Notes",zh:"記事本",icon:"▤",cls:"notes",home:true,enabled:true},
 {id:"mail",name:"Mail",zh:"信箱",icon:"✉",cls:"mail",home:true,enabled:true},
-{id:"browser",name:"Browser",zh:"瀏覽器",icon:"◎",cls:"browser",home:true,enabled:false},
+{id:"browser",name:"Browser",zh:"瀏覽器",icon:"◎",cls:"browser",home:true,enabled:true},
 {id:"school",name:"School",zh:"學校",icon:"◆",cls:"school",home:false,enabled:false},
 {id:"rpg",name:"RPG",zh:"遊戲",icon:"♜",cls:"rpg",home:false,enabled:false},
 {id:"settings",name:"Settings",zh:"設定",icon:"⚙",cls:"settings",home:true,enabled:true}
@@ -47,9 +54,9 @@ function closePhone(){state.phone.open=false;$("#phoneLayer").classList.add("hid
 $("#phoneToggle").onclick=openPhone;$("#scrim").onclick=closePhone;$("#drawerHandle").onclick=()=>showView("drawer");$$("[data-home]").forEach(b=>b.onclick=()=>showView("home"));$("#navHome").onclick=()=>{state.phone.currentApp=null;showView("home")};$("#navBack").onclick=()=>{if(state.phone.currentView==="app"){state.phone.currentApp=null;showView("home")}else if(["drawer","recents"].includes(state.phone.currentView))showView("home");else if(state.phone.currentView==="home")closePhone()};$("#navRecents").onclick=()=>{state.phone.currentApp=null;showView("recents")};$("#clearAll").onclick=clearAllSessions;
 $("#appSearch").oninput=()=>{const q=$("#appSearch").value.trim().toLowerCase();$("#drawerApps").innerHTML=apps.filter(a=>!q||a.name.toLowerCase().includes(q)||a.zh.includes(q)).map(appButton).join("");bindAppButtons()};
 (()=>{const surface=$("#lockScreen"),content=$("#lockContent");let tracking=false,startY=0,dy=0,pointerId=null;surface.addEventListener("pointerdown",e=>{if(state.phone.currentView!=="lock")return;tracking=true;startY=e.clientY;dy=0;pointerId=e.pointerId;surface.setPointerCapture(pointerId);surface.classList.add("dragging")});surface.addEventListener("pointermove",e=>{if(!tracking||e.pointerId!==pointerId)return;dy=Math.min(0,e.clientY-startY);content.style.transform="translateY("+dy+"px)";content.style.opacity=String(Math.max(.25,1-Math.abs(dy)/260))});const finish=()=>{if(!tracking)return;tracking=false;surface.classList.remove("dragging");if(dy<-75){content.style.transform="translateY(-120%)";content.style.opacity="0";setTimeout(()=>{state.phone.locked=false;content.style.transition="none";content.style.transform="";content.style.opacity="";requestAnimationFrame(()=>content.style.transition="");showView("home")},160)}else{content.style.transform="";content.style.opacity=""}};surface.addEventListener("pointerup",finish);surface.addEventListener("pointercancel",finish)})();
-function openApp(id,front=true){const a=appById(id);if(!a||!a.enabled)return;state.phone.currentApp=id;if(front)touchSession(id);showView("app");if(id==="notes")mountNotes();if(id==="mail")mountMail();if(id==="settings")mountSettings();save()}
+function openApp(id,front=true){const a=appById(id);if(!a||!a.enabled)return;state.phone.currentApp=id;if(front)touchSession(id);showView("app");if(id==="notes")mountNotes();if(id==="mail")mountMail();if(id==="browser")mountBrowser();if(id==="settings")mountSettings();save()}
 function renderRecents(){const ids=state.phone.recents.filter(id=>state.phone.sessions.includes(id));state.phone.recents=ids;$("#recentsEmpty").classList.toggle("hidden",ids.length>0);$("#recentsTrack").classList.toggle("hidden",ids.length===0);$("#recentsTrack").innerHTML=ids.map(id=>{const a=appById(id);return '<button class="recent-card" data-recent="'+id+'"><div class="recent-card-head"><span class="mini-icon app-icon '+a.cls+'">'+a.icon+'</span><b>'+a.name+'</b></div><div class="recent-preview">'+recentPreview(id)+'</div></button>'}).join("");bindRecentGestures()}
-function recentPreview(id){if(id==="notes"){const n=state.notes.items.find(x=>x.id===state.notes.activeId);return '<b>'+esc(n?.title||"Notes")+'</b><p>'+esc((n?.content||"尚未選擇筆記。").slice(0,120)).replace(/\n/g,"<br>")+'</p>'}if(id==="mail"){const acct=mailAccount(),msgs=mailBox().filter(m=>m.folder==="inbox");const unread=msgs.filter(m=>!m.read).length;return '<b>'+esc(acct?.displayName||"Mail")+'</b><p>收件匣 '+msgs.length+' 封<br>未讀 '+unread+' 封</p>'}if(id==="settings")return '<b>Phone Settings</b><p>深色模式：'+(state.settings.dark?"開":"關")+'<br>App 名稱：'+(state.settings.showLabels?"顯示":"隱藏")+'</p>';return ""}
+function recentPreview(id){if(id==="notes"){const n=state.notes.items.find(x=>x.id===state.notes.activeId);return '<b>'+esc(n?.title||"Notes")+'</b><p>'+esc((n?.content||"尚未選擇筆記。").slice(0,120)).replace(/\n/g,"<br>")+'</p>'}if(id==="mail"){const acct=mailAccount(),msgs=mailBox().filter(m=>m.folder==="inbox");const unread=msgs.filter(m=>!m.read).length;return '<b>'+esc(acct?.displayName||"Mail")+'</b><p>收件匣 '+msgs.length+' 封<br>未讀 '+unread+' 封</p>'}if(id==="browser"){const t=browserTab();return '<b>Browser</b><p>'+esc(t?.url||"home.local")+'</p>'}if(id==="settings")return '<b>Phone Settings</b><p>深色模式：'+(state.settings.dark?"開":"關")+'<br>App 名稱：'+(state.settings.showLabels?"顯示":"隱藏")+'</p>';return ""}
 function bindRecentGestures(){$$("[data-recent]").forEach(card=>{let tracking=false,startX=0,startY=0,dy=0,dx=0,pid=null,dragged=false;card.addEventListener("pointerdown",e=>{tracking=true;pid=e.pointerId;startX=e.clientX;startY=e.clientY;dy=dx=0;dragged=false;card.setPointerCapture(pid)});card.addEventListener("pointermove",e=>{if(!tracking||e.pointerId!==pid)return;dx=e.clientX-startX;dy=e.clientY-startY;if(Math.abs(dy)>10&&Math.abs(dy)>Math.abs(dx)){dragged=true;const moveY=Math.min(0,dy);card.classList.add("dragging");card.style.transform="translateY("+moveY+"px) rotate("+(moveY/80)+"deg)";card.style.opacity=String(Math.max(.2,1-Math.abs(moveY)/220));e.preventDefault()}});const finish=()=>{if(!tracking)return;tracking=false;card.classList.remove("dragging");if(dragged&&dy<-85){const id=card.dataset.recent;card.style.transform="translateY(-130%)";card.style.opacity="0";setTimeout(()=>closeSession(id),160)}else{card.style.transform="";card.style.opacity="";if(!dragged)openApp(card.dataset.recent,true)}};card.addEventListener("pointerup",finish);card.addEventListener("pointercancel",finish)})}
 function mountNotes(){$("#appMount").innerHTML="";$("#appMount").appendChild($("#notesTemplate").content.cloneNode(true));$("[data-app-back]").onclick=()=>{state.phone.currentApp=null;showView("home")};$("#newNote").onclick=()=>{const id="n"+Date.now();state.notes.items.unshift({id,title:"新筆記",content:"",updated:Date.now()});state.notes.activeId=id;save();renderNotes()};$("#noteSearch").value=state.notes.search||"";$("#noteSearch").oninput=()=>{state.notes.search=$("#noteSearch").value;save();renderNotes()};renderNotes()}
 function renderNotes(){const q=(state.notes.search||"").trim().toLowerCase();const items=state.notes.items.filter(n=>!q||n.title.toLowerCase().includes(q)||n.content.toLowerCase().includes(q));$("#noteList").innerHTML=items.map(n=>'<div class="note-row '+(state.notes.activeId===n.id?"active":"")+'" data-note="'+n.id+'"><b>'+esc(n.title||"未命名筆記")+'</b><small>'+esc((n.content||"沒有內容").replace(/\n/g," ").slice(0,34))+'</small></div>').join("");$$("[data-note]").forEach(r=>r.onclick=()=>{state.notes.activeId=r.dataset.note;save();renderNotes()});const active=state.notes.items.find(n=>n.id===state.notes.activeId);$("#emptyNote").classList.toggle("hidden",!!active);$("#noteEditor").classList.toggle("hidden",!active);if(active){$("#noteTitle").value=active.title;$("#noteContent").value=active.content;$("#noteUpdated").textContent="最後更新 "+new Date(active.updated).toLocaleString("zh-TW",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"});$("#noteTitle").oninput=()=>{active.title=$("#noteTitle").value;active.updated=Date.now();save()};$("#noteContent").oninput=()=>{active.content=$("#noteContent").value;active.updated=Date.now();save()};$("#deleteNote").onclick=()=>{state.notes.items=state.notes.items.filter(n=>n.id!==active.id);state.notes.activeId=null;save();renderNotes()}}}
@@ -107,6 +114,97 @@ function renderMailCompose(){
   mailBox().push({id:"sent-"+Date.now(),folder:"sent",from:mailAccount().address,to,subject,body,time:"剛剛",read:true});
   state.mail.folder="sent";state.mail.mode="list";state.mail.activeMessage=null;save();renderMail()
  };
+}
+
+
+const WorldWebRegistry={
+"home.local":{title:"World Browser",subtitle:"世界網路測試首頁"},
+"school.local":{title:"School Web Directory",subtitle:"校園網站測試"},
+"forum.local":{title:"Student Forum",subtitle:"學生論壇測試"},
+"search.local":{title:"Search",subtitle:"世界內搜尋"}
+};
+function browserTab(){return state.browser.tabs.find(t=>t.id===state.browser.activeTab)||state.browser.tabs[0]}
+function normalizeWorldUrl(raw){
+ raw=(raw||"").trim();
+ if(!raw)return "home.local";
+ if(raw.startsWith("mail://"))return raw;
+ raw=raw.replace(/^https?:\/\//i,"").replace(/\/$/,"");
+ if(raw.includes(".")||raw.includes("?"))return raw;
+ return "search.local?q="+encodeURIComponent(raw);
+}
+function browserTitle(url){
+ const base=url.split("?")[0];
+ return WorldWebRegistry[base]?.title||url;
+}
+function browserNavigate(raw,push=true){
+ const url=normalizeWorldUrl(raw);
+ if(url.startsWith("mail://")){openDeepLink(url);return}
+ const t=browserTab();if(!t)return;
+ if(push){
+  t.history=t.history.slice(0,t.historyIndex+1);
+  t.history.push(url);t.historyIndex=t.history.length-1;
+  state.browser.pageHistory=state.browser.pageHistory.filter(x=>x!==url);
+  state.browser.pageHistory.unshift(url);state.browser.pageHistory=state.browser.pageHistory.slice(0,30);
+ }
+ t.url=url;save();renderBrowser();
+}
+function openDeepLink(uri){
+ if(uri.startsWith("mail://")){
+  const parts=uri.slice(7).split("/");
+  const accountId=parts[0],messageId=parts[1];
+  if(state.mail.boxes[accountId]){
+   state.mail.activeAccount=accountId;
+   state.mail.folder="inbox";
+   state.mail.activeMessage=messageId||null;
+   state.mail.mode="list";
+   openApp("mail",true);
+  }
+ }
+}
+function mountBrowser(){
+ $("#appMount").innerHTML="";$("#appMount").appendChild($("#browserTemplate").content.cloneNode(true));
+ $("[data-app-back]").onclick=()=>{state.phone.currentApp=null;showView("home")};
+ $("#newBrowserTab").onclick=()=>{
+  const id="tab-"+Date.now();state.browser.tabs.push({id,url:"home.local",history:["home.local"],historyIndex:0});state.browser.activeTab=id;save();renderBrowser()
+ };
+ $("#browserBack").onclick=()=>{const t=browserTab();if(t&&t.historyIndex>0){t.historyIndex--;t.url=t.history[t.historyIndex];save();renderBrowser()}};
+ $("#browserForward").onclick=()=>{const t=browserTab();if(t&&t.historyIndex<t.history.length-1){t.historyIndex++;t.url=t.history[t.historyIndex];save();renderBrowser()}};
+ $("#browserReload").onclick=()=>renderBrowser();
+ $("#browserAddressForm").onsubmit=e=>{e.preventDefault();browserNavigate($("#browserAddress").value,true)};
+ $("#browserStar").onclick=()=>{const u=browserTab()?.url;if(!u)return;const i=state.browser.bookmarks.indexOf(u);if(i>=0)state.browser.bookmarks.splice(i,1);else state.browser.bookmarks.unshift(u);save();renderBrowser()};
+ $("#browserPanel").onclick=()=>{state.browser.panelOpen=!state.browser.panelOpen;save();renderBrowserPanel()};
+ renderBrowser();
+}
+function renderBrowser(){
+ const t=browserTab();if(!t)return;
+ $("#browserAddress").value=t.url;
+ $("#browserBack").disabled=t.historyIndex<=0;
+ $("#browserForward").disabled=t.historyIndex>=t.history.length-1;
+ $("#browserStar").textContent=state.browser.bookmarks.includes(t.url)?"★":"☆";
+ $("#browserTabs").innerHTML=state.browser.tabs.map(x=>'<button class="browser-tab '+(x.id===state.browser.activeTab?"active":"")+'" data-tab="'+x.id+'">'+esc(browserTitle(x.url))+'</button>').join("");
+ $("#browserTabs [data-tab]").forEach(b=>b.onclick=()=>{state.browser.activeTab=b.dataset.tab;save();renderBrowser()});
+ renderBrowserPanel();
+ $("#browserContent").innerHTML=renderWorldPage(t.url);
+ bindWorldLinks();
+}
+function renderBrowserPanel(){
+ const panel=$("#browserPanelView");if(!panel)return;
+ panel.classList.toggle("hidden",!state.browser.panelOpen);
+ if(!state.browser.panelOpen)return;
+ panel.innerHTML='<h4>Bookmarks / 書籤</h4>'+(state.browser.bookmarks.length?state.browser.bookmarks.map(u=>'<button data-browser-go="'+esc(u)+'">★ '+esc(u)+'</button>').join(""):'<button disabled>尚無書籤</button>')+'<h4>History / 歷史</h4>'+state.browser.pageHistory.slice(0,10).map(u=>'<button data-browser-go="'+esc(u)+'">'+esc(u)+'</button>').join("");
+ $("[data-browser-go]").forEach(b=>b.onclick=()=>{state.browser.panelOpen=false;browserNavigate(b.dataset.browserGo,true)});
+}
+function renderWorldPage(url){
+ const [base,qs]=url.split("?");const params=new URLSearchParams(qs||"");
+ if(base==="home.local")return '<section class="web-page"><span class="web-kicker">WORLD WEB</span><h2>Clearwater Bay Browser</h2><p>這個瀏覽器只解析《人生》世界內網站，不會直接開啟真實網路。</p><div class="web-warning">目前網站名稱與網域為系統測試用，不代表正式世界觀名稱。</div><div class="web-card-grid"><button class="web-card" data-world-url="school.local"><b>School Web</b><small>校曆、課表、規則與公告的未來入口。</small></button><button class="web-card" data-world-url="forum.local"><b>Student Forum</b><small>世界內學生論壇測試。</small></button><button class="web-card" data-world-url="mail://acct-test/tm1"><b>Mail Deep Link</b><small>測試從網站直接打開指定郵件。</small></button><button class="web-card" data-world-url="search.local"><b>Search</b><small>搜尋已註冊的世界網站。</small></button></div></section>';
+ if(base==="school.local")return '<section class="web-page"><span class="web-kicker">SCHOOL WEB TEST</span><h2>School Web Directory</h2><p>正式學校網站內容之後會由 World Web Registry 提供；這裡先驗證 Browser 的頁面、書籤與導覽。</p><div class="web-card-grid"><div class="web-card"><b>Calendar</b><small>校曆入口預留</small></div><div class="web-card"><b>Schedule</b><small>課表入口預留</small></div><div class="web-card"><b>Rules</b><small>校規入口預留</small></div><div class="web-card"><b>Clubs</b><small>社團入口預留</small></div></div></section>';
+ if(base==="forum.local")return '<section class="web-page"><span class="web-kicker">STUDENT COMMUNITY TEST</span><h2>Student Forum</h2><p>論壇內容尚未正式製作，先保留已規劃的分類結構。</p><div class="forum-tags"><span>閒聊</span><span>功課</span><span>失物</span><span>社團</span><span>匿名</span><span>戀愛</span><span>二手</span><span>午餐</span></div></section>';
+ if(base==="search.local"){const q=params.get("q")||"";const registry=Object.keys(WorldWebRegistry).filter(x=>x!=="search.local");const hits=q?registry.filter(u=>(u+" "+browserTitle(u)).toLowerCase().includes(q.toLowerCase())):registry;return '<section class="web-page"><span class="web-kicker">WORLD SEARCH</span><h2>Search</h2><form class="web-search" id="worldSearchForm"><input id="worldSearchInput" value="'+esc(q)+'" placeholder="搜尋世界內網站"><button>搜尋</button></form>'+(hits.length?'<div class="web-card-grid">'+hits.map(u=>'<button class="web-card" data-world-url="'+u+'"><b>'+esc(browserTitle(u))+'</b><small>'+u+'</small></button>').join("")+'</div>':'<p>沒有找到已註冊網站。</p>')+'</section>'}
+ return '<section class="web-page"><span class="web-kicker">NOT FOUND</span><h2>找不到這個世界內網址</h2><p>'+esc(url)+'</p><button class="web-link" data-world-url="home.local">回到首頁</button></section>';
+}
+function bindWorldLinks(){
+ $("[data-world-url]").forEach(b=>b.onclick=()=>browserNavigate(b.dataset.worldUrl,true));
+ const f=$("#worldSearchForm");if(f)f.onsubmit=e=>{e.preventDefault();browserNavigate("search.local?q="+encodeURIComponent($("#worldSearchInput").value),true)};
 }
 
 function mountSettings(){$("#appMount").innerHTML="";$("#appMount").appendChild($("#settingsTemplate").content.cloneNode(true));$("[data-app-back]").onclick=()=>{state.phone.currentApp=null;showView("home")};$("#darkToggle").checked=!!state.settings.dark;$("#labelsToggle").checked=state.settings.showLabels!==false;$("#sessionCount").textContent=state.phone.sessions.length;$("#darkToggle").onchange=()=>{state.settings.dark=$("#darkToggle").checked;save();applySettings()};$("#labelsToggle").onchange=()=>{state.settings.showLabels=$("#labelsToggle").checked;save();applySettings()}}
