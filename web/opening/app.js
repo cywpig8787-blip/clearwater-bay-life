@@ -1,168 +1,37 @@
-const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
-const KEY="clearwater-life-opening-v1";
-let state=JSON.parse(localStorage.getItem(KEY)||"{}");
-state.page=state.page||1;
-state.basic=state.basic||{};
-state.skills=state.skills||{total:20,groups:{}};
-state.family=state.family||{finance:"富裕",generation:"系統生成",notes:""};
-state.school=state.school||{selected:null,firstHouse:null,secondHouse:null};
-state.residence=state.residence||{boysChoice:null};
-
-const steps=[
-  ["Basic Information","基本資料"],
-  ["Skills & Interests","能力與興趣"],
-  ["Family Background","家庭背景"],
-  ["Choose School","選擇學校"],
-  ["Residence","住宿安排"],
-  ["Confirmation","確認資料"]
-];
-
-const schools=[
-  {id:"girls",name:"Rosamund Girls’ Academy",zh:"羅莎蒙德女子學院",kind:"女子學院",desc:"需填第一、第二學院志願；住宿由校方安排。"},
-  {id:"boys",name:"Ravenwood Boys’ College",zh:"雷文伍德男子學院",kind:"男子學院",desc:"住宿可選。"},
-  {id:"coed",name:"Clearwater Bay High School",zh:"克萊爾灣高級中學",kind:"男女混校",desc:"高一固定住宿。"}
-];
-const houses=["Valette House 瓦萊特學院","Quillan House 奎蘭學院","Fairmont House 翡爾蒙特學院","Hartwell House 哈特威爾學院"];
-const skillGroups=["基礎技能 01","基礎技能 02","基礎技能 03","基礎技能 04","基礎技能 05","基礎技能 06"];
-
-const save=()=>localStorage.setItem(KEY,JSON.stringify(state));
-
-function init(){
-  $("#steps").innerHTML=steps.map((s,i)=>'<button class="step" data-step="'+(i+1)+'"><b>'+(i+1)+'</b><span>'+s[0]+'<small>'+s[1]+'</small></span></button>').join("");
-  for(let m=1;m<=12;m++)$("#birthMonth").insertAdjacentHTML("beforeend",'<option value="'+m+'">'+m+'</option>');
-  for(let d=1;d<=31;d++)$("#birthDay").insertAdjacentHTML("beforeend",'<option value="'+d+'">'+d+'</option>');
-  bindBasic();
-  renderSkills();
-  renderSchools();
-  restoreBasic();
-  restoreFamily();
-  showPage(state.page);
+const $=s=>document.querySelector(s), KEY="cbl-character-v01";
+const steps=["基本資料","能力值","學科技能","其他技能","家庭／經歷","選校","住宿","確認"];
+let s=JSON.parse(localStorage.getItem(KEY)||"null")||{page:0,basic:{name:"",birthday:"09/01",gender:"中性",pronouns:""},attr:{STR:30,CON:30,AGI:30,DEX:30,PER:30,INT:30},academic:{},skills:{},family:{finance:"富裕",notes:""},experience:"",school:"",house:"",residence:"",dev:false};
+const academics=["語文","English","Spanish","French","Japanese","Mandarin Chinese","數學","物理","化學","生物","歷史","地理","政治／公民","經濟","法律","心理"];
+const groups={ "視覺藝術與設計":["繪畫","雕塑／立體造型","攝影","設計"],"音樂與表演":["音樂","表演","舞蹈"],"媒體製作":["影像製作","音訊製作"],"資訊與數位技術":["電腦","程式設計","資料分析"],"工程、製作與修繕":["工程","電子","機械","修理","木工","縫紉","手工藝"],"生活與實用":["烹飪","家務","園藝","急救","生存","駕駛"],"體育與身體技術":["跑步","游泳","自行車","滑行","籃球","足球","排球","棒球／壘球","網球","羽毛球","拳擊","跆拳道","空手道","柔道","體操","滑雪"],"溝通與社會互動":["演說","辯論","交涉","欺瞞","洞察"],"世界玩法":["潛行","妙手"]};
+const schools={coed:["Ravenwood High School","雷文伍德高中"],girls:["Rosamund Girls’ Academy","羅莎蒙德女子學院"],boys:["Avenor Boys’ Academy","阿維諾男子學院"]};
+const houses=["Valette 瓦萊特","Quillan 奎蘭特","Fairmont 費爾蒙特","Hartwell 哈特威爾"];
+function save(){localStorage.setItem(KEY,JSON.stringify(s))}
+function points(obj){return Object.values(obj).reduce((a,b)=>a+(+b||0),0)}
+function counter(name,val,kind){return '<div class="row"><span>'+name+'</span><div class="counter"><button data-minus="'+kind+'|'+name+'">−</button><b>'+val+'</b><button data-plus="'+kind+'|'+name+'">＋</button></div></div>'}
+function nav(){ $("#steps").innerHTML=steps.map((x,i)=>'<button data-go="'+i+'" class="'+(i===s.page?'active':'')+'">'+(i+1)+'. '+x+'</button>').join("");$("#bar").style.width=((s.page+1)/steps.length*100)+"%";$("#back").style.visibility=s.page?"visible":"hidden";$("#next").textContent=s.page===7?"建立 Player State":"下一步 ›"}
+function render(){
+ nav();let h="";
+ if(s.page===0)h='<div class="hero"><div class="portrait"><span>測試頭貼<br>portrait asset</span></div><div><h2>你是誰？</h2><p>第一版只建立必要資料；正式捏臉之後再接入同一份 Player State。</p></div></div><div class="card"><label class="field">姓名<input data-basic="name" value="'+s.basic.name+'"></label><label class="field">生日（月／日）<input data-basic="birthday" value="'+s.basic.birthday+'" placeholder="09/01"></label><div class="field">性別<div class="choices">'+["男性","女性","中性"].map(x=>'<button data-gender="'+x+'" class="'+(s.basic.gender===x?'selected':'')+'">'+x+'</button>').join("")+'</div></div><label class="field">代名詞<input data-basic="pronouns" value="'+s.basic.pronouns+'" placeholder="可自訂"></label></div>';
+ if(s.page===1){let total=Object.values(s.attr).reduce((a,b)=>a+b,0);h='<h2>Attribute <small>能力值</small></h2><p class="hint">v0.1 先保存六項能力；對技能與學習效率的公式之後再定。</p><div class="stats"><div class="stat"><small>目前總值</small><b>'+total+'</b></div><div class="stat"><small>項目</small><b>6</b></div><div class="stat"><small>公式</small><b>—</b></div></div><div class="card">'+Object.keys(s.attr).map(k=>counter(k,s.attr[k],"attr")).join("")+'</div>'}
+ if(s.page===2){let used=points(s.academic);h='<h2>Academic Skills <small>學科技能</small></h2><div class="stats"><div class="stat"><small>已投入</small><b>'+used+'</b></div><div class="stat"><small>單項上限</small><b>75</b></div><div class="stat"><small>私人測試</small><b>寬裕</b></div></div><div class="dev"><span>Developer Override 開發者覆寫</span><input id="dev" type="checkbox" '+(s.dev?'checked':'')+'></div><div class="card">'+academics.map(k=>counter(k,s.academic[k]||0,"academic")).join("")+'</div>'}
+ if(s.page===3){let used=points(s.skills);h='<h2>Other Skills <small>其他技能</small></h2><p class="hint">Skill Group（技能群）只有分類，不存在「美術 70」或「體育 70」總值。</p><div class="stats"><div class="stat"><small>已投入</small><b>'+used+'</b></div><div class="stat"><small>單項上限</small><b>75</b></div><div class="stat"><small>群組</small><b>'+Object.keys(groups).length+'</b></div></div>'+Object.entries(groups).map(([g,a])=>'<details class="group"><summary>'+g+'</summary><div class="inside">'+a.map(k=>counter(k,s.skills[k]||0,"skills")).join("")+'</div></details>').join("")}
+ if(s.page===4)h='<h2>家庭與過去經歷</h2><div class="card"><label class="field">Family Finance / 家庭經濟<input value="富裕" disabled></label><label class="field">家庭備註<textarea data-family="notes" rows="4">'+s.family.notes+'</textarea></label></div><div class="card"><h3>Past Experience / 過去經歷</h3><p class="hint">能力描述結果；故事解釋來源。可以拒絕系統建議、改寫或完全自填。</p><label class="field">角色在入學前經歷<textarea id="experience" rows="8" placeholder="例如：家人要求我學了八年鋼琴，我本人並不喜歡。">'+s.experience+'</textarea></label></div>';
+ if(s.page===5)h='<h2>Choose School <small>選校</small></h2><p class="hint">目前依 CYW-51 的 SchoolEligibility（入學資格）結構保留判定接口。</p>'+Object.entries(schools).map(([id,x])=>'<button class="school '+(s.school===id?'selected':'')+'" data-school="'+id+'"><b>'+x[0]+'</b><small>'+x[1]+'</small></button>').join("")+(s.school==="girls"?'<div class="card"><h3>Rosamund House / 學院</h3><div class="choices">'+houses.map(x=>'<button data-house="'+x+'" class="'+(s.house===x?'selected':'')+'">'+x+'</button>').join("")+'</div></div>':"");
+ if(s.page===6){let txt=s.school==="girls"?"四年校內住宿；住所由學院宿舍系統分配。":s.school==="coed"?"高一校內住宿；後續年級依規則處理。":"Avenor 不強制住宿，可選校內或校外。";h='<h2>Residence <small>住宿</small></h2><div class="card"><h3>'+(schools[s.school]?.[1]||"尚未選校")+'</h3><p class="hint">'+txt+'</p>'+(s.school==="boys"?'<div class="choices"><button data-res="campus" class="'+(s.residence==="campus"?'selected':'')+'">校內住宿</button><button data-res="offcampus" class="'+(s.residence==="offcampus"?'selected':'')+'">校外住宿</button></div>':'')+'</div>'}
+ if(s.page===7){const out={saveVersion:1,player:{identity:s.basic,portraitId:"placeholder-v01",attributes:s.attr,academicSkills:s.academic,skills:s.skills,family:s.family,pastExperience:s.experience,schoolId:s.school,houseId:s.house||null,residenceChoice:s.residence||null},interfaces:{appearance:{},bodyTraits:{},proficiencies:{},knowledge:{}}};h='<h2>確認角色</h2><p class="hint">這就是第一版準備寫入正式 Game / Player State 的資料。</p><div class="card summary"><b>'+(s.basic.name||"未命名角色")+'</b><p>'+s.basic.gender+' · '+s.basic.birthday+' · '+(schools[s.school]?.[1]||"未選校")+'</p><span class="tag">Academic '+points(s.academic)+'</span><span class="tag">Skills '+points(s.skills)+'</span><span class="tag">Skill cap 75</span><pre>'+JSON.stringify(out,null,2)+'</pre></div>'}
+ $("#page").innerHTML=h; bind();
 }
-function bindBasic(){
-  ["firstName","lastName","preferredName","birthMonth","birthDay","gender","pronouns","statement"].forEach(id=>{
-    $("#"+id).addEventListener("input",()=>{state.basic[id]=$("#"+id).value;save();renderSchools()});
-  });
-  $("#studentPhoto").onclick=()=>$("#creatorModal").classList.remove("hidden");
-  $("#closeCreator").onclick=()=>$("#creatorModal").classList.add("hidden");
-  $("#familyGeneration").onchange=()=>{state.family.generation=$("#familyGeneration").value;save()};
-  $("#familyNotes").oninput=()=>{state.family.notes=$("#familyNotes").value;save()};
+function bind(){
+ document.querySelectorAll("[data-basic]").forEach(e=>e.oninput=()=>{s.basic[e.dataset.basic]=e.value;save()});
+ document.querySelectorAll("[data-family]").forEach(e=>e.oninput=()=>{s.family[e.dataset.family]=e.value;save()});
+ document.querySelectorAll("[data-gender]").forEach(e=>e.onclick=()=>{s.basic.gender=e.dataset.gender;save();render()});
+ document.querySelectorAll("[data-school]").forEach(e=>e.onclick=()=>{s.school=e.dataset.school;s.house="";s.residence="";save();render()});
+ document.querySelectorAll("[data-house]").forEach(e=>e.onclick=()=>{s.house=e.dataset.house;save();render()});
+ document.querySelectorAll("[data-res]").forEach(e=>e.onclick=()=>{s.residence=e.dataset.res;save();render()});
+ const ex=$("#experience");if(ex)ex.oninput=()=>{s.experience=ex.value;save()};const d=$("#dev");if(d)d.onchange=()=>{s.dev=d.checked;save()};
+ document.querySelectorAll("[data-plus],[data-minus]").forEach(e=>e.onclick=()=>{const raw=e.dataset.plus||e.dataset.minus,[kind,name]=raw.split("|"),obj=s[kind],delta=e.dataset.plus?5:-5;obj[name]=Math.max(0,Math.min(75,(obj[name]||0)+delta));save();render()});
 }
-function restoreBasic(){
-  Object.entries(state.basic).forEach(([k,v])=>{if($("#"+k))$("#"+k).value=v});
-}
-function restoreFamily(){
-  $("#familyGeneration").value=state.family.generation||"系統生成";
-  $("#familyNotes").value=state.family.notes||"";
-}
-function showPage(n){
-  state.page=n;
-  $$(".page").forEach(p=>p.classList.toggle("active",Number(p.dataset.page)===n));
-  $$(".step").forEach(b=>b.classList.toggle("active",Number(b.dataset.step)===n));
-  const s=schools.find(x=>x.id===state.school.selected);
-  $$(".step")[4].classList.toggle("skipped",s?.id==="girls");
-  if(n===4)renderSchools();
-  if(n===5)renderResidence();
-  if(n===6)renderSummary();
-  save();
-}
-document.addEventListener("click",e=>{
-  const next=e.target.closest("[data-next]"),prev=e.target.closest("[data-prev]"),step=e.target.closest("[data-step]");
-  if(next)showPage(Number(next.dataset.next));
-  if(prev)showPage(Number(prev.dataset.prev));
-  if(step)showPage(Number(step.dataset.step));
-});
-
-function renderSkills(){
-  $("#skillGrid").innerHTML=skillGroups.map((g,gi)=>{
-    state.skills.groups[g]=state.skills.groups[g]||[0,0,0];
-    return '<section class="skill-card"><h3>'+g+'</h3>'+
-      [0,1,2].map(bi=>'<label class="branch"><span>分支 '+String(bi+1).padStart(2,"0")+'</span><input type="number" min="0" max="20" data-skill="'+gi+'" data-branch="'+bi+'" value="'+state.skills.groups[g][bi]+'"></label>').join("")+
-      '</section>';
-  }).join("");
-  $$("[data-skill]").forEach(i=>i.oninput=()=>{
-    const g=skillGroups[Number(i.dataset.skill)],bi=Number(i.dataset.branch);
-    const old=state.skills.groups[g][bi]||0;
-    let val=Math.max(0,Math.min(20,Number(i.value)||0));
-    const usedWithout=skillUsed()-old;
-    if(usedWithout+val>state.skills.total)val=state.skills.total-usedWithout;
-    state.skills.groups[g][bi]=val;i.value=val;save();updatePoints();
-  });
-  updatePoints();
-}
-function skillUsed(){return Object.values(state.skills.groups).flat().reduce((a,b)=>a+(Number(b)||0),0)}
-function updatePoints(){const used=skillUsed();$("#usedPoints").textContent=used;$("#remainingPoints").textContent=state.skills.total-used}
-
-function eligible(s){
-  const g=state.basic.gender||"";
-  if(s.id==="coed")return true;
-  if(s.id==="girls")return g!=="男性";
-  if(s.id==="boys")return g!=="女性";
-  return true;
-}
-function renderSchools(){
-  $("#schoolCards").innerHTML=schools.map(s=>{
-    const ok=eligible(s),sel=state.school.selected===s.id;
-    return '<article class="school-card '+(sel?"selected ":"")+(ok?"":"blocked")+'"><h3>'+s.name+'</h3><b>'+s.zh+'</b><p>'+s.desc+'</p><button data-school="'+s.id+'" '+(ok?"":"disabled")+'>'+(sel?"✓ 已選擇":"選擇")+'</button></article>';
-  }).join("");
-  $$("[data-school]").forEach(b=>b.onclick=()=>{
-    state.school.selected=b.dataset.school;
-    if(state.school.selected!=="girls"){state.school.firstHouse=null;state.school.secondHouse=null}
-    state.residence.boysChoice=null;save();renderSchools();
-  });
-  const hp=$("#housePanel");
-  if(state.school.selected==="girls"){
-    hp.classList.remove("hidden");
-    hp.innerHTML='<h3>House Preferences / 學院志願</h3><div class="pref"><label>第一志願<select id="firstHouse"><option value="">請選擇</option>'+houses.map(h=>'<option>'+h+'</option>').join("")+'</select></label><label>第二志願<select id="secondHouse"><option value="">請選擇</option>'+houses.map(h=>'<option>'+h+'</option>').join("")+'</select></label></div>';
-    $("#firstHouse").value=state.school.firstHouse||"";
-    $("#secondHouse").value=state.school.secondHouse||"";
-    $("#firstHouse").onchange=()=>{state.school.firstHouse=$("#firstHouse").value;if(state.school.secondHouse===state.school.firstHouse)state.school.secondHouse=null;save();renderSchools()};
-    $("#secondHouse").onchange=()=>{if($("#secondHouse").value===state.school.firstHouse){$("#secondHouse").value="";return}state.school.secondHouse=$("#secondHouse").value;save()};
-  } else hp.classList.add("hidden");
-}
-$("#schoolNext").onclick=()=>{
-  const s=schools.find(x=>x.id===state.school.selected);
-  if(!s){$("#schoolMessage").textContent="請先選擇學校。";return}
-  if(s.id==="girls"&&(!state.school.firstHouse||!state.school.secondHouse)){ $("#schoolMessage").textContent="女子學院需要第一志願與第二志願。"; return }
-  $("#schoolMessage").textContent="";
-  if(s.id==="girls")showPage(6);else showPage(5);
-};
-
-function renderResidence(){
-  const s=schools.find(x=>x.id===state.school.selected);
-  if(!s){$("#residenceContent").innerHTML='<div class="residence-card">尚未選校。</div>';return}
-  if(s.id==="girls"){showPage(6);return}
-  if(s.id==="boys"){
-    $("#residenceContent").innerHTML='<div class="residence-card"><h3>'+s.zh+'</h3><p>男校住宿可選。目前只決定是否住校，不設定未確認的宿舍棟、房型或住宿費。</p><div class="residence-choice"><button data-res="campus" class="'+(state.residence.boysChoice==="campus"?"selected":"")+'">校內住宿</button><button data-res="offcampus" class="'+(state.residence.boysChoice==="offcampus"?"selected":"")+'">不住校</button></div></div>';
-    $$("[data-res]").forEach(b=>b.onclick=()=>{state.residence.boysChoice=b.dataset.res;save();renderResidence()});
-  } else {
-    $("#residenceContent").innerHTML='<div class="auto-residence"><h3>'+s.zh+'</h3><p><b>高一校內住宿已自動套用。</b></p><p>男女住宿區分開；宿舍棟、房間、室友與其他細節尚未正式設定。</p></div>';
-  }
-}
-$("#residenceNext").onclick=()=>{
-  const s=schools.find(x=>x.id===state.school.selected);
-  if(s?.id==="boys"&&!state.residence.boysChoice){$("#residenceMessage").textContent="請先選擇住校或不住校。";return}
-  $("#residenceMessage").textContent="";showPage(6);
-};
-
-function renderSummary(){
-  const s=schools.find(x=>x.id===state.school.selected);
-  const rows=[
-    ["姓名",(state.basic.lastName||"")+" "+(state.basic.firstName||"")],
-    ["生日",(state.basic.birthMonth||"—")+"/"+(state.basic.birthDay||"—")],
-    ["性別",state.basic.gender||"—"],
-    ["代名詞",state.basic.pronouns||"—"],
-    ["技能點數",skillUsed()+" / "+state.skills.total],
-    ["家庭經濟","富裕"],
-    ["學校",s? s.zh+" / "+s.name:"—"]
-  ];
-  if(s?.id==="girls"){
-    rows.push(["第一學院志願",state.school.firstHouse],["第二學院志願",state.school.secondHouse],["住宿","校內住宿，由學院／校方自動安排"]);
-  }else if(s?.id==="boys"){
-    rows.push(["住宿",state.residence.boysChoice==="campus"?"校內住宿":state.residence.boysChoice==="offcampus"?"不住校":"—"]);
-  }else if(s?.id==="coed"){
-    rows.push(["住宿","高一固定校內住宿"]);
-  }
-  $("#summary").innerHTML=rows.map(r=>'<div class="summary-row"><b>'+r[0]+'</b><span>'+r[1]+'</span></div>').join("");
-}
-$("#finish").onclick=()=>alert("測試版：Player State 建立接口已保留；正式 World State / Save 尚未接線。");
-init();
+$("#steps").onclick=e=>{const b=e.target.closest("[data-go]");if(b){s.page=+b.dataset.go;save();render()}};
+$("#back").onclick=()=>{if(s.page){s.page--;save();render()}};
+$("#next").onclick=()=>{if(s.page<7){s.page++;save();render()}else{localStorage.setItem("clearwater-life-player-state-v1",JSON.stringify({saveVersion:1,createdAt:new Date().toISOString(),player:s}));alert("Player State 已建立並保存於本機測試存檔。")}};
+render();
