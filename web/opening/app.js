@@ -4,6 +4,8 @@ const $=s=>document.querySelector(s), KEY="cbl-character-v01";
 const steps=["基本資料","能力值","學科技能","其他技能","家庭／經歷","選校","住宿","確認"];
 let s=JSON.parse(localStorage.getItem(KEY)||"null")||{page:0,basic:{name:"",birthday:"09/01",gender:"中性",pronouns:""},attr:{STR:30,CON:30,AGI:30,DEX:30,PER:30,INT:30},academic:{},skills:{},family:{finance:"富裕",notes:""},experience:"",school:"",house:"",residence:"",dev:false,openGroups:{}};
 s.openGroups=s.openGroups||{};
+s.academic=s.academic||{};
+s.skills=s.skills||{};
 // Migrate the editable draft, never carry an earlier residence choice into a new world.
 residenceFields.forEach(key=>delete s[key]);
 s.basic.gender=({male:'男性',female:'女性',neutral:'中性'})[s.basic.gender]||s.basic.gender;
@@ -16,7 +18,7 @@ function esc(value){return String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;"
 function save(){localStorage.setItem(KEY,JSON.stringify(s))}
 function points(obj){return Object.values(obj).reduce((a,b)=>a+(+b||0),0)}
 function counter(name,val,kind){return '<div class="row"><span>'+name+'</span><div class="counter"><button aria-label="減少 '+name+'" data-minus="'+kind+'|'+name+'">−</button><input aria-label="'+name+'" class="score-input" type="number" min="0" '+(s.dev?'':'max="'+(kind==='attr'?65:75)+'"')+' step="1" inputmode="numeric" data-score="'+kind+'|'+name+'" value="'+val+'"><button aria-label="增加 '+name+'" data-plus="'+kind+'|'+name+'">＋</button></div></div>'}
-function randomize(kind,names){randomizeScores(s,kind,names);pointMessage='';save();render()}
+function randomize(kind,names){try{randomizeScores(s,kind,names);pointMessage='';save();}catch(error){pointMessage=error.message;}render()}
 function eligibleSchool(id){const g=s.basic.gender,f=s.family.finance;if(id==="coed")return {ok:true,why:"公立混校，可申請"};if(id==="girls"){if(g==="男性")return {ok:false,why:"目前性別資料不符合女子學院入學資格"};if(f!=="富裕")return {ok:false,why:"目前家庭財政未達私校一般入學條件"};return {ok:true,why:"符合目前測試資格"}}if(id==="boys"){if(g==="女性")return {ok:false,why:"目前性別資料不符合男子學院入學資格"};if(f!=="富裕")return {ok:false,why:"目前家庭財政未達私校一般入學條件"};return {ok:true,why:"符合目前測試資格"}}return {ok:false,why:"不符合資格"}}
 function nav(){ $("#steps").innerHTML=steps.map((x,i)=>'<button data-go="'+i+'" class="'+(i===s.page?'active':'')+'">'+(i+1)+'. '+x+'</button>').join("");$("#bar").style.width=((s.page+1)/steps.length*100)+"%";$("#back").style.visibility=s.page?"visible":"hidden";$("#next").textContent=s.page===7?s.school==="coed"?"建立角色並進入 Ravenwood":"建立 Player State":"下一步 ›"}
 function render(){
