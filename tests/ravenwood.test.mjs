@@ -3,8 +3,9 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {spawnSync} from 'node:child_process';
 import {locations,connections,exits,travelSeconds,dormitories} from '../web/ravenwood/world.mjs';
-import {newWorld,move,accessReason,assignResidence,residentialSide,openLocker,reserve,clock,validateWorld} from '../web/ravenwood/engine.mjs';
+import {newWorld,move,accessReason,assignResidence,residentialSide,openLocker,reserve,clock,validateWorld,completeResidenceAssignment} from '../web/ravenwood/engine.mjs';
 const character=(gender='男性',side)=>({basic:{name:'測試玩家',gender},school:'coed',skills:{'妙手':42},residentialAccess:side});
+function assignedWorld(character,id){const state=newWorld(character,id);Object.assign(state.player,assignResidence(character));state.residenceAssignment='assigned';return state;}
 function route(state,to){
  const queue=[[state.locationId]],seen=new Set(queue[0]);
  while(queue.length){const r=queue.shift(),last=r.at(-1);if(last===to)return r;
@@ -13,6 +14,27 @@ function route(state,to){
  return null;
 }
 function walk(state,to){const r=route(state,to);assert.ok(r,`Route to ${to}`);for(const id of r.slice(1))move(state,id);}
+test('all genders enter unassigned; residence is established only in the world at administration',()=>{
+ for(const [gender,choice,side] of [['male','female_side','male_side'],['female','male_side','female_side'],['neutral','male_side','male_side'],['neutral','female_side','female_side']]){
+  const state=newWorld({...character(gender,'male_side'),buildingId:'10'},gender);
+  for(const key of ['residentialAccess','residenceId','buildingId','floorId','roomId','bedId'])assert.ok(!(key in state.player));
+  assert.ok(validateWorld(JSON.parse(JSON.stringify(state)),gender));
+  assert.throws(()=>completeResidenceAssignment(state,choice));
+  walk(state,'dorm-08-lobby');assert.throws(()=>move(state,'dorm-08-1-hall'));
+  walk(state,'admin');
+  if(gender==='neutral'){assert.throws(()=>completeResidenceAssignment(state));assert.equal(state.residenceAssignment,'pending');}
+  completeResidenceAssignment(state,choice);assert.equal(state.player.residentialAccess,side);
+  for(const key of ['residentialAccess','residenceId','buildingId','floorId','roomId','bedId'])assert.ok(state.player[key]);
+  assert.throws(()=>completeResidenceAssignment(state,choice));
+  walk(state,state.player.roomId);assert.ok(validateWorld(JSON.parse(JSON.stringify(state)),gender));walk(state,'south-gate');
+ }
+});
+test('pending saves cannot grant residence access; legacy assigned saves still load',()=>{
+ const pending=newWorld(character('neutral'),'a');pending.player.buildingId='08';assert.equal(validateWorld(pending,'a'),false);
+ const legacy=assignedWorld(character(),'a');delete legacy.residenceAssignment;
+ for(const key of ['residenceId','floorId','bedId'])delete legacy.player[key];
+ assert.equal(validateWorld(legacy,'a'),true);
+});
 test('browser entry modules parse as ES modules',()=>{
  for(const path of ['../web/opening/app.js','../web/ravenwood/app.mjs']){
   const result=spawnSync(process.execPath,['--input-type=module','--check'],{input:readFileSync(new URL(path,import.meta.url),'utf8'),encoding:'utf8'});
@@ -52,7 +74,7 @@ test('male/female fixed, neutral explicitly chooses; no stale opposite assignmen
 });
 test('all permitted locations reachable and every route can return to south gate for all four buildings',()=>{
  for(const d of dormitories){
-  const state=newWorld({...character('中性',d.side),buildingId:d.id},d.id);
+  const state=assignedWorld({...character('中性',d.side),buildingId:d.id},d.id);
   // Reservation is a deliberate interaction gate, not a broken connection.
   state.reservations=Object.values(locations).filter(l=>l.reservationRequired).map(l=>l.id);
   const reachable=Object.keys(locations).filter(id=>route(state,id));
@@ -64,7 +86,7 @@ test('all permitted locations reachable and every route can return to south gate
  }
 });
 test('main routes advance clock and survive JSON save/load',()=>{
- const state=newWorld(character(),'a');
+ const state=assignedWorld(character(),'a');
  for(const id of ['main-5-class-2','chemistry','dining','library','maker','recording','backstage','pool','track','shopping-street',state.player.roomId,'south-gate'])walk(state,id);
  assert.ok(state.elapsedSeconds>0);
  const copy=JSON.parse(JSON.stringify(state));assert.ok(validateWorld(copy,'a'));assert.equal(validateWorld(copy,'different'),false);
@@ -73,7 +95,7 @@ test('main routes advance clock and survive JSON save/load',()=>{
 });
 test('both shared spaces reject opposite side and other building, with no time penalty',()=>{
  for(const d of dormitories){
-  const state=newWorld({...character('中性',d.side),buildingId:d.id},d.id);
+  const state=assignedWorld({...character('中性',d.side),buildingId:d.id},d.id);
   walk(state,`shared-${d.pair}`);
   const other=d.pair.split('-').find(id=>id!==d.id),before=state.elapsedSeconds;
   assert.throws(()=>move(state,`dorm-${other}-3-hall`));assert.equal(state.elapsedSeconds,before);
@@ -84,12 +106,12 @@ test('both shared spaces reject opposite side and other building, with no time p
  }
 });
 test('reservation from door unlocks room; cannot reserve remotely',()=>{
- const state=newWorld(character(),'a');assert.throws(()=>reserve(state,'life-meeting-A'));
+ const state=assignedWorld(character(),'a');assert.throws(()=>reserve(state,'life-meeting-A'));
  walk(state,'life-2-hall');assert.throws(()=>move(state,'life-meeting-A'));
  reserve(state,'life-meeting-A');move(state,'life-meeting-A');move(state,'life-2-hall');
 });
 test('locker attempt works only locally; success opens access, failure is discovered; both cost 120 sec',()=>{
- const state=newWorld(character(),'a');assert.throws(()=>openLocker(state,'locker-5'));
+ const state=assignedWorld(character(),'a');assert.throws(()=>openLocker(state,'locker-5'));
  walk(state,'main-5-hall');let before=state.elapsedSeconds;
  assert.ok(openLocker(state,'own-locker').success);assert.equal(state.elapsedSeconds,before);
  const fail=openLocker(state,'locker-5',()=>.99);assert.equal(fail.success,false);assert.equal(state.discoveredCount,1);assert.equal(state.elapsedSeconds,before+120);assert.ok(!state.openedLockers.includes('locker-5'));

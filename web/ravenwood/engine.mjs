@@ -3,28 +3,43 @@ export const WORLD_KEY='clearwater-life-ravenwood-v1';
 export const PLAYER_KEY='clearwater-life-player-state-v1';
 export const checkConfig={baseChance:25,skillWeight:1,minChance:5,maxChance:95,seconds:120};
 export function residentialSide(gender,choice) {
-  if(gender==='男性')return 'male_side';
-  if(gender==='女性')return 'female_side';
-  return gender==='中性'&&['male_side','female_side'].includes(choice)?choice:null;
+  if(['男性','male'].includes(gender))return 'male_side';
+  if(['女性','female'].includes(gender))return 'female_side';
+  return ['中性','neutral'].includes(gender)&&['male_side','female_side'].includes(choice)?choice:null;
 }
 export function assignResidence(character) {
   const side=residentialSide(character.basic?.gender,character.residentialAccess);
   if(!side)throw new Error('請在住宿階段選擇男側或女側。');
   const available=dormitories.filter(d=>d.side===side);
   const buildingId=available.some(d=>d.id===character.buildingId)?character.buildingId:available[0].id;
-  return {residentialAccess:side,buildingId,roomId:`dorm-${buildingId}-2-room-1`};
+  const roomId=`dorm-${buildingId}-2-room-1`;
+  return {residentialAccess:side,residenceId:`dorm-${buildingId}`,buildingId,floorId:`dorm-${buildingId}-2`,roomId,bedId:`${roomId}-bed-1`};
+}
+export function completeResidenceAssignment(state,choice) {
+  if(state.locationId!=='admin')throw new Error('請到主校舍 1F 行政中心辦理住宿分配。');
+  if(state.player.residentialAccess)throw new Error('住宿已分配完成。');
+  // Only this world interaction assigns access; ignore creator-era residence fields.
+  const residence=assignResidence({basic:{gender:state.player.gender},residentialAccess:choice});
+  Object.assign(state.player,residence);
+  state.residenceAssignment='assigned';
+  return record(state,`住宿分配完成：${residence.buildingId} 棟、2F、201 雙人房、床位 1。學生證已開通對應住宿門禁。`);
 }
 export function newWorld(character,characterId) {
   if(character.school!=='coed')throw new Error('第一版校園測試僅開放 Ravenwood。');
-  const residence=assignResidence(character);
-  return {version:1,characterId,locationId:'south-gate',elapsedSeconds:0,startTime:'2026-08-25T09:00:00',openingDate:'2026-09-01',
-    player:{name:character.basic.name||'未命名角色',gender:character.basic.gender,skills:{...character.skills},portraitId:'placeholder-v01',...residence},
-    openedLockers:[],reservations:[],discoveredCount:0,log:['開學前一週，你抵達雷文伍德高中南門。'],showChecks:false};
+  return {version:1,characterId,residenceAssignment:'pending',locationId:'south-gate',elapsedSeconds:0,startTime:'2026-08-25T09:00:00',openingDate:'2026-09-01',
+    player:{name:character.basic.name||'未命名角色',gender:character.basic.gender,skills:{...character.skills},portraitId:'placeholder-v01'},
+    openedLockers:[],reservations:[],discoveredCount:0,log:['開學前一週，你抵達雷文伍德高中南門。請到主校舍 1F 行政中心辦理住宿分配。'],showChecks:false};
 }
 export function validateWorld(state,characterId) {
+  const pending=state?.residenceAssignment==='pending'&&Boolean(state.player)&&
+    ['男性','女性','中性','male','female','neutral'].includes(state.player.gender)&&
+    ['residentialAccess','residenceId','buildingId','floorId','roomId','bedId'].every(key=>state.player[key]==null);
+  const assigned=dormitories.some(d=>d.id===state?.player?.buildingId&&d.side===state?.player?.residentialAccess)&&
+    residentialSide(state.player.gender,state.player.residentialAccess)===state.player.residentialAccess&&
+    state.player.roomId===`dorm-${state.player.buildingId}-2-room-1`;
   return state?.version===1&&state.characterId===characterId&&Boolean(locations[state.locationId])&&
     Number.isFinite(state.elapsedSeconds)&&state.elapsedSeconds>=0&&
-    dormitories.some(d=>d.id===state.player?.buildingId&&d.side===state.player?.residentialAccess)&&
+    (pending||assigned)&&
     Array.isArray(state.openedLockers)&&Array.isArray(state.reservations)&&Array.isArray(state.log)&&
     accessReason(state,state.locationId)==='';
 }
