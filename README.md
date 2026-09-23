@@ -11,6 +11,14 @@
 
 ## 目前正式模組
 
+### Character Creation v0.1 ＋ Ravenwood 文本校園測試
+
+- [創角與校園試玩](https://cywpig8787-blip.github.io/clearwater-bay-life/opening/)：完成 Ravenwood 角色與住宿分配後進入校園。
+- [接續校園存檔](https://cywpig8787-blip.github.io/clearwater-bay-life/ravenwood/)：主校舍、科學翼、02–07、08–11 宿舍及南門→公園→商店街。
+- 距離推進時間、住宅門禁、中性住宿側選擇、置物櫃妙手判定。
+- 本版為 Web 玩法驗證，Godot 尚待移植。設計來源、估算與限制見 [Ravenwood 說明](web/ravenwood/README.md)。
+- 測試：`node --test tests/ravenwood.test.mjs`。
+
 ### Phone OS v2
 手機系統已納入正式專案，包含：
 
