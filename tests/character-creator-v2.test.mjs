@@ -1,14 +1,103 @@
-import test from 'node:test';import assert from 'node:assert/strict';
-import {newCharacter,finishCharacter,validateCharacter} from '../web/creation-v2/creator-service.mjs';
-import {allocate} from '../web/creation-v2/allocation-engine.mjs';
-import {categoryStatus,proficiencyRemaining} from '../web/creation-v2/point-source-ledger.mjs';
-import {schoolEligibility} from '../web/creation-v2/school-eligibility.mjs';
-import {newRun,readRun,rollFinance} from '../web/creation-v2/finance.mjs';
-const store=()=>{const map=new Map;return {getItem:k=>map.get(k)||null,setItem:(k,v)=>map.set(k,v)}};
-function ready(){const s=newCharacter();for(const id of ['STR','CON','AGI','DEX','PER','INT'])allocate(s,'attribute',id,id==='STR'||id==='CON'?60:id==='AGI'||id==='DEX'?60:55);s.basic={name:'測試',month:'9',day:'1',gender:'female',pronouns:'她'};s.motherTongue='中文';s.school='girls';return s}
-test('350 total, 65 cap, shared category formula',()=>{const s=ready();assert.equal(Object.values(s.attributes).reduce((a,b)=>a+b),350);assert.throws(()=>allocate(s,'attribute','STR',66));allocate(s,'attribute','STR',45);allocate(s,'attribute','INT',45);allocate(s,'attribute','DEX',65);allocate(s,'attribute','PER',65);assert.equal(categoryStatus(s,'藝術').total,172);allocate(s,'skill','繪畫',65);allocate(s,'skill','設計',65);assert.equal(categoryStatus(s,'藝術').allocated,130);assert.throws(()=>allocate(s,'skill','設計',66));});
-test('mother tongue grant and separated proficiency pool',()=>{const s=ready();assert.equal(categoryStatus(s,'語言').allocated,0);allocate(s,'skill','母語',60);assert.equal(categoryStatus(s,'語言').allocated,5);assert.equal(proficiencyRemaining(s),500);allocate(s,'proficiency','鋼琴',75);assert.equal(proficiencyRemaining(s),425);assert.throws(()=>allocate(s,'proficiency','鋼琴',76));assert.equal(categoryStatus(s,'音樂').allocated,0)});
-test('attribute decrease preserves overspent skills and blocks final',()=>{const s=ready();allocate(s,'skill','繪畫',65);allocate(s,'skill','設計',65);allocate(s,'skill','攝影',10);allocate(s,'attribute','DEX',0);assert.equal(s.skills['繪畫'],65);assert(categoryStatus(s,'藝術').remaining<0);assert(validateCharacter(s,{locked:true}).some(x=>x.includes('藝術')))});
-test('run roll immediately persists and only new run rerolls',()=>{const storage=store();const first=newRun(storage,'a');const locked=rollFinance(storage,()=>({tierId:'test-a'}));assert.equal(readRun(storage).result.tierId,'test-a');assert.deepEqual(rollFinance(storage,()=>{throw Error('rerolled')}),locked);newRun(storage,'b');assert.equal(readRun(storage).locked,false);assert.equal(rollFinance(storage,()=>({tierId:'test-b'})).result.tierId,'test-b');assert.equal(first.id,'a')});
-test('school gating and player state without residence assignment',()=>{const s=ready(),roll={id:'run',locked:true,result:{tierId:'test'}};assert.equal(schoolEligibility(s,'girls',null).ok,false);const state=finishCharacter(s,roll);assert.equal(state.phase,'preparation_week');assert.equal(state.player.residence.status,'pending_preparation_week');assert.equal(state.player.residence.assignment,null);assert.equal(state.player.schoolRegistration.schoolId,'girls');assert.equal(JSON.parse(JSON.stringify(state)).player.familyFinance.tierId,'test')});
-test('opening UI only references portrait on page 01 and preserves scroll/group state',async()=>{const fs=await import('node:fs/promises');const app=await fs.readFile('web/opening/app.mjs','utf8');assert.match(app,/s\.openGroups\[id\]/);assert.match(app,/s\.scroll\[s\.page===3/);assert.match(app,/case 7:\{/);assert.doesNotMatch(app.slice(app.indexOf('case 7:{'),app.indexOf('page.innerHTML=html')),/portraitSource|portraitUpload/)});
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {newCharacter,validateCharacter,confirmCharacterData} from '../web/creation-v2/creator-service.mjs';
+import {allocate,adjust,attributePointsRemaining} from '../web/creation-v2/allocation-engine.mjs';
+import {attributeTotal,validateAttributes} from '../web/creation-v2/attribute-engine.mjs';
+import {categoryBudget,categoryStatus,proficiencyRemaining} from '../web/creation-v2/point-source-ledger.mjs';
+import {attributes,categories,financeTiers,rules} from '../web/creation-v2/catalog.mjs';
+import {newRun,readRun,rollFinance,developerFinance} from '../web/creation-v2/finance.mjs';
+import {readFile} from 'node:fs/promises';
+const storage=()=>{const m=new Map();return {getItem:k=>m.get(k)||null,setItem:(k,v)=>m.set(k,v),removeItem:k=>m.delete(k)}};
+function filled(){const s=newCharacter();for(const [id,n] of Object.entries({STR:42,CON:42,AGI:42,DEX:42,PER:41,INT:41}))allocate(s,'attribute',id,n);s.basic={name:'測試角色',month:'2',day:'29',gender:'neutral',pronouns:'they/them'};s.motherTongue='中文';return s}
+
+test('seven steps, no school step, final action ends without creating game state',async()=>{
+ const s=filled(),run={id:'run-a',locked:true,result:{id:'tier_3',label:'家庭資源第三級'}};
+ assert.equal(confirmCharacterData(s,run),true);assert.deepEqual(validateCharacter(s,run),[]);
+ const app=await readFile('web/opening/app.mjs','utf8'),html=await readFile('web/opening/index.html','utf8');
+ assert.match(app,/const titles=\['基本資料','家庭經濟','能力值','技能','熟練度','背景','最終確認'\]/);
+ assert.doesNotMatch(app,/選校|校徽|House Placement|residenceId|preparation_week|player-state-v1/);
+ assert.match(app,/角色資料已確認/);assert.match(app,/confirmCharacterData\(s,run\)/);
+ assert.match(html,/paper-master\.jpg|style\.css/);assert.match(html,/rotateGate/);
+});
+
+test('250 attribute points, individual cap, exact completion and clamp',()=>{
+ assert.equal(rules.attributeTotal,250);const s=filled();assert.equal(attributeTotal(s),250);assert.equal(attributePointsRemaining(s),0);allocate(s,'attribute','CON',19);allocate(s,'attribute','STR',64);assert.equal(adjust(s,'attribute','STR',5),65);assert.equal(adjust(s,'attribute','STR',10),65);
+ assert.throws(()=>allocate(s,'attribute','STR',66),/65/);
+ assert.equal(adjust(s,'attribute','STR',10),65);assert.equal(adjust(s,'attribute','STR',-100),0);assert.equal(adjust(s,'attribute','STR',10),10);
+ const partial=newCharacter();for(const [id,n] of Object.entries({STR:60,CON:60,AGI:40,DEX:40,PER:24,INT:24}))allocate(partial,'attribute',id,n);
+ assert.equal(attributeTotal(partial),248);assert.equal(adjust(partial,'attribute','STR',10),62);assert.equal(attributePointsRemaining(partial),0);
+ assert.equal(adjust(partial,'attribute','STR',-100),0);assert.equal(adjust(partial,'attribute','STR',100),62);
+ assert.throws(()=>allocate(partial,'attribute','CON',65),/250/);
+});
+
+test('all 14 skill categories use the formal pair and exact budget formula',()=>{
+ const expected={語言:'INT,PER',表達:'INT,PER',數理:'INT,PER',自然科學:'INT,PER','社會與人文':'INT,PER',藝術:'DEX,PER',音樂:'INT,PER',表演:'AGI,CON','資訊與媒體':'INT,DEX','工程／製作':'INT,DEX',生活技能:'DEX,PER',體育:'STR,AGI',人際:'INT,PER','感知／調查':'PER,INT'};
+ assert.equal(Object.keys(categories).length,14);
+ for(const [id,pair] of Object.entries(expected))assert.equal(categories[id].pair.join(','),pair);
+ const s=newCharacter();for(const [id,n] of Object.entries({STR:0,CON:0,AGI:0,DEX:65,PER:65,INT:0}))s.attributes[id]=n;
+ assert.equal(categoryBudget(s,'藝術'),172);
+ for(const [id,{pair}] of Object.entries(categories)){const [a,b]=pair;assert.equal(categoryBudget(s,id),s.attributes[a]+s.attributes[b]+Math.floor(s.attributes[a]*s.attributes[b]/100))}
+});
+
+test('skills share category budgets; mother tongue 55 is free, only excess spends',()=>{
+ const s=newCharacter();for(const [id,n] of Object.entries({STR:60,CON:60,AGI:0,DEX:65,PER:65,INT:0}))s.attributes[id]=n;
+ assert.equal(categoryStatus(s,'語言').allocated,0);
+ allocate(s,'skill','母語',60);assert.equal(categoryStatus(s,'語言').allocated,5);
+ allocate(s,'skill','繪畫',65);allocate(s,'skill','設計',65);
+ assert.equal(categoryStatus(s,'藝術').allocated,130);assert.equal(categoryStatus(s,'藝術').total,172);
+ assert.equal(adjust(s,'skill','繪畫',10),65);assert.throws(()=>allocate(s,'skill','設計',66),/65/);
+});
+
+test('attribute changes preserve skills and final confirmation flags overbudget',()=>{
+ const s=newCharacter();for(const [id,n] of Object.entries({STR:60,CON:60,AGI:0,DEX:65,PER:65,INT:0}))s.attributes[id]=n;
+ allocate(s,'skill','繪畫',65);allocate(s,'skill','設計',65);allocate(s,'skill','攝影',20);
+ allocate(s,'attribute','DEX',0);assert.equal(s.skills['繪畫'],65);assert.equal(s.skills['設計'],65);assert(categoryStatus(s,'藝術').remaining<0);
+ assert(validateCharacter(s,{locked:true}).some(x=>x.includes('藝術 超額')));
+});
+
+test('500 proficiency pool is independent and uses clamp and 75 cap',()=>{
+ assert.equal(rules.proficiencyTotal,500);const s=filled();assert.equal(proficiencyRemaining(s),500);
+ assert.equal(adjust(s,'proficiency','鋼琴',10),10);assert.equal(adjust(s,'proficiency','鋼琴',100),75);
+ assert.throws(()=>allocate(s,'proficiency','鋼琴',76),/75/);assert.equal(proficiencyRemaining(s),425);
+ assert.equal(categoryStatus(s,'音樂').allocated,0);
+});
+
+test('five finance results have equal 20 percent buckets and persist run-bound',()=>{
+ const storageRef=storage();newRun(storageRef,'run-a');
+ const outputs=[0,.2,.4,.6,.8].map((n,i)=>{newRun(storageRef,'sample-'+i);return rollFinance(storageRef,()=>n).result.id});
+ assert.deepEqual(outputs,['tier_1','tier_2','tier_3','tier_4','tier_5']);
+ assert.deepEqual(financeTiers.map(x=>x.id),outputs);
+ const stored=readRun(storageRef),reroll=rollFinance(storageRef,()=>.99);
+ assert.deepEqual(reroll,stored);assert.equal(readRun(storageRef).result.id,'tier_5');
+ newRun(storageRef,'run-b');assert.equal(readRun(storageRef).locked,false);
+ assert.throws(()=>rollFinance(storageRef,()=>1),/隨機值/);
+ assert.equal(developerFinance(storageRef,{tierId:'tier_2'}).result.id,'tier_2');
+});
+
+test('month/day picker creates only valid dates and February excludes day 30',async()=>{
+ const source=await readFile('web/opening/app.mjs','utf8'),html=await readFile('web/opening/index.html','utf8');
+ assert.match(source,/function openBirthdayPicker/);assert.match(source,/const n=Number\(m\.value\),max=n\?\[31,29,31,30/);
+ assert.match(source,/id="openBirthday"/);assert.match(html,/id="birthMonth"/);assert.match(html,/id="birthDay"/);
+ const s=filled();s.basic.day='30';assert(validateCharacter(s,{locked:true}).some(e=>e.includes('生日')));
+});
+
+test('portrait is only rendered on page 01; final summary omits portrait and all school concepts',async()=>{
+ const app=await readFile('web/opening/app.mjs','utf8'),html=await readFile('web/opening/index.html','utf8');
+ assert.match(app,/case 0:html=.*portraitSource/);const final=app.slice(app.indexOf('case 6:{'),app.indexOf('page.innerHTML=html'));
+ assert.doesNotMatch(final,/portrait|school|House|Residence|校徽|住宿|選校/);
+ const css=await readFile('web/opening/style.css','utf8');
+ assert.match(css,/background:[^;]*paper-master\.jpg/);assert.match(css,/orientation: portrait/);assert.match(css,/orientation: landscape/);
+ assert.match(css,/grid-template-columns: repeat\(7, minmax\(0, 1fr\)\)/);assert.match(css,/note-tab\.active/);assert.match(css,/note-tab\.pressed/);
+});
+
+test('skill details, expanded categories and scroll position persist',async()=>{
+ const app=await readFile('web/opening/app.mjs','utf8');
+ assert.match(app,/data-group/);assert.match(app,/s\.openGroups\[d\.dataset\.group\]=d\.open/);
+ assert.match(app,/s\.scroll\[s\.page===3\?'skills':'proficiencies'\]/);
+ assert.match(app,/class="note-tab/);assert.match(app,/b\.classList\.add\('pressed'\)/);
+});
+
+test('original attached paper master is byte-for-byte used by the page asset',async()=>{
+ const {readFile,stat}=await import('node:fs/promises'),a=await readFile('/workspace/scratch/79bc97cbc8be/upload/01-1000078230.png'),b=await readFile('web/opening/paper-master.jpg');
+ assert.deepEqual(a,b);assert.equal((await stat('web/opening/paper-master.jpg')).size,a.length);
+});

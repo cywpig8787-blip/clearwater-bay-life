@@ -1,5 +1,5 @@
 export const attributes=['STR','CON','AGI','DEX','PER','INT'];
-export const rules=Object.freeze({attributeTotal:350,attributeCap:65,skillCap:65,proficiencyTotal:500,proficiencyCap:75,motherTongueBase:55});
+export const rules=Object.freeze({attributeTotal:250,attributeCap:65,skillCap:65,proficiencyTotal:500,proficiencyCap:75,motherTongueBase:55});
 export const categories={
  '語言':{pair:['INT','PER'],skills:['母語']},'表達':{pair:['INT','PER'],skills:['寫作','演講','辯論']},
  '數理':{pair:['INT','PER'],skills:['數學','統計']},'自然科學':{pair:['INT','PER'],skills:['物理','化學','生物','地球科學','天文']},
@@ -17,4 +17,11 @@ export const proficiencyGroups={'藝術媒材':['素描','水彩','油畫','數�
  '樂器與音訊':['鋼琴','吉他','小提琴','鼓'],'表演形式':['芭蕾','爵士舞','街舞','現代舞','國標舞','踢踏舞','戲劇','喜劇','歌劇','音樂劇','脫口秀'],
  '程式語言':['Python','JavaScript','C#','C++'],'運動與武術':['籃球','足球','棒球','排球','網球','高爾夫','羽球','桌球','田徑','擊劍','拳擊','柔道','空手道','跆拳道'],
  '其他具體熟練項目':[]};
+export const financeTiers=Object.freeze([
+ {id:'tier_1',label:'家庭資源第一級'}, {id:'tier_2',label:'家庭資源第二級'},
+ {id:'tier_3',label:'家庭資源第三級'}, {id:'tier_4',label:'家庭資源第四級'},
+ {id:'tier_5',label:'超富裕'}
+]);
+
+// Deferred interface metadata; this Creator round does not render or validate schools.
 export const schools={coed:'Ravenwood High School',girls:'Rosamund Girls’ Academy',boys:'Avenor Boys’ Academy'};
