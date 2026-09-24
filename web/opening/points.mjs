@@ -29,7 +29,7 @@ export function pointPools(character) {
     {id:'academic',type:'base',attribute:null,label:'Academic Base Points',amount:rules.academicBase,skills:academics},
     {id:'general',type:'base',attribute:null,label:'General Skill Points',amount:rules.generalBase,skills:Object.values(groups).flat()},
     ...attributes.map(id=>({id,type:'attributeBonus',attribute:id,label:`${id} Bonus`,amount:bonus(character.attr?.[id]),skills:bonusSkills[id]}))
-  ];
+  ].map(pool=>({...pool,eligibleSkills:[...pool.skills]}));
 }
 // A residual flow graph can re-route previously allocated points when eligible
 // sources overlap (e.g. INT shared by academics and programming). Each source
@@ -52,10 +52,38 @@ export function allocation(character,{pools=pointPools(character),kinds=['academ
     used+=amount;
   }
   const fundedPools=links.map(({pool,capacity,skills})=>({...pool,used:capacity.capacity-capacity.remaining,remaining:capacity.remaining,allocations:skills.filter(x=>x.edge.capacity-x.edge.remaining>0).map(x=>({name:x.name,points:x.edge.capacity-x.edge.remaining}))}));
-  const skills=requests.map(({name,kind,edge})=>({name,kind,allocated:edge.capacity,unfunded:edge.remaining,
-    sources:fundedPools.flatMap(pool=>pool.allocations.filter(a=>a.name===name).map(a=>({poolId:pool.id,points:a.points})))
-  }));
+  const skills=requests.map(({name,kind,edge})=>{
+    const sources=fundedPools.flatMap(pool=>pool.allocations.filter(a=>a.name===name).map(a=>({poolId:pool.id,points:a.points})));
+    return {name,kind,allocated:edge.capacity,unfunded:edge.remaining,sources,
+      baseContribution:sources.filter(s=>!attributes.includes(s.poolId)).reduce((n,s)=>n+s.points,0),
+      attributeBonusContributions:Object.fromEntries(attributes.map(id=>[id,sources.filter(s=>s.poolId===id).reduce((n,s)=>n+s.points,0)]))};
+  });
   return {used,unfunded:requests.reduce((n,r)=>n+r.edge.remaining,0),pools:fundedPools,skills};
+}
+// Independently check the payment ledger, never accept a matching total alone.
+// Pool definitions come from current attributes, not from the submitted ledger.
+export function validateAllocation(character,skills,{pools=pointPools(character),kinds=['academic','skills']}={}) {
+  const errors=[],spent=Object.fromEntries(pools.map(p=>[p.id,0])),seen=new Set();
+  for(const skill of skills){
+    const key=skill.kind+'|'+skill.name;
+    const allowed=skill.kind==='academic'?academics:skill.kind==='skills'?Object.values(groups).flat():[];
+    if(!kinds.includes(skill.kind)||!allowed.includes(skill.name)||seen.has(key)){errors.push('未知或重複技能：'+key);continue;}
+    seen.add(key);
+    const baseId=skill.kind==='academic'?'academic':'general';
+    const contributions={...skill.attributeBonusContributions,[baseId]:skill.baseContribution};
+    let paid=0;
+    for(const [id,points] of Object.entries(contributions)){
+      if(!nonnegativeInteger(points)){errors.push(key+' 的 '+id+' 投入必須是非負整數');continue;}
+      if(!points)continue;
+      const pool=pools.find(p=>p.id===id);
+      if(!pool||!pool.eligibleSkills.includes(skill.name)){errors.push(id+' 不可支付 '+skill.name);continue;}
+      spent[id]+=points;paid+=points;
+    }
+    if(paid!==(character[skill.kind]?.[skill.name]||0))errors.push(key+' 的投入缺少合法來源');
+  }
+  for(const kind of kinds)for(const [name,value] of Object.entries(character[kind]||{}))if(value&&!seen.has(kind+'|'+name))errors.push('缺少技能投入紀錄：'+name);
+  for(const pool of pools)if(spent[pool.id]>pool.amount)errors.push(pool.id+' 投入 '+spent[pool.id]+' 超過額度 '+pool.amount);
+  return {valid:errors.length===0,errors,spent};
 }
 export function skillBudget(character,kind) {
   if(!['academic','skills'].includes(kind))throw new Error('未知技能池。');
@@ -65,6 +93,7 @@ export function skillBudget(character,kind) {
   const reserved=allocation(character,{kinds:[other]});
   const sources=reserved.pools.filter(pool=>pool.skills.some(name=>names.includes(name))).map(pool=>({
     ...pool,generated:pool.amount,reserved:pool.used,amount:pool.remaining,
+    eligibleSkills:pool.eligibleSkills.filter(name=>names.includes(name)),
     skills:pool.skills.filter(name=>names.includes(name))
   }));
   const base=sources.filter(p=>!attributes.includes(p.id)).reduce((n,p)=>n+p.amount,0);
@@ -82,7 +111,9 @@ export function validateCharacter(character,{complete=false,normal=false}={}) {
     if(!(kind==='academic'?academics:Object.values(groups).flat()).includes(name))errors.push(`未知技能：${name}。`);
     else if(!nonnegativeInteger(value)||(!dev&&value>rules.skillCap))errors.push(`${name} 必須是 0–${dev?'安全整數':rules.skillCap} 的整數。`);
   }
-  const {unfunded}=allocation(character);if(unfunded)errors.push(`技能配置有 ${unfunded} 點超出適用點數池；請降低技能或重新分配能力值。`);
+  const ledger=allocation(character);
+  errors.push(...validateAllocation(character,ledger.skills).errors);
+  const {unfunded}=ledger;if(unfunded)errors.push(`技能配置有 ${unfunded} 點超出適用點數池；請降低技能或重新分配能力值。`);
   return errors;
 }
 export function setScore(character,kind,name,value) {
@@ -97,9 +128,10 @@ export function setScore(character,kind,name,value) {
   }
   // Decreases always remain possible, including repairs to older saved drafts.
   if(kind!=='attr'&&value>old){
-      const budget=skillBudget(character,kind);
-      if(allocation({...character,[kind]:{...character[kind],[name]:value}},{pools:budget.sources,kinds:[kind]}).unfunded)throw new Error('適用點數不足；請先降低其他技能，或查看點數來源。');
-    }
+    const budget=skillBudget(character,kind),candidate={...character,[kind]:{...character[kind],[name]:value}};
+    const ledger=allocation(candidate,{pools:budget.sources,kinds:[kind]});
+    if(!validateAllocation(candidate,ledger.skills,{pools:budget.sources,kinds:[kind]}).valid)throw new Error('適用點數不足；請先降低其他技能，或查看點數來源。');
+  }
   character[kind]??={};
   character[kind][name]=value;
 }
@@ -112,6 +144,7 @@ export function randomizeScores(character,kind,names,rng=Math.random) {
   const budget=kind==='attr'?null:skillBudget(character,kind);
   const sources=budget?[...budget.sources].sort((a,b)=>a.skills.length-b.skills.length):[{amount:rules.attributeTotal,skills:names}];
   const rolled=Object.fromEntries(names.map(name=>[name,0]));
+  const payments=Object.fromEntries(names.map(name=>[name,{name,kind,baseContribution:0,attributeBonusContributions:Object.fromEntries(attributes.map(id=>[id,0]))}]));
   for(const source of sources){
     let remaining=source.amount;
     while(remaining>0){
@@ -120,8 +153,10 @@ export function randomizeScores(character,kind,names,rng=Math.random) {
       const name=possible[Math.min(possible.length-1,Math.floor(rng()*possible.length))];
       const amount=Math.min(5,remaining,cap-rolled[name]);
       rolled[name]+=amount;remaining-=amount;
+      if(budget){if(source.type==='base')payments[name].baseContribution+=amount;else payments[name].attributeBonusContributions[source.attribute]+=amount;}
     }
   }
+  if(budget&&!validateAllocation({...character,[kind]:rolled},Object.values(payments),{pools:budget.sources,kinds:[kind]}).valid)throw new Error('隨機配置的來源或使用限制不合法，原配置已保留。');
   if(budget&&(sum(rolled)>budget.total||allocation({...character,[kind]:rolled},{pools:budget.sources,kinds:[kind]}).unfunded))throw new Error('隨機配置超出合法預算，原配置已保留。');
   character[kind]=rolled;
   return budget;
