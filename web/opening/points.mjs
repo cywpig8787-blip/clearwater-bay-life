@@ -1,68 +1,18 @@
-// CYW-51 Point Pools v0.1; eligible skills confirmed by the user on 2026-09-23.
-export const rules = Object.freeze({attributeTotal:250,attributeCap:65,baseline:50,academicBase:200,generalBase:200,skillCap:75});
-export const attributes = ['STR','CON','AGI','DEX','PER','INT'];
-export const academics = ['語文','English','Spanish','French','Japanese','Mandarin Chinese','數學','物理','化學','生物','歷史','地理','政治／公民','經濟','法律','心理'];
-export const groups = {
-  '視覺藝術與設計':['繪畫','雕塑／立體造型','攝影','設計'],
-  '音樂與表演':['音樂','表演','舞蹈'],
-  '媒體製作':['影像製作','音訊製作'],
-  '資訊與數位技術':['電腦','程式設計','資料分析'],
-  '工程、製作與修繕':['工程','電子','機械','修理','木工','縫紉','手工藝'],
-  '生活與實用':['烹飪','家務','園藝','急救','生存','駕駛'],
-  '體育與身體技術':['跑步','游泳','自行車','滑行','籃球','足球','排球','棒球／壘球','網球','羽毛球','拳擊','跆拳道','空手道','柔道','體操','滑雪'],
-  '溝通與社會互動':['演說','辯論','交涉','欺瞞','洞察'],
-  '世界玩法':['潛行','妙手']
-};
-export const bonusSkills = {
-  STR:['拳擊','跆拳道','空手道','柔道'],
-  CON:['跑步','游泳','自行車','生存'],
-  AGI:[...groups['體育與身體技術'],'表演','舞蹈'],
-  DEX:[...groups['工程、製作與修繕'],'繪畫','雕塑／立體造型','妙手'],
-  PER:['攝影','洞察','急救'],
-  INT:[...academics,...groups['資訊與數位技術']]
-};
-export const sum = obj => Object.values(obj||{}).reduce((a,b)=>a+(Number(b)||0),0);
-export const bonus = value => Math.max(0,Number(value||0)-rules.baseline);
-const nonnegativeInteger = value => Number.isSafeInteger(value)&&value>=0;
-export function pointPools(character) {
-  return [
-    {id:'academic',type:'base',attribute:null,label:'Academic Base Points',amount:rules.academicBase,skills:academics},
-    {id:'general',type:'base',attribute:null,label:'General Skill Points',amount:rules.generalBase,skills:Object.values(groups).flat()},
-    ...attributes.map(id=>({id,type:'attributeBonus',attribute:id,label:`${id} Bonus`,amount:bonus(character.attr?.[id]),skills:bonusSkills[id]}))
-  ].map(pool=>({...pool,eligibleSkills:[...pool.skills]}));
+import {rules,attributes,academics,groups,sum} from './point-data.mjs?v=ledger-v3';
+import {AllocationEngine,pointSources,integer as nonnegativeInteger} from './allocation-engine.mjs?v=ledger-v3';
+export * from './point-data.mjs?v=ledger-v3';
+export {AllocationEngine,pointSources};
+// Compatibility readers for existing callers; all calculations live in the engine.
+export const pointPools=character=>pointSources(character).map(s=>({...s,skills:[...s.eligibleSkills]}));
+export function allocation(character,{pools,kinds}={}) {
+  const ledger=new AllocationEngine(character,{...(pools?{sources:pools,restore:false}:{}),...(kinds?{kinds,restore:false}:{})}).ledger();
+  return {...ledger,pools:ledger.sources};
 }
-// A residual flow graph can re-route previously allocated points when eligible
-// sources overlap (e.g. INT shared by academics and programming). Each source
-// has one capacity, so categories can never duplicate an attribute's bonus.
-export function allocation(character,{pools=pointPools(character),kinds=['academic','skills']}={}) {
-  const demands=[...academics.map(name=>({name,kind:'academic'})),...Object.values(groups).flat().map(name=>({name,kind:'skills'}))].filter(skill=>kinds.includes(skill.kind));
-  const source=0,firstPool=1,firstSkill=firstPool+pools.length,sink=firstSkill+demands.length;
-  const graph=Array.from({length:sink+1},()=>[]);
-  function edge(from,to,capacity){const forward={to,remaining:capacity,capacity,reverse:graph[to].length};const back={to:from,remaining:0,capacity:0,reverse:graph[from].length};graph[from].push(forward);graph[to].push(back);return forward;}
-  const links=pools.map((pool,p)=>({pool,capacity:edge(source,firstPool+p,pool.amount),skills:demands.flatMap((skill,d)=>pool.skills.includes(skill.name)?[{name:skill.name,edge:edge(firstPool+p,firstSkill+d,Number.MAX_SAFE_INTEGER)}]:[])}));
-  const requests=demands.map((skill,d)=>({...skill,edge:edge(firstSkill+d,sink,Math.max(0,Number(character[skill.kind]?.[skill.name])||0))}));
-  let used=0;
-  while(true){
-    const previous=Array(graph.length).fill(null),queue=[source];previous[source]={};
-    for(let q=0;q<queue.length&&!previous[sink];q++)for(const link of graph[queue[q]])if(link.remaining>0&&!previous[link.to]){previous[link.to]={from:queue[q],link};queue.push(link.to);}
-    if(!previous[sink])break;
-    let amount=Infinity;
-    for(let at=sink;at!==source;at=previous[at].from)amount=Math.min(amount,previous[at].link.remaining);
-    for(let at=sink;at!==source;at=previous[at].from){const {from,link}=previous[at];link.remaining-=amount;graph[at][link.reverse].remaining+=amount;}
-    used+=amount;
-  }
-  const fundedPools=links.map(({pool,capacity,skills})=>({...pool,used:capacity.capacity-capacity.remaining,remaining:capacity.remaining,allocations:skills.filter(x=>x.edge.capacity-x.edge.remaining>0).map(x=>({name:x.name,points:x.edge.capacity-x.edge.remaining}))}));
-  const skills=requests.map(({name,kind,edge})=>{
-    const sources=fundedPools.flatMap(pool=>pool.allocations.filter(a=>a.name===name).map(a=>({poolId:pool.id,points:a.points})));
-    return {name,kind,allocated:edge.capacity,unfunded:edge.remaining,sources,
-      baseContribution:sources.filter(s=>!attributes.includes(s.poolId)).reduce((n,s)=>n+s.points,0),
-      attributeBonusContributions:Object.fromEntries(attributes.map(id=>[id,sources.filter(s=>s.poolId===id).reduce((n,s)=>n+s.points,0)]))};
-  });
-  return {used,unfunded:requests.reduce((n,r)=>n+r.edge.remaining,0),pools:fundedPools,skills};
-}
-// Independently check the payment ledger, never accept a matching total alone.
-// Pool definitions come from current attributes, not from the submitted ledger.
-export function validateAllocation(character,skills,{pools=pointPools(character),kinds=['academic','skills']}={}) {
+export const skillBudget=(character,kind)=>{
+  if(!['academic','skills'].includes(kind))throw new Error('未知技能分類。');
+  return new AllocationEngine(character).summary(kind);
+};
+export function validateAllocation(character,skills,{pools=pointSources(character),kinds=['academic','skills']}={}) {
   const errors=[],spent=Object.fromEntries(pools.map(p=>[p.id,0])),seen=new Set();
   for(const skill of skills){
     const key=skill.kind+'|'+skill.name;
@@ -71,6 +21,14 @@ export function validateAllocation(character,skills,{pools=pointPools(character)
     seen.add(key);
     const baseId=skill.kind==='academic'?'academic':'general';
     const contributions={...skill.attributeBonusContributions,[baseId]:skill.baseContribution};
+    if(skill.sources){
+      const listed={};
+      for(const source of skill.sources){
+        if(!nonnegativeInteger(source.points)||Object.hasOwn(listed,source.poolId))errors.push('重複或無效來源：'+skill.name);
+        listed[source.poolId]=(listed[source.poolId]||0)+source.points;
+      }
+      for(const id of new Set([...Object.keys(listed),...Object.keys(contributions)]))if((listed[id]||0)!==(contributions[id]||0))errors.push('來源明細不一致：'+skill.name);
+    }
     let paid=0;
     for(const [id,points] of Object.entries(contributions)){
       if(!nonnegativeInteger(points)){errors.push(key+' 的 '+id+' 投入必須是非負整數');continue;}
@@ -85,22 +43,7 @@ export function validateAllocation(character,skills,{pools=pointPools(character)
   for(const pool of pools)if(spent[pool.id]>pool.amount)errors.push(pool.id+' 投入 '+spent[pool.id]+' 超過額度 '+pool.amount);
   return {valid:errors.length===0,errors,spent};
 }
-export function skillBudget(character,kind) {
-  if(!['academic','skills'].includes(kind))throw new Error('未知技能池。');
-  const names=kind==='academic'?academics:Object.values(groups).flat(),other=kind==='academic'?'skills':'academic';
-  // Reserve only the sources needed by the unchanged pool, even if that old
-  // draft is over budget. Its validation errors must not block this pool's roll.
-  const reserved=allocation(character,{kinds:[other]});
-  const sources=reserved.pools.filter(pool=>pool.skills.some(name=>names.includes(name))).map(pool=>({
-    ...pool,generated:pool.amount,reserved:pool.used,amount:pool.remaining,
-    eligibleSkills:pool.eligibleSkills.filter(name=>names.includes(name)),
-    skills:pool.skills.filter(name=>names.includes(name))
-  }));
-  const base=sources.filter(p=>!attributes.includes(p.id)).reduce((n,p)=>n+p.amount,0);
-  const extra=sources.filter(p=>attributes.includes(p.id)).reduce((n,p)=>n+p.amount,0);
-  const total=base+extra,allocated=sum(character[kind]);
-  return {kind,base,bonus:extra,total,allocated,remaining:total-allocated,sources};
-}
+
 export function validateCharacter(character,{complete=false,normal=false}={}) {
   const errors=[],dev=character.dev&&!normal;
   for(const id of attributes){const value=character.attr?.[id];if(!nonnegativeInteger(value))errors.push(`${id} 必須是非負整數。`);else if(!dev&&value>rules.attributeCap)errors.push(`${id} 一般創角上限為 ${rules.attributeCap}。`);}
@@ -116,50 +59,45 @@ export function validateCharacter(character,{complete=false,normal=false}={}) {
   const {unfunded}=ledger;if(unfunded)errors.push(`技能配置有 ${unfunded} 點超出適用點數池；請降低技能或重新分配能力值。`);
   return errors;
 }
+
 export function setScore(character,kind,name,value) {
-  if(!['attr','academic','skills'].includes(kind))throw new Error('未知配點種類。');
-  if(!(kind==='attr'?attributes:kind==='academic'?academics:Object.values(groups).flat()).includes(name))throw new Error('未知能力或技能。');
-  if(!nonnegativeInteger(value))throw new Error('請輸入非負整數。');
+  const allowed=kind==='attr'?attributes:kind==='academic'?academics:kind==='skills'?Object.values(groups).flat():[];
+  if(!allowed.includes(name)||!nonnegativeInteger(value))throw new Error('請輸入合法能力或技能的非負整數。');
   const old=character[kind]?.[name]||0;
   if(!character.dev){
     const cap=kind==='attr'?rules.attributeCap:rules.skillCap;
-    if(value>cap)throw new Error(`單項上限為 ${cap}。`);
+    if(value>cap)throw new Error('單項上限為 '+cap+'。');
     if(kind==='attr'&&value>old&&sum(character.attr)-old+value>rules.attributeTotal)throw new Error('能力值總可分配值為 250；請先降低其他能力值。');
   }
-  // Decreases always remain possible, including repairs to older saved drafts.
-  if(kind!=='attr'&&value>old){
-    const budget=skillBudget(character,kind),candidate={...character,[kind]:{...character[kind],[name]:value}};
-    const ledger=allocation(candidate,{pools:budget.sources,kinds:[kind]});
-    if(!validateAllocation(candidate,ledger.skills,{pools:budget.sources,kinds:[kind]}).valid)throw new Error('適用點數不足；請先降低其他技能，或查看點數來源。');
-  }
-  character[kind]??={};
-  character[kind][name]=value;
+  const candidate={...character,[kind]:{...character[kind],[name]:value}};
+  const engine=new AllocationEngine(candidate);
+  if(kind!=='attr'&&value>old&&!validateAllocation(candidate,engine.ledger().skills).valid)throw new Error('適用點數不足；請先降低其他技能，或查看點數來源。');
+  character[kind]=candidate[kind];
+  character.creationPoints=engine.ledger();
 }
 export function randomizeScores(character,kind,names,rng=Math.random) {
-  const cap=kind==='attr'?rules.attributeCap:rules.skillCap;
   const allowed=kind==='attr'?attributes:kind==='academic'?academics:kind==='skills'?Object.values(groups).flat():[];
-  if(!allowed.length||names.some(name=>!allowed.includes(name)))throw new Error('未知配點種類或技能。');
-  // Calculate the budget BEFORE sampling. Spend restricted bonuses first,
-  // leaving the flexible base for any remaining skills. No combined 400+ pool.
-  const budget=kind==='attr'?null:skillBudget(character,kind);
-  const sources=budget?[...budget.sources].sort((a,b)=>a.skills.length-b.skills.length):[{amount:rules.attributeTotal,skills:names}];
-  const rolled=Object.fromEntries(names.map(name=>[name,0]));
-  const payments=Object.fromEntries(names.map(name=>[name,{name,kind,baseContribution:0,attributeBonusContributions:Object.fromEntries(attributes.map(id=>[id,0]))}]));
-  for(const source of sources){
-    let remaining=source.amount;
-    while(remaining>0){
-      const possible=source.skills.filter(name=>names.includes(name)&&rolled[name]<cap);
-      if(!possible.length)break;
-      const name=possible[Math.min(possible.length-1,Math.floor(rng()*possible.length))];
-      const amount=Math.min(5,remaining,cap-rolled[name]);
-      rolled[name]+=amount;remaining-=amount;
-      if(budget){if(source.type==='base')payments[name].baseContribution+=amount;else payments[name].attributeBonusContributions[source.attribute]+=amount;}
+  if(!allowed.length||names.length!==allowed.length||new Set(names).size!==allowed.length||names.some(n=>!allowed.includes(n)))throw new Error('隨機配置必須包含此分類的完整技能清單。');
+  if(kind==='attr'){
+    const values=Object.fromEntries(attributes.map(id=>[id,0]));
+    let remaining=rules.attributeTotal;
+    while(remaining){
+      const possible=attributes.filter(id=>values[id]<rules.attributeCap),sample=rng();
+      if(!Number.isFinite(sample)||sample<0||sample>=1)throw new Error('無效隨機值。');
+      const id=possible[Math.floor(sample*possible.length)],amount=Math.min(5,remaining,rules.attributeCap-values[id]);
+      values[id]+=amount;remaining-=amount;
     }
+    character.attr=values;new AllocationEngine(character).persist();return null;
   }
-  if(budget&&!validateAllocation({...character,[kind]:rolled},Object.values(payments),{pools:budget.sources,kinds:[kind]}).valid)throw new Error('隨機配置的來源或使用限制不合法，原配置已保留。');
-  if(budget&&(sum(rolled)>budget.total||allocation({...character,[kind]:rolled},{pools:budget.sources,kinds:[kind]}).unfunded))throw new Error('隨機配置超出合法預算，原配置已保留。');
-  character[kind]=rolled;
-  return budget;
+  const candidate={...character},engine=new AllocationEngine(candidate),summary=engine.summary(kind);
+  candidate[kind]=engine.randomize(kind,names,rng);
+  // The same payment ledger is persisted, not reconstructed by a second allocator.
+  const ledger=engine.ledger();
+  const selected=ledger.skills.filter(s=>s.kind===kind);
+  const proof=validateAllocation(candidate,selected,{kinds:[kind]});
+  if(!proof.valid)throw new Error(proof.errors.join(' '));
+  character[kind]=candidate[kind];character.creationPoints=ledger;
+  return summary;
 }
 export const canonicalGender = gender => ({男性:'male',女性:'female',中性:'neutral'})[gender]||gender;
 export const residenceFields=['residentialAccess','residenceId','buildingId','floorId','roomId','bedId'];
@@ -167,7 +105,7 @@ export function creatorPlayer(character) {
   const player=structuredClone(character);
   // Recompute creation provenance; a saved snapshot never authorizes spending.
   // In-game growth does not spend these creation-only resources.
-  player.creationPoints={version:1,attributes:{...character.attr},...allocation(character)};
+  player.creationPoints={attributes:{...character.attr},...new AllocationEngine(character).ledger()};
   player.basic.gender=canonicalGender(player.basic.gender);
   residenceFields.forEach(key=>delete player[key]);
   return player;

@@ -27,9 +27,9 @@ test('per-skill source ledger conserves each point and survives save serializati
     assert.equal(pool.attribute,attributes.includes(pool.id)?pool.id:null);
   }
   const player=JSON.parse(JSON.stringify(creatorPlayer(c)));assert.deepEqual(player.creationPoints.skills,result.skills);
-  player.creationPoints.pools.find(p=>p.id==='DEX').amount=999;
+  player.creationPoints.sources.find(p=>p.id==='DEX').amount=999;
   player.attr.DEX=50;
-  assert.equal(creatorPlayer(player).creationPoints.pools.find(p=>p.id==='DEX').amount,0);
+  assert.equal(creatorPlayer(player).creationPoints.sources.find(p=>p.id==='DEX').amount,0);
   assert.ok(validateCharacter(player).length);
 });
 test('override lifts caps but rejects unfunded or ineligible skill points and old invalid drafts',()=>{
@@ -41,16 +41,14 @@ test('override lifts caps but rejects unfunded or ineligible skill points and ol
 test('manual first edit initializes missing skill collections',()=>{
   const c=fresh();delete c.skills;setScore(c,'skills','工程',15);assert.equal(c.skills.工程,15);
 });
-test('visible source rows use generated and reserved amounts; details expose the skill ledger',()=>{
+test('visible source rows expose independent sources once and exact contributions',()=>{
   const c=fresh();c.academic.化學=15;c.skills.工程=15;
-  const html=pointPanel(c);
-  for(const kind of ['academic','skills']){
-    const section=html.match(new RegExp(`data-budget="${kind}"[^>]*>([\\s\\S]*?)</section>`))[1];
-    for(const p of skillBudget(c,kind).sources.filter(p=>attributes.includes(p.id))){
-      assert.ok(section.includes(`${p.id} Bonus +${p.generated}`));
-      assert.ok(section.includes(`另一池使用 ${p.reserved} · 本池可用 <b>${p.amount}</b>`));
-      assert.ok(section.includes(p.skills.join('、')));
-    }
+  const html=pointPanel(c),ledger=allocation(c);
+  assert.ok(!html.includes('另一池使用'));assert.ok(!html.includes('本池可用'));
+  for(const source of ledger.sources){
+    assert.equal(html.split('data-source="'+source.id+'"').length-1,1);
+    assert.ok(html.includes('可投入：'+source.eligibleSkills.join('、')));
+    assert.ok(html.includes('已用 '+source.used+' ／剩餘 '+source.remaining));
   }
-  assert.ok(html.includes('化學 15 = INT 15'));assert.ok(html.includes('工程 15 = DEX 15'));
+  assert.ok(html.includes('化學 15 = INT Bonus 15'));assert.ok(html.includes('工程 15 = DEX Bonus 15'));
 });

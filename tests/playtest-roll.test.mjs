@@ -38,7 +38,7 @@ test('an invalid other draft cannot freeze or erase this pool, and stays untouch
     const before=structuredClone(c[other]),budget=skillBudget(c,kind);
     randomizeScores(c,kind,names[kind],random(7));
     assert.equal(sum(c[kind]),budget.total);assert.ok(budget.total>=200);assert.deepEqual(c[other],before);
-    assert.equal(allocation(c,{pools:budget.sources,kinds:[kind]}).unfunded,0);
+    assert.equal(allocation(c).skills.filter(s=>s.kind===kind).reduce((n,s)=>n+s.unfunded,0),0);
   }
 });
 test('budgets are computed before sampling; only legal sources are spent, even with override',()=>{
@@ -61,7 +61,7 @@ test('UI Base / Bonus / Total / Allocated / Remaining equal actual independent b
     for(const kind of ['academic','skills']){
       const b=skillBudget(c,kind),section=html.match(new RegExp(`data-budget="${kind}"[^>]*>([\\s\\S]*?)</section>`))[1];
       for(const key of ['base','bonus','total','allocated','remaining'])assert.equal(Number(section.match(new RegExp(`data-budget-value="${key}">(-?\\d+)`))[1]),b[key]);
-      assert.equal(b.total,b.base+b.bonus);assert.equal(b.remaining,b.total-sum(c[kind]));
+      assert.equal(b.total,b.base+b.bonus);assert.equal(b.remaining,b.total-b.allocated);assert.ok(b.remaining>=0);assert.equal(b.requested,sum(c[kind]));assert.equal(b.unfunded,b.requested-b.allocated);
     }
     assert.ok(html.includes(`INT Bonus = max(0, ${c.attr.INT} - 50) = ${Math.max(0,c.attr.INT-50)}`));
     assert.ok(html.includes('DEX Bonus = max(0, 60 - 50) = 10'));

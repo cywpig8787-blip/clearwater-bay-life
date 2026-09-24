@@ -7,7 +7,9 @@ import {pointPanel} from '../web/opening/point-ui.mjs';
 const screenshotCase=()=>({attr:{STR:37,CON:37,AGI:37,DEX:65,PER:37,INT:37},academic:{語文:75,數學:75,物理:50},skills:{音樂:75,烹飪:75,設計:50,妙手:15}});
 test('screenshot regression: identical 215 totals can be legal or illegal',()=>{
   const legal=screenshotCase(),illegal=screenshotCase();delete illegal.skills.妙手;illegal.skills.演說=15;
-  for(const c of [legal,illegal]){assert.equal(skillBudget(c,'skills').total,215);assert.equal(skillBudget(c,'skills').allocated,215);assert.equal(skillBudget(c,'skills').remaining,0);}
+  for(const c of [legal,illegal]){assert.equal(skillBudget(c,'skills').total,215);assert.equal(skillBudget(c,'skills').requested,215);}
+  assert.equal(skillBudget(legal,'skills').allocated,215);assert.equal(skillBudget(legal,'skills').remaining,0);
+  assert.equal(skillBudget(illegal,'skills').allocated,200);assert.equal(skillBudget(illegal,'skills').unfunded,15);assert.equal(skillBudget(illegal,'skills').remaining,15);
   const ledger=allocation(legal);const proof=validateAllocation(legal,ledger.skills);
   assert.equal(proof.valid,true);assert.equal(proof.spent.general,200);assert.equal(proof.spent.DEX,15);
   const dex=ledger.skills.find(s=>s.name==='妙手');assert.equal(dex.baseContribution,0);assert.equal(dex.attributeBonusContributions.DEX,15);
