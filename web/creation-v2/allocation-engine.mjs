@@ -1,6 +1,6 @@
-import {attributes,categories,proficiencyGroups,rules} from './catalog.mjs';
-import {attributeTotal,clampAttribute,validateAttributes} from './attribute-engine.mjs';
-import {categoryStatus,proficiencyRemaining} from './point-source-ledger.mjs';
+import {attributes,categories,proficiencyGroups,rules} from './catalog.mjs?v=cyw51-r3';
+import {attributeTotal,clampAttribute,validateAttributes} from './attribute-engine.mjs?v=cyw51-r3';
+import {categoryStatus,proficiencyRemaining} from './point-source-ledger.mjs?v=cyw51-r3';
 const valid=n=>Number.isSafeInteger(n)&&n>=0;
 export function allocate(s,kind,id,value){
  if(!valid(value))throw Error('請輸入非負整數。');

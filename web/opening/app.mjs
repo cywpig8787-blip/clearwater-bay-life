@@ -1,8 +1,8 @@
-import {newCharacter,validateCharacter,confirmCharacterData} from '../creation-v2/creator-service.mjs';
-import {attributes,categories,proficiencyGroups,financeTiers,rules} from '../creation-v2/catalog.mjs';
-import {allocate,adjust,attributePointsRemaining} from '../creation-v2/allocation-engine.mjs';
-import {categoryStatus,proficiencyRemaining} from '../creation-v2/point-source-ledger.mjs';
-import {readRun,newRun,rollFinance,developerFinance} from '../creation-v2/finance.mjs';
+import {newCharacter,validateCharacter,confirmCharacterData} from '../creation-v2/creator-service.mjs?v=cyw51-r3';
+import {attributes,categories,proficiencyGroups,financeTiers,rules} from '../creation-v2/catalog.mjs?v=cyw51-r3';
+import {allocate,adjust,attributePointsRemaining} from '../creation-v2/allocation-engine.mjs?v=cyw51-r3';
+import {categoryStatus,proficiencyRemaining} from '../creation-v2/point-source-ledger.mjs?v=cyw51-r3';
+import {readRun,newRun,rollFinance,developerFinance} from '../creation-v2/finance.mjs?v=cyw51-r3';
 const $=q=>document.querySelector(q),all=q=>[...document.querySelectorAll(q)],KEY='clearwater-life-creator-v4';
 let s;try{s=JSON.parse(localStorage.getItem(KEY))||newCharacter();if(s.version!==4)s=newCharacter()}catch{s=newCharacter()}
 let run=readRun()||newRun();let message='',detail='',mobileDetail=false;
