@@ -98,6 +98,6 @@ test('skill details, expanded categories and scroll position persist',async()=>{
 });
 
 test('original attached paper master is byte-for-byte used by the page asset',async()=>{
- const {readFile,stat}=await import('node:fs/promises'),a=await readFile('/workspace/scratch/79bc97cbc8be/upload/01-1000078230.png'),b=await readFile('web/opening/paper-master.jpg');
- assert.deepEqual(a,b);assert.equal((await stat('web/opening/paper-master.jpg')).size,a.length);
+ const {readFile,stat}=await import('node:fs/promises'),{createHash}=await import('node:crypto'),b=await readFile('web/opening/paper-master.jpg');
+ assert.equal(createHash('md5').update(b).digest('hex'),'f4313003d0a5317582b87c9b9701ae59');assert.equal((await stat('web/opening/paper-master.jpg')).size,246605);
 });
