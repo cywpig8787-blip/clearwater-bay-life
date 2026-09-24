@@ -26,9 +26,9 @@ export const bonus = value => Math.max(0,Number(value||0)-rules.baseline);
 const nonnegativeInteger = value => Number.isSafeInteger(value)&&value>=0;
 export function pointPools(character) {
   return [
-    {id:'academic',label:'Academic Base Points',amount:rules.academicBase,skills:academics},
-    {id:'general',label:'General Skill Points',amount:rules.generalBase,skills:Object.values(groups).flat()},
-    ...attributes.map(id=>({id,label:`${id} Bonus`,amount:bonus(character.attr?.[id]),skills:bonusSkills[id]}))
+    {id:'academic',type:'base',attribute:null,label:'Academic Base Points',amount:rules.academicBase,skills:academics},
+    {id:'general',type:'base',attribute:null,label:'General Skill Points',amount:rules.generalBase,skills:Object.values(groups).flat()},
+    ...attributes.map(id=>({id,type:'attributeBonus',attribute:id,label:`${id} Bonus`,amount:bonus(character.attr?.[id]),skills:bonusSkills[id]}))
   ];
 }
 // A residual flow graph can re-route previously allocated points when eligible
@@ -51,7 +51,11 @@ export function allocation(character,{pools=pointPools(character),kinds=['academ
     for(let at=sink;at!==source;at=previous[at].from){const {from,link}=previous[at];link.remaining-=amount;graph[at][link.reverse].remaining+=amount;}
     used+=amount;
   }
-  return {used,unfunded:requests.reduce((n,r)=>n+r.edge.remaining,0),pools:links.map(({pool,capacity,skills})=>({...pool,used:capacity.capacity-capacity.remaining,remaining:capacity.remaining,allocations:skills.filter(x=>x.edge.capacity-x.edge.remaining>0).map(x=>({name:x.name,points:x.edge.capacity-x.edge.remaining}))}))};
+  const fundedPools=links.map(({pool,capacity,skills})=>({...pool,used:capacity.capacity-capacity.remaining,remaining:capacity.remaining,allocations:skills.filter(x=>x.edge.capacity-x.edge.remaining>0).map(x=>({name:x.name,points:x.edge.capacity-x.edge.remaining}))}));
+  const skills=requests.map(({name,kind,edge})=>({name,kind,allocated:edge.capacity,unfunded:edge.remaining,
+    sources:fundedPools.flatMap(pool=>pool.allocations.filter(a=>a.name===name).map(a=>({poolId:pool.id,points:a.points})))
+  }));
+  return {used,unfunded:requests.reduce((n,r)=>n+r.edge.remaining,0),pools:fundedPools,skills};
 }
 export function skillBudget(character,kind) {
   if(!['academic','skills'].includes(kind))throw new Error('未知技能池。');
@@ -78,24 +82,25 @@ export function validateCharacter(character,{complete=false,normal=false}={}) {
     if(!(kind==='academic'?academics:Object.values(groups).flat()).includes(name))errors.push(`未知技能：${name}。`);
     else if(!nonnegativeInteger(value)||(!dev&&value>rules.skillCap))errors.push(`${name} 必須是 0–${dev?'安全整數':rules.skillCap} 的整數。`);
   }
-  if(!dev){const {unfunded}=allocation(character);if(unfunded)errors.push(`技能配置有 ${unfunded} 點超出適用點數池；請降低技能或重新分配能力值。`);}
+  const {unfunded}=allocation(character);if(unfunded)errors.push(`技能配置有 ${unfunded} 點超出適用點數池；請降低技能或重新分配能力值。`);
   return errors;
 }
 export function setScore(character,kind,name,value) {
   if(!['attr','academic','skills'].includes(kind))throw new Error('未知配點種類。');
   if(!(kind==='attr'?attributes:kind==='academic'?academics:Object.values(groups).flat()).includes(name))throw new Error('未知能力或技能。');
   if(!nonnegativeInteger(value))throw new Error('請輸入非負整數。');
-  const old=character[kind][name]||0;
+  const old=character[kind]?.[name]||0;
   if(!character.dev){
     const cap=kind==='attr'?rules.attributeCap:rules.skillCap;
     if(value>cap)throw new Error(`單項上限為 ${cap}。`);
     if(kind==='attr'&&value>old&&sum(character.attr)-old+value>rules.attributeTotal)throw new Error('能力值總可分配值為 250；請先降低其他能力值。');
-    // Decreases always remain possible, including repairs to older saved drafts.
-    if(kind!=='attr'&&value>old){
+  }
+  // Decreases always remain possible, including repairs to older saved drafts.
+  if(kind!=='attr'&&value>old){
       const budget=skillBudget(character,kind);
       if(allocation({...character,[kind]:{...character[kind],[name]:value}},{pools:budget.sources,kinds:[kind]}).unfunded)throw new Error('適用點數不足；請先降低其他技能，或查看點數來源。');
     }
-  }
+  character[kind]??={};
   character[kind][name]=value;
 }
 export function randomizeScores(character,kind,names,rng=Math.random) {
@@ -125,6 +130,9 @@ export const canonicalGender = gender => ({男性:'male',女性:'female',中性:
 export const residenceFields=['residentialAccess','residenceId','buildingId','floorId','roomId','bedId'];
 export function creatorPlayer(character) {
   const player=structuredClone(character);
+  // Recompute creation provenance; a saved snapshot never authorizes spending.
+  // In-game growth does not spend these creation-only resources.
+  player.creationPoints={version:1,attributes:{...character.attr},...allocation(character)};
   player.basic.gender=canonicalGender(player.basic.gender);
   residenceFields.forEach(key=>delete player[key]);
   return player;

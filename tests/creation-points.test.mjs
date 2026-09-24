@@ -57,7 +57,8 @@ test('lowering attributes updates bonus immediately without silently deleting sk
   setScore(c,'skills','妙手',0);assert.deepEqual(validateCharacter(c),[]);
 });
 test('override permits extreme testing, but normal validation and edits reject leaked limits',()=>{
-  const c=character();c.dev=true;setScore(c,'attr','STR',150);setScore(c,'skills','音樂',300);
+  const c=character();c.dev=true;setScore(c,'attr','STR',150);setScore(c,'skills','設計',25);setScore(c,'skills','音樂',100);
+  assert.throws(()=>setScore(c,'skills','音樂',300));
   assert.deepEqual(validateCharacter(c,{complete:true}),[]);assert.ok(validateCharacter(c,{normal:true}).length);
   c.dev=false;assert.throws(()=>setScore(c,'attr','CON',66));assert.ok(validateCharacter(c,{complete:true}).length);
   setScore(c,'attr','STR',42);setScore(c,'skills','音樂',75);assert.deepEqual(validateCharacter(c,{complete:true}),[]);
