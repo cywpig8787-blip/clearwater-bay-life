@@ -125,27 +125,74 @@ textarea { width: 100%; border: 1px solid #c7b39a; line-height: 1.7; resize: ver
 .background-summary { max-height: 8rem; overflow: auto; white-space: pre-wrap; }
 #rotateGate { display: none; }
 
-/* Touch devices use the same landscape paper; portrait is a rotation prompt. */
-@media (orientation: landscape) and (max-height: 600px) and (pointer: coarse) {
-  .paper { width: min(100vw, 1536px, 150dvh); height: min(100dvh, 1024px); min-height: 0; aspect-ratio: 3 / 2; padding: 10.5% 7.4% 4%; }
-  .sheet { min-height: 0; height: 100%; }
-  #tabs { top: 1%; left: 16.5%; width: 63%; height: 10.5%; }
-  #tabs .note-tab { padding: .2rem .05rem; font-size: clamp(8px, 1.25vw, 12px); }
-  .identity { grid-template-columns: 30% 1fr; gap: 3%; }
-  .portrait { min-height: 0; }
-  .portrait-view { min-height: 0; }
-  .statgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .25rem .7rem; }
-  .stat { flex-wrap: nowrap; }
-  .counter { gap: .08rem; }
-  .counter button { min-width: clamp(1rem, 2.6vw, 1.6rem); padding: .1rem 0; font-size: clamp(.52rem, 1.25vw, .7rem); }
-  .counter input { flex-basis: clamp(1.6rem, 4vw, 2.2rem); width: clamp(1.6rem, 4vw, 2.2rem); padding: .2rem 0; font-size: .68rem; }
-  .split { height: 55%; grid-template-columns: 67% 31%; }
-  .list { max-height: none; }
-  .details { position: static; display: block; max-height: none; box-shadow: none; }
-  .summary { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .5rem; }
-  .summary > article { margin: 0; padding: 0 .45rem; }
-  footer { position: static; padding: .4rem 0; }
-  #cropStage { width: min(75vw, 650px); height: min(50dvh, 400px); }
+/* The short landscape viewport is a separate document layout, not a scaled desktop. */
+@media (orientation: landscape) and (max-height: 600px) and (max-width: 1100px) {
+  html, body { width: 100%; height: 100%; overflow: hidden; }
+  #creator { width: 100%; height: 100dvh; overflow: hidden; }
+  .paper {
+    width: 100%; height: 100dvh; min-height: 0; aspect-ratio: auto;
+    margin: 0; overflow: hidden;
+    padding: clamp(42px, 11dvh, 60px) 7.5vw clamp(23px, 7dvh, 38px);
+    background-size: 100% 100%;
+  }
+  #tabs { top: 1%; left: 16.5%; width: 63%; height: 10.5%; gap: 0; }
+  #tabs .note-tab {
+    min-width: 0; height: 88%; padding: 2px 0;
+    white-space: nowrap; word-break: keep-all; overflow-wrap: normal;
+    font-size: clamp(9px, 1.35vw, 12px); line-height: 1.05;
+  }
+  #tabs .note-tab.active { height: 94%; }
+  .sheet { min-width: 0; min-height: 0; height: 100%; overflow: hidden; }
+  header { flex: none; margin: 0 1% 5px; padding: 0 0 3px; }
+  header p { margin: 0; font-size: 9px; letter-spacing: .18em; }
+  h1 { margin: 0; font-size: clamp(16px, 3dvh, 21px); line-height: 1.15; }
+  h2 { font-size: 15px; margin: .2rem 0; }
+  #page { margin: 0 1%; overflow: auto; min-height: 0; scrollbar-width: thin; }
+  #page:has(.split) { display: flex; flex-direction: column; overflow: hidden; }
+  footer { flex: none; min-height: 34px; margin: 4px 1% 0; padding: 3px 0 0; gap: 6px; }
+  footer button { padding: 4px 9px; white-space: nowrap; font-size: 11px; }
+  #status { min-width: 0; max-height: 28px; overflow: auto; font-size: 10px; text-align: center; }
+  button, input, select, textarea { min-width: 0; }
+  .field { gap: 2px; margin: 3px 0; }
+  .field label, .field span { font-size: 11px; }
+  .field input, .field select, .field button { width: 100%; padding: 3px 5px; font-size: 12px; }
+  .identity { height: 100%; min-height: 0; grid-template-columns: minmax(0, 30%) minmax(0, 1fr); gap: 3%; max-width: none; margin: 0; }
+  .portrait { min-width: 0; min-height: 0; height: 100%; overflow: hidden; padding: 5px; }
+  .portrait img { max-height: 62%; }
+  .silhouette { font-size: clamp(42px, 12dvh, 64px); line-height: 1; }
+  .portrait .field { width: 100%; font-size: 10px; text-align: center; }
+  .portrait input[type=file] { width: 100%; padding: 2px 0; font-size: 9px; }
+  .formgrid { min-width: 0; align-content: center; gap: 0 8px; }
+  .finance { min-width: 0; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; max-width: none; margin: 0; font-size: 12px; }
+  .finance section { min-width: 0; }
+  .finance p { margin: 5px 0; }
+  .finance button { font-size: 11px; padding: 4px 7px; }
+  .budget { margin: 0 0 3px; font-size: 12px; }
+  .statgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 9px; }
+  .stat, .skillrow { min-width: 0; gap: 2px; padding: 2px 0; }
+  .stat b { min-width: 24px; font-size: 11px; }
+  .counter { flex: none; flex-wrap: nowrap; gap: 1px; }
+  .counter button { min-width: 22px; width: 22px; padding: 3px 0; font: 10px/1 Georgia, serif; }
+  .counter input { flex: 0 0 28px; width: 28px; padding: 2px 0; font-size: 11px; }
+  .split { flex: 1; height: auto; min-height: 0; grid-template-columns: minmax(0, 69%) minmax(0, 29%); gap: 2%; }
+  .list, .details { min-height: 0; max-height: 100%; overflow-y: auto; overflow-x: hidden; padding: 0 4px 0 0; }
+  .details { padding: 3px 0 0 8px; font-size: 11px; }
+  .details h2 { overflow-wrap: anywhere; }
+  .details button { padding: 2px 5px; font-size: 10px; }
+  .category { padding: 2px 0; }
+  .category summary { font-size: 12px; }
+  .meta { font-size: 10px; }
+  .skillrow .name { min-width: 0; padding: 2px 0; font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .summary { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; font-size: 11px; }
+  .summary > article { min-width: 0; padding: 0 5px; overflow-wrap: anywhere; }
+  .summary h2 { font-size: 13px; }
+  .summary p { margin: 3px 0; }
+  .note { font-size: 11px; }
+  .center { max-width: none; height: 100%; margin: 0; }
+  .center .field { height: 100%; margin: 0; grid-template-rows: auto minmax(0, 1fr); }
+  .background { min-height: 0; height: 100%; resize: none; font-size: 12px; }
+  #cropDialog { max-height: 95dvh; overflow: auto; }
+  #cropStage { width: min(75vw, 650px); height: min(45dvh, 400px); }
 }
 
 @media (orientation: portrait) and (max-width: 900px) and (pointer: coarse) {

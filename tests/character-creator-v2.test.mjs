@@ -18,7 +18,7 @@ test('seven steps, no school step, final action ends without creating game state
  assert.doesNotMatch(app,/選校|校徽|House Placement|residenceId|preparation_week|player-state-v1/);
  assert.match(app,/角色資料已確認/);assert.match(app,/confirmCharacterData\(s,run\)/);
  assert.match(html,/paper-master\.jpg|style\.css/);assert.match(html,/rotateGate/);
- assert.match(html,/app\.mjs\?v=cyw51-r5/);assert.match(html,/style\.css\?v=cyw51-r5/);
+ assert.match(html,/app\.mjs\?v=cyw51-r6/);assert.match(html,/style\.css\?v=cyw51-r6/);
 });
 
 test('250 attribute points, individual cap, exact completion and clamp',()=>{
@@ -102,4 +102,18 @@ test('skill details, expanded categories and scroll position persist',async()=>{
 test('original attached paper master is byte-for-byte used by the page asset',async()=>{
  const {readFile,stat}=await import('node:fs/promises'),{createHash}=await import('node:crypto'),b=await readFile('web/opening/paper-master.jpg');
  assert.equal(createHash('md5').update(b).digest('hex'),'f4313003d0a5317582b87c9b9701ae59');assert.equal((await stat('web/opening/paper-master.jpg')).size,246605);
+});
+
+test('short landscape uses a bounded paper document, single-line tabs and internal lists',async()=>{
+ const css=await readFile('web/opening/style.css','utf8');
+ const mobile=css.split('@media (orientation: landscape) and (max-height: 600px) and (max-width: 1100px) {')[1]?.split('@media (orientation: portrait)')[0];
+ assert(mobile,'dedicated short landscape rules must exist');
+ assert.match(mobile,/\.paper\s*\{[^}]*width: 100%; height: 100dvh;[^}]*overflow: hidden;/s);
+ assert.match(mobile,/\.sheet\s*\{[^}]*height: 100%; overflow: hidden;/s);
+ assert.match(mobile,/#tabs \.note-tab\s*\{[^}]*white-space: nowrap; word-break: keep-all;/s);
+ assert.match(mobile,/#page:has\(\.split\)\s*\{[^}]*overflow: hidden;/s);
+ assert.match(mobile,/\.list, \.details\s*\{[^}]*overflow-y: auto; overflow-x: hidden;/s);
+ assert.match(mobile,/\.counter\s*\{[^}]*flex-wrap: nowrap;/s);
+ assert.match(mobile,/footer\s*\{[^}]*flex: none;/s);
+ assert.doesNotMatch(mobile,/150dvh|aspect-ratio: 3 \/ 2/);
 });
