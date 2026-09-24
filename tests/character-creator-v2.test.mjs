@@ -1,34 +1,35 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {newCharacter,validateCharacter,confirmCharacterData} from '../web/creation-v2/creator-service.mjs';
-import {allocate,adjust,attributePointsRemaining} from '../web/creation-v2/allocation-engine.mjs';
+import {allocate,adjust,attributePointsRemaining,randomizeAttributes,randomizeSkills} from '../web/creation-v2/allocation-engine.mjs';
 import {attributeTotal,validateAttributes} from '../web/creation-v2/attribute-engine.mjs';
 import {categoryBudget,categoryStatus,proficiencyRemaining} from '../web/creation-v2/point-source-ledger.mjs';
 import {attributes,categories,financeTiers,rules} from '../web/creation-v2/catalog.mjs';
 import {newRun,readRun,rollFinance,developerFinance} from '../web/creation-v2/finance.mjs';
 import {readFile} from 'node:fs/promises';
 const storage=()=>{const m=new Map();return {getItem:k=>m.get(k)||null,setItem:(k,v)=>m.set(k,v),removeItem:k=>m.delete(k)}};
-function filled(){const s=newCharacter();for(const [id,n] of Object.entries({STR:42,CON:42,AGI:42,DEX:42,PER:41,INT:41}))allocate(s,'attribute',id,n);s.basic={name:'測試角色',month:'2',day:'29',gender:'neutral',pronouns:'they/them'};s.motherTongue='中文';return s}
+function filled(){const s=newCharacter();for(const [id,n] of Object.entries({STR:25,CON:25,AGI:25,DEX:25,PER:25,INT:25}))allocate(s,'attribute',id,n);s.basic={lastName:'測',firstName:'試角色',month:'2',day:'29',gender:'neutral',pronouns:'they/them'};s.motherTongue='中文';s.nationality='美國';allocate(s,'skill','寫作',1);allocate(s,'proficiency','鋼琴',1);return s}
 
 test('seven steps, no school step, final action ends without creating game state',async()=>{
- const s=filled(),run={id:'run-a',locked:true,result:{id:'tier_3',label:'家庭資源第三級'}};
+ const s=filled(),run={id:'run-a',locked:true,result:{id:'tier_3',label:'上中產'}};
  assert.equal(confirmCharacterData(s,run),true);assert.deepEqual(validateCharacter(s,run),[]);
  const app=await readFile('web/opening/app.mjs','utf8'),html=await readFile('web/opening/index.html','utf8');
  assert.match(app,/const titles=\['基本資料','家庭經濟','能力值','技能','熟練度','背景','最終確認'\]/);
  assert.doesNotMatch(app,/選校|校徽|House Placement|residenceId|preparation_week|player-state-v1/);
  assert.match(app,/角色資料已確認/);assert.match(app,/confirmCharacterData\(s,run\)/);
  assert.match(html,/paper-master\.jpg|style\.css/);assert.match(html,/rotateGate/);
- assert.match(html,/app\.mjs\?v=cyw51-r6/);assert.match(html,/style\.css\?v=cyw51-r6/);
+ assert.match(html,/app\.mjs\?v=cyw51-r7/);assert.match(html,/style\.css\?v=cyw51-r7/);
 });
 
-test('250 attribute points, individual cap, exact completion and clamp',()=>{
- assert.equal(rules.attributeTotal,250);const s=filled();assert.equal(attributeTotal(s),250);assert.equal(attributePointsRemaining(s),0);allocate(s,'attribute','CON',19);allocate(s,'attribute','STR',64);assert.equal(adjust(s,'attribute','STR',5),65);assert.equal(adjust(s,'attribute','STR',10),65);
+test('150 attribute points, individual cap, exact completion and clamp',()=>{
+ assert.equal(rules.attributeTotal,150);const s=filled();assert.equal(attributeTotal(s),150);assert.equal(attributePointsRemaining(s),0);
+ allocate(s,'attribute','CON',0);allocate(s,'attribute','AGI',0);allocate(s,'attribute','STR',64);assert.equal(adjust(s,'attribute','STR',5),65);
  assert.throws(()=>allocate(s,'attribute','STR',66),/65/);
- assert.equal(adjust(s,'attribute','STR',10),65);assert.equal(adjust(s,'attribute','STR',-100),0);assert.equal(adjust(s,'attribute','STR',10),10);
- const partial=newCharacter();for(const [id,n] of Object.entries({STR:60,CON:60,AGI:40,DEX:40,PER:24,INT:24}))allocate(partial,'attribute',id,n);
- assert.equal(attributeTotal(partial),248);assert.equal(adjust(partial,'attribute','STR',10),62);assert.equal(attributePointsRemaining(partial),0);
+ assert.equal(adjust(s,'attribute','STR',-100),0);assert.equal(adjust(s,'attribute','STR',10),10);
+ const partial=newCharacter();for(const [id,n] of Object.entries({STR:60,CON:60,AGI:14,DEX:14}))allocate(partial,'attribute',id,n);
+ assert.equal(attributeTotal(partial),148);assert.equal(adjust(partial,'attribute','STR',10),62);assert.equal(attributePointsRemaining(partial),0);
  assert.equal(adjust(partial,'attribute','STR',-100),0);assert.equal(adjust(partial,'attribute','STR',100),62);
- assert.throws(()=>allocate(partial,'attribute','CON',65),/250/);
+ assert.throws(()=>allocate(partial,'attribute','CON',65),/150/);
 });
 
 test('all 14 skill categories use the formal pair and exact budget formula',()=>{
@@ -41,7 +42,7 @@ test('all 14 skill categories use the formal pair and exact budget formula',()=>
 });
 
 test('skills share category budgets; mother tongue 55 is free, only excess spends',()=>{
- const s=newCharacter();for(const [id,n] of Object.entries({STR:60,CON:60,AGI:0,DEX:65,PER:65,INT:0}))s.attributes[id]=n;
+ const s=newCharacter();for(const [id,n] of Object.entries({STR:0,CON:0,AGI:0,DEX:65,PER:65,INT:0}))s.attributes[id]=n;
  assert.equal(categoryStatus(s,'語言').allocated,0);
  allocate(s,'skill','母語',60);assert.equal(categoryStatus(s,'語言').allocated,5);
  allocate(s,'skill','繪畫',65);allocate(s,'skill','設計',65);
@@ -50,14 +51,14 @@ test('skills share category budgets; mother tongue 55 is free, only excess spend
 });
 
 test('attribute changes preserve skills and final confirmation flags overbudget',()=>{
- const s=newCharacter();for(const [id,n] of Object.entries({STR:60,CON:60,AGI:0,DEX:65,PER:65,INT:0}))s.attributes[id]=n;
+ const s=newCharacter();for(const [id,n] of Object.entries({STR:0,CON:0,AGI:0,DEX:65,PER:65,INT:0}))s.attributes[id]=n;
  allocate(s,'skill','繪畫',65);allocate(s,'skill','設計',65);allocate(s,'skill','攝影',20);
  allocate(s,'attribute','DEX',0);assert.equal(s.skills['繪畫'],65);assert.equal(s.skills['設計'],65);assert(categoryStatus(s,'藝術').remaining<0);
  assert(validateCharacter(s,{locked:true}).some(x=>x.includes('藝術 超額')));
 });
 
 test('500 proficiency pool is independent and uses clamp and 75 cap',()=>{
- assert.equal(rules.proficiencyTotal,500);const s=filled();assert.equal(proficiencyRemaining(s),500);
+ assert.equal(rules.proficiencyTotal,500);const s=newCharacter();assert.equal(proficiencyRemaining(s),500);
  assert.equal(adjust(s,'proficiency','鋼琴',10),10);assert.equal(adjust(s,'proficiency','鋼琴',100),75);
  assert.throws(()=>allocate(s,'proficiency','鋼琴',76),/75/);assert.equal(proficiencyRemaining(s),425);
  assert.equal(categoryStatus(s,'音樂').allocated,0);
@@ -116,4 +117,28 @@ test('short landscape uses a bounded paper document, single-line tabs and intern
  assert.match(mobile,/\.counter\s*\{[^}]*flex-wrap: nowrap;/s);
  assert.match(mobile,/footer\s*\{[^}]*flex: none;/s);
  assert.doesNotMatch(mobile,/150dvh|aspect-ratio: 3 \/ 2/);
+});
+
+
+test('random allocation uses the formal engine and stays within 150 and each category budget',()=>{
+ for(let i=0;i<20;i++){
+  const s=newCharacter();randomizeAttributes(s,Math.random);assert.equal(attributeTotal(s),150);validateAttributes(s,true);
+  randomizeSkills(s,Math.random);for(const id of Object.keys(categories))assert(categoryStatus(s,id).remaining>=0);
+  for(const [id,value] of Object.entries(s.skills))assert(value>=0&&value<=65, id);
+  allocate(s,'attribute','STR',Math.max(0,s.attributes.STR-1));assert.equal(attributeTotal(s),149);
+ }
+});
+test('five player labels are fixed; missing data and allocations block confirmation',()=>{
+ assert.deepEqual(financeTiers.map(x=>x.label),['小康','中產','上中產','富裕','超富裕']);
+ const s=filled(),run={id:'a',locked:true,result:financeTiers[0]};assert.deepEqual(validateCharacter(s,run),[]);
+ s.basic.firstName='';assert(validateCharacter(s,run).some(x=>x.includes('名字')));s.basic.firstName='名';
+ s.proficiencies.鋼琴=0;assert(validateCharacter(s,run).some(x=>x.includes('熟練度')));
+});
+test('older drafts keep their data while being reduced to the new attribute limit',()=>{
+ const s=filled();s.attributes=Object.fromEntries(attributes.map(id=>[id,40]));
+ assert.equal(attributeTotal(s),240);
+ allocate(s,'attribute','STR',10);assert.equal(attributeTotal(s),210);
+ assert.throws(()=>allocate(s,'attribute','STR',11),/150/);
+ randomizeAttributes(s,()=>0);assert.equal(attributeTotal(s),150);
+ assert.equal(s.basic.lastName,'測');assert.equal(s.proficiencies.鋼琴,1);
 });

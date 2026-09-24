@@ -1,7 +1,7 @@
-import {newCharacter} from './character-data.mjs?v=cyw51-r5';
-import {validateAttributes} from './attribute-engine.mjs?v=cyw51-r5';
-import {categories,rules,proficiencyGroups} from './catalog.mjs?v=cyw51-r5';
-import {categoryStatus,proficiencyRemaining} from './point-source-ledger.mjs?v=cyw51-r5';
+import {newCharacter} from './character-data.mjs?v=cyw51-r7';
+import {validateAttributes} from './attribute-engine.mjs?v=cyw51-r7';
+import {categories,rules,proficiencyGroups} from './catalog.mjs?v=cyw51-r7';
+import {categoryStatus,proficiencyRemaining} from './point-source-ledger.mjs?v=cyw51-r7';
 export {newCharacter};
 export function validateCharacter(s,run){
  const errors=[];try{validateAttributes(s,true)}catch(e){errors.push(e.message)}
@@ -9,7 +9,12 @@ export function validateCharacter(s,run){
  for(const [id,value] of Object.entries(s.skills)){if(!Number.isSafeInteger(value)||value>(id==='母語'?rules.skillCap:rules.skillCap))errors.push(`技能數值無效：${id}`)}
  for(const [id,value] of Object.entries(s.proficiencies)){if(!Number.isSafeInteger(value)||value<0||value>rules.proficiencyCap)errors.push(`熟練度數值無效：${id}`)}
  if(proficiencyRemaining(s)<0)errors.push('熟練度超額');
- if(!s.basic.name.trim())errors.push('請輸入姓名');
+ if(!s.basic.lastName?.trim())errors.push('請輸入姓氏');
+ if(!s.basic.firstName?.trim())errors.push('請輸入名字');
+ if(!s.basic.pronouns?.trim())errors.push('請輸入代名詞');
+ if(!s.nationality?.trim())errors.push('請輸入國籍／地區');
+ if(Object.entries(s.skills).every(([id,value])=>value<=(id==='母語'?rules.motherTongueBase:0)))errors.push('請分配至少一項技能');
+ if(Object.values(s.proficiencies).every(value=>value<=0))errors.push('請分配至少一項熟練度');
  const m=+s.basic.month,d=+s.basic.day;if(!Number.isInteger(m)||m<1||m>12||!Number.isInteger(d)||d<1||d>([31,29,31,30,31,30,31,31,30,31,30,31][m-1]||0))errors.push('生日月／日無效');
  if(!['male','female','neutral'].includes(s.basic.gender))errors.push('請選擇性別');
  if(!s.motherTongue.trim())errors.push('請選擇母語');

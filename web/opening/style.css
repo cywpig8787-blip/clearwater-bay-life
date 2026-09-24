@@ -74,15 +74,24 @@ h2, h3 { font-weight: 500; }
 @keyframes appear { from { opacity: .6; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 footer { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin: 1rem 4% 0; padding-top: .8rem; border-top: 1px solid #bba58c; }
 button, input, select, textarea { font: inherit; }
-button { padding: .45rem .8rem; border: 1px solid #91795d; border-radius: 3px; background: #f7eee0; color: #49392c; cursor: pointer; }
-button:hover:not(:disabled) { background: #ead9be; }
+button { padding: .45rem .8rem; border: 1px solid #967c60; border-radius: 2px; background: linear-gradient(165deg,#fff8e9,#e9d8b9); box-shadow: inset 0 1px #fffaf0,0 2px 3px #513e2922; color: #49392c; cursor: pointer; transition: background .18s,box-shadow .18s,transform .18s; }
+button:hover:not(:disabled) { background: #ead9be; box-shadow: 0 3px 8px #513e2933; }
+button:active:not(:disabled) { transform: translateY(1px); box-shadow: inset 0 2px 3px #513e2922; }
 button:disabled { opacity: .55; cursor: not-allowed; }
-input, select, textarea { max-width: 100%; padding: .45rem; border: 0; border-bottom: 1px solid #ad9780; background: #fffaf0a8; color: inherit; }
+input, select, textarea { max-width: 100%; padding: .45rem; border: 1px solid #bca78b; border-radius: 2px; background: #fff9edbf; box-shadow: inset 0 1px 3px #59483218; color: inherit; outline-color: #765d43; }
+input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible { outline: 2px solid #725944; outline-offset: 2px; }
+input[type=checkbox] { appearance: none; width: 17px; height: 17px; padding: 0; vertical-align: middle; cursor: pointer; }
+input[type=checkbox]:checked { background: #786048; box-shadow: inset 0 0 0 4px #f7eddc; }
+select { appearance: none; padding-right: 1.8rem; background-image: linear-gradient(45deg,transparent 50%,#765d43 50%),linear-gradient(135deg,#765d43 50%,transparent 50%); background-position: calc(100% - 17px) 50%,calc(100% - 12px) 50%; background-size: 5px 5px; background-repeat: no-repeat; }
 textarea { width: 100%; border: 1px solid #c7b39a; line-height: 1.7; resize: vertical; }
 .field { display: grid; gap: .35rem; margin: 1.1rem 0; }
 .field label { font-size: .85rem; }
 .identity { display: grid; grid-template-columns: 30% 1fr; gap: 4%; max-width: 1100px; margin: 3% auto; }
 .portrait { min-height: 300px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid #b39b7e; background: #e9dcc7aa; }
+.portrait-hit { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .6rem; width: 100%; height: 100%; min-height: 300px; padding: 1rem; border: 0; background: transparent; box-shadow: inset 0 0 0 5px #fffaf050; }
+.portrait-hit img { display: block; width: 100%; height: min(28vh,280px); max-width: 100%; object-fit: contain; object-position: center; margin: auto; }
+.portrait-hint { font-size: .8rem; letter-spacing: .1em; }
+.file-hidden { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 .portrait img { max-width: 95%; max-height: 280px; object-fit: contain; }
 .silhouette { color: #ab9881; font-size: 7rem; }
 .portrait-view { width: 100%; height: 100%; min-height: 300px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .7rem; border: 0; background: transparent; }
@@ -110,6 +119,22 @@ textarea { width: 100%; border: 1px solid #c7b39a; line-height: 1.7; resize: ver
 .center { max-width: 700px; margin: 3rem auto; }
 .background { height: 45vh; }
 .finance { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; max-width: 1000px; margin: 3rem auto; }
+.finance section { padding: .8rem 1rem; border-left: 1px solid #b6a086; }
+.finance-result { margin: 1rem 0; padding: 1rem; border: 1px double #9c8469; background: #f9efdabe; }
+.finance-result span { display: block; font-size: .75rem; letter-spacing: .16em; }
+.finance-result strong { display: block; margin: .25rem 0; font-size: 1.6rem; font-weight: 500; }
+.finance-result p { font-size: .8rem; line-height: 1.6; }
+.roll-control { display: flex; align-items: center; gap: .7rem; margin: 1.5rem 0; padding: .6rem 1.2rem; font-size: 1.1rem; }
+.roll-control span { font-size: 1.6rem; }
+.finance details { margin-top: 1.5rem; padding: .5rem; border-top: 1px solid #bba68d; font-size: .85rem; }
+.dev-pick { display: flex; flex-wrap: wrap; gap: .3rem; margin: .6rem 0; }
+.dev-pick[hidden], #devReroll[hidden] { display: none; }
+.allocation-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: .4rem; border-bottom: 1px solid #c5b299; }
+.allocation-toolbar .budget { margin: 0; }
+.allocation-toolbar button { white-space: nowrap; font-size: .8rem; padding: .3rem .6rem; }
+footer { background: #faf1df99; border-top: 1px double #9e896e; padding: .6rem .5rem; }
+footer #next { border-color: #73583e; background: linear-gradient(165deg,#8b7053,#59432f); color: #fff8e8; }
+footer #next:hover:not(:disabled) { background: #674d35; }
 .actions { display: flex; justify-content: flex-end; gap: .7rem; }
 #cropDialog { max-width: min(90vw, 820px); border: 1px solid #8d745a; background: #f8eedc; }
 #cropStage { position: relative; width: min(75vw, 650px); height: 400px; overflow: hidden; background: #292929; touch-action: none; }
@@ -158,6 +183,9 @@ textarea { width: 100%; border: 1px solid #c7b39a; line-height: 1.7; resize: ver
   .field input, .field select, .field button { width: 100%; padding: 3px 5px; font-size: 12px; }
   .identity { height: 100%; min-height: 0; grid-template-columns: minmax(0, 30%) minmax(0, 1fr); gap: 3%; max-width: none; margin: 0; }
   .portrait { min-width: 0; min-height: 0; height: 100%; overflow: hidden; padding: 5px; }
+  .portrait-hit { min-height: 0; padding: 2px; gap: 1px; }
+  .portrait-hit img { height: min(30dvh,110px); margin: auto; }
+  .portrait-hint { font-size: 9px; }
   .portrait img { max-height: 62%; }
   .silhouette { font-size: clamp(42px, 12dvh, 64px); line-height: 1; }
   .portrait .field { width: 100%; font-size: 10px; text-align: center; }
@@ -167,6 +195,14 @@ textarea { width: 100%; border: 1px solid #c7b39a; line-height: 1.7; resize: ver
   .finance section { min-width: 0; }
   .finance p { margin: 5px 0; }
   .finance button { font-size: 11px; padding: 4px 7px; }
+  .finance section { padding: 2px 6px; }
+  .finance-result { margin: 4px 0; padding: 5px; }
+  .finance-result strong { font-size: 16px; }
+  .finance-result p { margin: 2px 0; font-size: 10px; }
+  .finance details { margin-top: 5px; padding: 2px; }
+  .roll-control { margin: 6px 0; }
+  .allocation-toolbar { margin-bottom: 2px; }
+  .allocation-toolbar button { font-size: 10px; padding: 2px 5px; }
   .budget { margin: 0 0 3px; font-size: 12px; }
   .statgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 9px; }
   .stat, .skillrow { min-width: 0; gap: 2px; padding: 2px 0; }

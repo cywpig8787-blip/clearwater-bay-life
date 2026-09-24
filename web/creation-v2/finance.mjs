@@ -1,6 +1,6 @@
-import {financeTiers} from './catalog.mjs?v=cyw51-r5';
+import {financeTiers} from './catalog.mjs?v=cyw51-r7';
 const KEY='clearwater-life-run-finance-v2';
-export function readRun(storage=localStorage){try{const r=JSON.parse(storage.getItem(KEY)||'null');return r?.locked&&!financeTiers.some(t=>t.id===r.result?.id)?null:r}catch{return null}}
+export function readRun(storage=localStorage){try{const r=JSON.parse(storage.getItem(KEY)||'null');if(r?.locked&&!financeTiers.some(t=>t.id===r.result?.id))return null;return r?.locked?{...r,result:{...r.result,label:financeTiers.find(t=>t.id===r.result.id).label}}:r}catch{return null}}
 export function newRun(storage=localStorage,id=crypto.randomUUID()){const run={id,locked:false,result:null};storage.setItem(KEY,JSON.stringify(run));return run;}
 export function rollFinance(storage=localStorage,rng=Math.random){
  const run=readRun(storage)||newRun(storage);if(run.locked)return run;

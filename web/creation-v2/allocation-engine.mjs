@@ -1,12 +1,16 @@
-import {attributes,categories,proficiencyGroups,rules} from './catalog.mjs?v=cyw51-r5';
-import {attributeTotal,clampAttribute,validateAttributes} from './attribute-engine.mjs?v=cyw51-r5';
-import {categoryStatus,proficiencyRemaining} from './point-source-ledger.mjs?v=cyw51-r5';
+import {attributes,categories,proficiencyGroups,rules} from './catalog.mjs?v=cyw51-r7';
+import {attributeTotal,clampAttribute,validateAttributes} from './attribute-engine.mjs?v=cyw51-r7';
+import {categoryStatus,proficiencyRemaining} from './point-source-ledger.mjs?v=cyw51-r7';
 const valid=n=>Number.isSafeInteger(n)&&n>=0;
 export function allocate(s,kind,id,value){
  if(!valid(value))throw Error('請輸入非負整數。');
  if(kind==='attribute'){
   if(!attributes.includes(id))throw Error('未知能力值。');
-  const draft=structuredClone(s);draft.attributes[id]=value;validateAttributes(draft);s.attributes[id]=value;return value;
+  const draft=structuredClone(s),before=attributeTotal(s);draft.attributes[id]=value;
+  if(before>rules.attributeTotal&&value<=s.attributes[id]&&attributeTotal(draft)<before){
+   if(value>rules.attributeCap)throw Error(`能力值單項上限 ${rules.attributeCap}。`);
+  }else validateAttributes(draft);
+  s.attributes[id]=value;return value;
  }
  if(kind==='skill'){
   const category=s.skillCategory[id];if(!categories[category]||id!=='母語'&&!categories[category].skills.includes(id)&&!(category==='語言'&&s.otherLanguages.includes(id)))throw Error('未知技能。');
@@ -34,3 +38,28 @@ export function adjust(s,kind,id,delta){
  allocate(s,kind,id,value);return value;
 }
 export function attributePointsRemaining(s){return rules.attributeTotal-attributeTotal(s)}
+
+// Random choices still enter through allocate, so every cap and ledger check applies.
+export function randomizeAttributes(s,rng=Math.random){
+ const draft=structuredClone(s);draft.attributes=Object.fromEntries(attributes.map(id=>[id,0]));
+ while(attributePointsRemaining(draft)>0){
+  const available=attributes.filter(id=>draft.attributes[id]<rules.attributeCap);
+  const id=available[Math.floor(rng()*available.length)];
+  allocate(draft,'attribute',id,draft.attributes[id]+1);
+ }
+ s.attributes=draft.attributes;
+ return s.attributes;
+}
+export function randomizeSkills(s,rng=Math.random){
+ for(const id of Object.keys(s.skills))allocate(s,'skill',id,id==='母語'?rules.motherTongueBase:0);
+ for(const [category,group] of Object.entries(categories)){
+  const ids=[...group.skills,...(category==='語言'?s.otherLanguages:[])];
+  while(categoryStatus(s,category).remaining>0){
+   const available=ids.filter(id=>(s.skills[id]||0)<rules.skillCap);
+   if(!available.length)break;
+   const id=available[Math.floor(rng()*available.length)];
+   allocate(s,'skill',id,(s.skills[id]||0)+1);
+  }
+ }
+ return s.skills;
+}
