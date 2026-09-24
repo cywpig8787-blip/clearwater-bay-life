@@ -1,32 +1,14 @@
-import {newCharacter,canonicalGender} from './character-data.mjs';
-import {AllocationEngine} from './allocation-engine.mjs';
+import {newCharacter} from './character-data.mjs';
 import {validateAttributes} from './attribute-engine.mjs';
-import {allocationPolicy} from './developer-override.mjs';
-import {ledger} from './point-source-ledger.mjs';
-import {validateSchool} from './school-eligibility.mjs';
-import {withoutAssignment} from './residence-assignment.mjs';
-export {academics,groups,attributes,schools,houses} from './character-data.mjs';
-export {residenceFields} from './residence-assignment.mjs';
-export const setScore=(s,kind,name,value)=>new AllocationEngine(s).set(kind,name,value);
-export const randomizeScores=(s,kind,_names,rng)=>new AllocationEngine(s).roll(kind,rng);
-export function validateCharacter(s,{normal=false,complete=false}={}){
- try{validateAttributes(s.attr,{...allocationPolicy(s,{normal}),complete});ledger(s,{normal});return [];}catch(e){return [e.message];}
-}
-export function creatorPlayer(s){
- const copy=withoutAssignment(s);copy.creationPoints=ledger(s);copy.basic.gender=canonicalGender(copy.basic.gender);
- copy.genderIdentity=copy.basic.gender;copy.schoolRegistration={schoolId:copy.school,houseId:copy.house||null};return copy;
-}
-export function finishCharacter(s){
- const errors=validateCharacter(s,{complete:true});if(errors.length)throw new Error(errors.join(' '));validateSchool(s);
- if(!s.basic.name.trim())throw new Error('請輸入姓名。');
- const match=/^(\d{1,2})\/(\d{1,2})$/.exec(s.basic.birthday);
- if(!match)throw new Error('生日請輸入月／日。');
- const month=Number(match[1]),day=Number(match[2]),days=[31,29,31,30,31,30,31,31,30,31,30,31];
- if(!days[month-1]||day<1||day>days[month-1])throw new Error('生日月／日無效。');
- return {saveVersion:1,createdAt:new Date().toISOString(),player:creatorPlayer(s)};
-}
-export function loadDraft(raw){
- if(!raw)return newCharacter();
- const value=JSON.parse(raw);if(value.version!==2)throw new Error('此草稿不是 v2。');
- ledger(value);return withoutAssignment(value);
-}
+import {categories,rules} from './catalog.mjs';
+import {categoryStatus,proficiencyRemaining} from './point-source-ledger.mjs';
+import {schoolEligibility} from './school-eligibility.mjs';
+import {pendingResidence} from './residence-interface.mjs';
+export {newCharacter};
+export function validateCharacter(s,roll){const errors=[];try{validateAttributes(s,true)}catch(e){errors.push(e.message)}
+ for(const id of Object.keys(categories))if(categoryStatus(s,id).remaining<0)errors.push(`${id} 超額 ${-categoryStatus(s,id).remaining} 點`);
+ if(proficiencyRemaining(s)<0)errors.push('熟練度超額');if(!s.basic.name.trim())errors.push('請輸入姓名');
+ const m=+s.basic.month,d=+s.basic.day;if(!Number.isInteger(m)||m<1||m>12||!Number.isInteger(d)||d<1||d>([31,29,31,30,31,30,31,31,30,31,30,31][m-1]||0))errors.push('生日月／日無效');
+ if(!s.motherTongue.trim())errors.push('請選擇母語');if(!roll?.locked)errors.push('家庭經濟尚未鎖定');if(!s.school||!schoolEligibility(s,s.school,roll).ok)errors.push('請選擇符合資格的學校');return errors;}
+export function finishCharacter(s,roll){const errors=validateCharacter(s,roll);if(errors.length)throw Error(errors.join('；'));
+ return {saveVersion:2,createdAt:new Date().toISOString(),runId:roll.id,phase:'preparation_week',weekDay:1,player:{identity:{...s.basic,nationality:s.nationality},portraitSource:s.appearance.portraitSource,attributes:structuredClone(s.attributes),skills:structuredClone(s.skills),motherTongue:s.motherTongue,proficiencies:structuredClone(s.proficiencies),knowledge:structuredClone(s.knowledge),familyFinance:structuredClone(roll.result),wallet:null,background:s.experience,schoolId:s.school,bodyTraits:structuredClone(s.bodyTraits),schoolRegistration:{schoolId:s.school},residence:pendingResidence(s.school)}};}

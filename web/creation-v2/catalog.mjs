@@ -1,26 +1,20 @@
-// CYW-51 creation rules and eligible skills confirmed on 2026-09-23.
-export const rules = Object.freeze({attributeTotal:250,attributeCap:65,baseline:50,academicBase:200,generalBase:200,skillCap:75});
-export const attributes = ['STR','CON','AGI','DEX','PER','INT'];
-export const academics = ['語文','English','Spanish','French','Japanese','Mandarin Chinese','數學','物理','化學','生物','歷史','地理','政治／公民','經濟','法律','心理'];
-export const groups = {
-  '視覺藝術與設計':['繪畫','雕塑／立體造型','攝影','設計'],
-  '音樂與表演':['音樂','表演','舞蹈'],
-  '媒體製作':['影像製作','音訊製作'],
-  '資訊與數位技術':['電腦','程式設計','資料分析'],
-  '工程、製作與修繕':['工程','電子','機械','修理','木工','縫紉','手工藝'],
-  '生活與實用':['烹飪','家務','園藝','急救','生存','駕駛'],
-  '體育與身體技術':['跑步','游泳','自行車','滑行','籃球','足球','排球','棒球／壘球','網球','羽毛球','拳擊','跆拳道','空手道','柔道','體操','滑雪'],
-  '溝通與社會互動':['演說','辯論','交涉','欺瞞','洞察'],
-  '世界玩法':['潛行','妙手']
+export const attributes=['STR','CON','AGI','DEX','PER','INT'];
+export const rules=Object.freeze({attributeTotal:350,attributeCap:65,skillCap:65,proficiencyTotal:500,proficiencyCap:75,motherTongueBase:55});
+export const categories={
+ '語言':{pair:['INT','PER'],skills:['母語']},'表達':{pair:['INT','PER'],skills:['寫作','演講','辯論']},
+ '數理':{pair:['INT','PER'],skills:['數學','統計']},'自然科學':{pair:['INT','PER'],skills:['物理','化學','生物','地球科學','天文']},
+ '社會與人文':{pair:['INT','PER'],skills:['歷史','地理','政治學','經濟','法律','心理學']},
+ '藝術':{pair:['DEX','PER'],skills:['繪畫','雕塑／立體造型','攝影','設計']},
+ '音樂':{pair:['INT','PER'],skills:['樂理','音訊製作']},'表演':{pair:['AGI','CON'],skills:['舞蹈','演戲','歌唱']},
+ '資訊與媒體':{pair:['INT','DEX'],skills:['電腦','程式設計','影片製作']},
+ '工程／製作':{pair:['INT','DEX'],skills:['工程','製作','修理','縫紉']},
+ '生活技能':{pair:['DEX','PER'],skills:['烹飪','園藝','急救','載具操控','潛行','妙手／扒竊','開鎖','魔術／手技']},
+ '體育':{pair:['STR','AGI'],skills:['運動','游泳','格鬥']},'人際':{pair:['INT','PER'],skills:['說服','欺瞞','交涉','洞察']},
+ '感知／調查':{pair:['PER','INT'],skills:['偵查','調查']}
 };
-export const bonusSkills = {
-  STR:['拳擊','跆拳道','空手道','柔道'],
-  CON:['跑步','游泳','自行車','生存'],
-  AGI:[...groups['體育與身體技術'],'表演','舞蹈'],
-  DEX:[...groups['工程、製作與修繕'],'繪畫','雕塑／立體造型','妙手'],
-  PER:['攝影','洞察','急救'],
-  INT:[...academics,...groups['資訊與數位技術']]
-};
-export const sum = obj => Object.values(obj||{}).reduce((a,b)=>a+(Number(b)||0),0);
-export const bonus = value => Math.max(0,Number(value||0)-rules.baseline);
-
+// CYW-51 provides examples and open-ended categories, not a closed proficiency catalogue.
+export const proficiencyGroups={'藝術媒材':['素描','水彩','油畫','數位繪畫','炭筆','麥克筆','Photoshop','Illustrator','Clip Studio Paint','Blender'],
+ '樂器與音訊':['鋼琴','吉他','小提琴','鼓'],'表演形式':['芭蕾','爵士舞','街舞','現代舞','國標舞','踢踏舞','戲劇','喜劇','歌劇','音樂劇','脫口秀'],
+ '程式語言':['Python','JavaScript','C#','C++'],'運動與武術':['籃球','足球','棒球','排球','網球','高爾夫','羽球','桌球','田徑','擊劍','拳擊','柔道','空手道','跆拳道'],
+ '其他具體熟練項目':[]};
+export const schools={coed:'Ravenwood High School',girls:'Rosamund Girls’ Academy',boys:'Avenor Boys’ Academy'};
