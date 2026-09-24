@@ -18,7 +18,7 @@ test('seven steps, no school step, final action ends without creating game state
  assert.doesNotMatch(app,/選校|校徽|House Placement|residenceId|preparation_week|player-state-v1/);
  assert.match(app,/角色資料已確認/);assert.match(app,/confirmCharacterData\(s,run\)/);
  assert.match(html,/paper-master\.jpg|style\.css/);assert.match(html,/rotateGate/);
- assert.match(html,/app\.mjs\?v=cyw51-r4/);assert.match(html,/style\.css\?v=cyw51-r4/);
+ assert.match(html,/app\.mjs\?v=cyw51-r5/);assert.match(html,/style\.css\?v=cyw51-r5/);
 });
 
 test('250 attribute points, individual cap, exact completion and clamp',()=>{
@@ -96,6 +96,7 @@ test('skill details, expanded categories and scroll position persist',async()=>{
  assert.match(app,/data-group/);assert.match(app,/s\.openGroups\[d\.dataset\.group\]=d\.open/);
  assert.match(app,/s\.scroll\[s\.page===3\?'skills':'proficiencies'\]/);
  assert.match(app,/class="note-tab/);assert.match(app,/b\.classList\.add\('pressed'\)/);
+ assert.match(app,/input\.oninput=.*allocate\(s,kind,id,Number\(input\.value\)\)/);assert.match(app,/refreshSkillBudget\('語言'\)/);
 });
 
 test('original attached paper master is byte-for-byte used by the page asset',async()=>{

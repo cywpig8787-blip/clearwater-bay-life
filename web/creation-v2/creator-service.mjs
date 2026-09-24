@@ -1,7 +1,7 @@
-import {newCharacter} from './character-data.mjs?v=cyw51-r4';
-import {validateAttributes} from './attribute-engine.mjs?v=cyw51-r4';
-import {categories,rules,proficiencyGroups} from './catalog.mjs?v=cyw51-r4';
-import {categoryStatus,proficiencyRemaining} from './point-source-ledger.mjs?v=cyw51-r4';
+import {newCharacter} from './character-data.mjs?v=cyw51-r5';
+import {validateAttributes} from './attribute-engine.mjs?v=cyw51-r5';
+import {categories,rules,proficiencyGroups} from './catalog.mjs?v=cyw51-r5';
+import {categoryStatus,proficiencyRemaining} from './point-source-ledger.mjs?v=cyw51-r5';
 export {newCharacter};
 export function validateCharacter(s,run){
  const errors=[];try{validateAttributes(s,true)}catch(e){errors.push(e.message)}
