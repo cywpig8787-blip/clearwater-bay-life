@@ -1,4 +1,4 @@
-import {rules,attributes,allocation,skillBudget,sum,validateCharacter,validateAllocation} from './points.mjs';
+import {rules,attributes,allocation,skillBudget,sum,validateCharacter,validateAllocation} from './points.mjs?v=restricted-v2';
 const escape=value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function pointPanel(character,message='') {
   const result=allocation(character),total=sum(character.attr),errors=validateCharacter(character);

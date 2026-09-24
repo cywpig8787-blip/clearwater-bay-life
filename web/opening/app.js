@@ -1,5 +1,5 @@
-import {academics,groups,attributes,setScore,randomizeScores,validateCharacter,creatorPlayer,residenceFields} from './points.mjs';
-import {pointPanel} from './point-ui.mjs';
+import {academics,groups,attributes,setScore,randomizeScores,validateCharacter,creatorPlayer,residenceFields} from './points.mjs?v=restricted-v2';
+import {pointPanel} from './point-ui.mjs?v=restricted-v2';
 const $=s=>document.querySelector(s), KEY="cbl-character-v01";
 const steps=["基本資料","能力值","學科技能","其他技能","家庭／經歷","選校","住宿","確認"];
 let s=JSON.parse(localStorage.getItem(KEY)||"null")||{page:0,basic:{name:"",birthday:"09/01",gender:"中性",pronouns:""},attr:{STR:30,CON:30,AGI:30,DEX:30,PER:30,INT:30},academic:{},skills:{},family:{finance:"富裕",notes:""},experience:"",school:"",house:"",residence:"",dev:false,openGroups:{}};
