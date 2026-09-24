@@ -26,7 +26,7 @@ body {
   z-index: 2;
   top: 1%;
   left: 16.5%;
-  width: 72%;
+  width: 63%;
   height: 10.5%;
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -129,7 +129,7 @@ textarea { width: 100%; border: 1px solid #c7b39a; line-height: 1.7; resize: ver
 @media (orientation: landscape) and (max-height: 600px) and (pointer: coarse) {
   .paper { width: min(100vw, 1536px, 150dvh); height: min(100dvh, 1024px); min-height: 0; aspect-ratio: 3 / 2; padding: 10.5% 7.4% 4%; }
   .sheet { min-height: 0; height: 100%; }
-  #tabs { top: 1%; left: 16.5%; width: 72%; height: 10.5%; }
+  #tabs { top: 1%; left: 16.5%; width: 63%; height: 10.5%; }
   #tabs .note-tab { padding: .2rem .05rem; font-size: clamp(8px, 1.25vw, 12px); }
   .identity { grid-template-columns: 30% 1fr; gap: 3%; }
   .portrait { min-height: 0; }
