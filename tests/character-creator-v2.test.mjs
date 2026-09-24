@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {newCharacter,validateCharacter,confirmCharacterData} from '../web/creation-v2/creator-service.mjs';
-import {allocate,adjust,attributePointsRemaining,randomizeAttributes,randomizeSkills} from '../web/creation-v2/allocation-engine.mjs';
+import {newCharacter,validateCharacter,validatePage,pageGate,confirmCharacterData} from '../web/creation-v2/creator-service.mjs';
+import {allocate,adjust,attributePointsRemaining,randomizeAttributes,randomizeSkills,randomizeProficiencies} from '../web/creation-v2/allocation-engine.mjs';
 import {attributeTotal,validateAttributes} from '../web/creation-v2/attribute-engine.mjs';
 import {categoryBudget,categoryStatus,proficiencyRemaining} from '../web/creation-v2/point-source-ledger.mjs';
 import {attributes,categories,financeTiers,rules} from '../web/creation-v2/catalog.mjs';
@@ -18,7 +18,7 @@ test('seven steps, no school step, final action ends without creating game state
  assert.doesNotMatch(app,/選校|校徽|House Placement|residenceId|preparation_week|player-state-v1/);
  assert.match(app,/角色資料已確認/);assert.match(app,/confirmCharacterData\(s,run\)/);
  assert.match(html,/paper-master\.jpg|style\.css/);assert.match(html,/rotateGate/);
- assert.match(html,/app\.mjs\?v=cyw51-r7/);assert.match(html,/style\.css\?v=cyw51-r7/);
+ assert.match(html,/app\.mjs\?v=cyw51-r8/);assert.match(html,/style\.css\?v=cyw51-r8/);
 });
 
 test('150 attribute points, individual cap, exact completion and clamp',()=>{
@@ -57,10 +57,10 @@ test('attribute changes preserve skills and final confirmation flags overbudget'
  assert(validateCharacter(s,{locked:true}).some(x=>x.includes('藝術 超額')));
 });
 
-test('500 proficiency pool is independent and uses clamp and 75 cap',()=>{
- assert.equal(rules.proficiencyTotal,500);const s=newCharacter();assert.equal(proficiencyRemaining(s),500);
+test('400 proficiency pool is independent and uses clamp and 75 cap',()=>{
+ assert.equal(rules.proficiencyTotal,400);const s=newCharacter();assert.equal(proficiencyRemaining(s),400);
  assert.equal(adjust(s,'proficiency','鋼琴',10),10);assert.equal(adjust(s,'proficiency','鋼琴',100),75);
- assert.throws(()=>allocate(s,'proficiency','鋼琴',76),/75/);assert.equal(proficiencyRemaining(s),425);
+ assert.throws(()=>allocate(s,'proficiency','鋼琴',76),/75/);assert.equal(proficiencyRemaining(s),325);
  assert.equal(categoryStatus(s,'音樂').allocated,0);
 });
 
@@ -141,4 +141,35 @@ test('older drafts keep their data while being reduced to the new attribute limi
  assert.throws(()=>allocate(s,'attribute','STR',11),/150/);
  randomizeAttributes(s,()=>0);assert.equal(attributeTotal(s),150);
  assert.equal(s.basic.lastName,'測');assert.equal(s.proficiencies.鋼琴,1);
+});
+
+test('proficiency random allocation spends exactly 400 through caps and permits manual edits',()=>{
+ for(const rng of [()=>0,()=>.999999,Math.random]){
+  const s=filled();s.customProficiencies.push('測試樂器');
+  randomizeProficiencies(s,rng);
+  assert.equal(proficiencyRemaining(s),0);
+  assert(Object.values(s.proficiencies).every(v=>Number.isInteger(v)&&v>=0&&v<=75));
+  const id=Object.keys(s.proficiencies).find(id=>s.proficiencies[id]>0),value=s.proficiencies[id];
+  adjust(s,'proficiency',id,-1);assert.equal(proficiencyRemaining(s),1);
+  adjust(s,'proficiency',id,10);assert.equal(s.proficiencies[id],value);assert.equal(proficiencyRemaining(s),0);
+  const before=structuredClone(s);assert.throws(()=>randomizeProficiencies(s,()=>1),/隨機值/);assert.deepEqual(s,before);
+ }
+});
+
+test('page gates and confirmation share validation including edits and invalid individual values',()=>{
+ const s=filled(),run={locked:true};assert.deepEqual(pageGate(s,run,6),[]);
+ for(const [page,mutate] of [
+  [0,s=>s.basic.lastName=''],[1,s=>s.nationality=''],[2,s=>s.attributes.STR--],
+  [3,s=>s.skills.寫作=-1],[4,s=>s.proficiencies.鋼琴=76]
+ ]){const copy=structuredClone(s);mutate(copy);assert(validatePage(copy,run,page).length);assert(pageGate(copy,run,6).length);assert.throws(()=>confirmCharacterData(copy,run));}
+ assert.deepEqual(validatePage(s,run,5),[]);
+ s.attributes.STR=66;s.attributes.CON=-16;
+ assert.equal(attributeTotal(s),150);assert(validatePage(s,run,2).length,'total alone cannot bypass caps');
+});
+
+test('overbudget proficiency drafts cannot proceed, lose no data, and can be repaired',()=>{
+ const s=filled();s.proficiencies={鋼琴:75,吉他:75,小提琴:75,鼓:75,素描:75,水彩:75};
+ assert.equal(proficiencyRemaining(s),-50);assert(validatePage(s,{locked:true},4).length);
+ adjust(s,'proficiency','水彩',-10);assert.equal(s.proficiencies.水彩,65);
+ randomizeProficiencies(s,()=>0);assert.equal(proficiencyRemaining(s),0);assert.equal(s.basic.lastName,'測');
 });

@@ -1,6 +1,6 @@
-import {attributes,categories,proficiencyGroups,rules} from './catalog.mjs?v=cyw51-r7';
-import {attributeTotal,clampAttribute,validateAttributes} from './attribute-engine.mjs?v=cyw51-r7';
-import {categoryStatus,proficiencyRemaining} from './point-source-ledger.mjs?v=cyw51-r7';
+import {attributes,categories,proficiencyGroups,rules} from './catalog.mjs?v=cyw51-r8';
+import {attributeTotal,clampAttribute,validateAttributes} from './attribute-engine.mjs?v=cyw51-r8';
+import {categoryStatus,proficiencyRemaining} from './point-source-ledger.mjs?v=cyw51-r8';
 const valid=n=>Number.isSafeInteger(n)&&n>=0;
 export function allocate(s,kind,id,value){
  if(!valid(value))throw Error('請輸入非負整數。');
@@ -62,4 +62,18 @@ export function randomizeSkills(s,rng=Math.random){
   }
  }
  return s.skills;
+}
+
+export function randomizeProficiencies(s,rng=Math.random){
+ const draft=structuredClone(s);
+ const ids=[...new Set([...Object.values(proficiencyGroups).flat(),...s.customProficiencies])];
+ draft.proficiencies={};
+ while(proficiencyRemaining(draft)>0){
+  const available=ids.filter(id=>(draft.proficiencies[id]||0)<rules.proficiencyCap);
+  const roll=rng();if(!Number.isFinite(roll)||roll<0||roll>=1)throw Error('無效隨機值。');
+  const id=available[Math.floor(roll*available.length)];
+  allocate(draft,'proficiency',id,(draft.proficiencies[id]||0)+1);
+ }
+ s.proficiencies=draft.proficiencies;
+ return s.proficiencies;
 }

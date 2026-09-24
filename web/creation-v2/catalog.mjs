@@ -1,5 +1,6 @@
 export const attributes=['STR','CON','AGI','DEX','PER','INT'];
-export const rules=Object.freeze({attributeTotal:150,attributeCap:65,skillCap:65,proficiencyTotal:500,proficiencyCap:75,motherTongueBase:55});
+export const attributeLabels={STR:'STR 力量',CON:'CON 體質',AGI:'AGI 敏捷',DEX:'DEX 靈巧',PER:'PER 感知',INT:'INT 智力'};
+export const rules=Object.freeze({attributeTotal:150,attributeCap:65,skillCap:65,proficiencyTotal:400,proficiencyCap:75,motherTongueBase:55});
 export const categories={
  '語言':{pair:['INT','PER'],skills:['母語']},'表達':{pair:['INT','PER'],skills:['寫作','演講','辯論']},
  '數理':{pair:['INT','PER'],skills:['數學','統計']},'自然科學':{pair:['INT','PER'],skills:['物理','化學','生物','地球科學','天文']},

@@ -8,7 +8,7 @@
 - Web 版本只負責快速測試 UI / UX；正式遊戲以 Godot 4 + GDScript 為目標。
 - 正式呈現方向為 Text-first Hybrid 3D：世界、Location、NPC、課程、事件、移動與生活模擬以文本為核心；3D 用於 Character/Body、Clothing、Items、可旋轉 Inventory Viewer 與少量特殊場景。完整 3D 開放世界不是必要目標。
 - Character Creation v2 位於 `web/creation-v2/`；`web/opening/` 只保留試玩 UI 入口。`archive/character-creation-v1/` 是失敗原型，禁止複製其分配邏輯至正式模組或繼續修補。
-- Character Creator v2 的唯一規格來源為 Linear CYW-51 最新內容。現行創角：Attributes 250/65；14 個 Skill Category 各以正式 Attribute Pair 公式計算預算；Proficiencies 共用 500、單項 75；五級家庭經濟等機率且綁定本局。不得恢復 Academic/Other Base 或 Attribute Bonus 舊池。
+- Character Creator v2 的唯一規格來源為 Linear CYW-51 最新內容。現行創角：Attributes 150/65；14 個 Skill Category 各以正式 Attribute Pair 公式計算預算；Proficiencies 共用 400、單項 75；五級家庭經濟等機率且綁定本局。不得恢復 Academic/Other Base 或 Attribute Bonus 舊池。
 - 外部程式碼／素材先記入 `THIRD_PARTY_NOTICES.md`，來源與授權不明者不得納入正式遊戲或發布產物。
 - 不得因新增功能而偷偷改動 Save、World State、Location 或其他已存在核心規則。
 - 未經使用者確認，不要自行發明世界觀規則、學校制度、住宿細節、技能名稱或角色設定。
