@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {attributes,academics,groups,bonusSkills,allocation,creatorPlayer,setScore,validateCharacter,skillBudget} from '../web/opening/points.mjs';
-import {pointPanel} from '../web/opening/point-ui.mjs';
+import {attributes,academics,groups,bonusSkills,allocation,creatorPlayer,setScore,validateCharacter,skillBudget} from '../archive/character-creation-v1/points.mjs';
+import {pointPanel} from '../archive/character-creation-v1/point-ui.mjs';
 const fresh=()=>({basic:{gender:'neutral'},attr:{STR:25,CON:25,AGI:25,DEX:65,PER:45,INT:65},academic:{語文:75,數學:75,物理:50},skills:{音樂:75,烹飪:75,設計:50},dev:false});
 test('every attribute at 65 funds exactly 15 only in its allowed skills',()=>{
   for(const id of attributes)for(const kind of ['academic','skills'])for(const name of kind==='academic'?academics:Object.values(groups).flat()){

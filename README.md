@@ -4,6 +4,8 @@
 
 ## 技術方向
 
+- **Text-first Hybrid 3D（文本優先混合 3D）**：主要世界、Location、NPC、課程、事件、移動與生活模擬以文本為核心。
+- 3D 主要用於 Character/Body、Clothing、Items、可旋轉 Inventory Viewer，以及少量特殊場景；完整 3D 開放世界不再是必要目標。
 - **Godot 4 + GDScript**：正式遊戲本體。
 - **GitHub**：唯一正式原始碼來源。
 - **GitHub Pages**：目前的固定瀏覽器測試入口。
@@ -11,13 +13,16 @@
 
 ## 目前正式模組
 
-### Character Creation v0.1 ＋ Ravenwood 文本校園測試
+### Character Creation v2 ＋ Ravenwood 文本校園測試
 
-- [創角與校園試玩](https://cywpig8787-blip.github.io/clearwater-bay-life/opening/)：完成 Ravenwood 角色與住宿分配後進入校園。
+- [創角與校園試玩](https://cywpig8787-blip.github.io/clearwater-bay-life/opening/)：建立角色後進入開學前校園，再到行政中心辦理住宿；中性角色於此時選宿舍側別。
+- v2 模組分離 Character Data、Attribute Engine、Point Source Ledger、Allocation Engine、School Eligibility、Residence Assignment。Academic / Other 各 200；Bonus 為獨立 restricted source，所有技能均保存付款來源。
+- v1 已封存在 `archive/character-creation-v1/`，不發布、不作為 v2 分配邏輯來源。v2 草稿與 v1 草稿隔離；既有正式存檔保留。
+- [架構、規格核對與限制](docs/character-creation-v2.md)；[第三方來源與商業發行記錄](THIRD_PARTY_NOTICES.md)。
 - [接續校園存檔](https://cywpig8787-blip.github.io/clearwater-bay-life/ravenwood/)：主校舍、科學翼、02–07、08–11 宿舍及南門→公園→商店街。
 - 距離推進時間、住宅門禁、中性住宿側選擇、置物櫃妙手判定。
 - 本版為 Web 玩法驗證，Godot 尚待移植。設計來源、估算與限制見 [Ravenwood 說明](web/ravenwood/README.md)。
-- 測試：`node --test tests/ravenwood.test.mjs`。
+- 測試：`node --test tests/*.test.mjs`（含封存原型的歷史回歸測試）；v2：`node --test tests/creation-v2.test.mjs`。
 
 ### Phone OS v2
 手機系統已納入正式專案，包含：

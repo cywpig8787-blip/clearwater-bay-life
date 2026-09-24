@@ -2,19 +2,9 @@ import {locations,exits,travelSeconds,dormitories} from './world.mjs';
 export const WORLD_KEY='clearwater-life-ravenwood-v1';
 export const PLAYER_KEY='clearwater-life-player-state-v1';
 export const checkConfig={baseChance:25,skillWeight:1,minChance:5,maxChance:95,seconds:120};
-export function residentialSide(gender,choice) {
-  if(['男性','male'].includes(gender))return 'male_side';
-  if(['女性','female'].includes(gender))return 'female_side';
-  return ['中性','neutral'].includes(gender)&&['male_side','female_side'].includes(choice)?choice:null;
-}
-export function assignResidence(character) {
-  const side=residentialSide(character.basic?.gender,character.residentialAccess);
-  if(!side)throw new Error('請在住宿階段選擇男側或女側。');
-  const available=dormitories.filter(d=>d.side===side);
-  const buildingId=available.some(d=>d.id===character.buildingId)?character.buildingId:available[0].id;
-  const roomId=`dorm-${buildingId}-2-room-1`;
-  return {residentialAccess:side,residenceId:`dorm-${buildingId}`,buildingId,floorId:`dorm-${buildingId}-2`,roomId,bedId:`${roomId}-bed-1`};
-}
+import {residentialSide,assignResidence as assignFromCatalog} from '../creation-v2/residence-assignment.mjs';
+export {residentialSide};
+export const assignResidence=character=>assignFromCatalog(character,dormitories);
 export function completeResidenceAssignment(state,choice) {
   if(state.locationId!=='admin')throw new Error('請到主校舍 1F 行政中心辦理住宿分配。');
   if(state.player.residentialAccess)throw new Error('住宿已分配完成。');

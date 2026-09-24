@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - "web/**"
+      - "tests/**"
+      - "archive/**"
       - ".github/workflows/deploy-pages.yml"
   workflow_dispatch:
 
@@ -26,6 +28,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Verify before publication
+        run: node --test tests/*.test.mjs
 
       - name: Configure Pages
         uses: actions/configure-pages@v5

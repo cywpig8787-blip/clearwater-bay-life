@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {academics,groups,skillBudget,randomizeScores,allocation,sum,setScore} from '../web/opening/points.mjs';
-import {pointPanel} from '../web/opening/point-ui.mjs';
+import {academics,groups,skillBudget,randomizeScores,allocation,sum,setScore} from '../archive/character-creation-v1/points.mjs';
+import {pointPanel} from '../archive/character-creation-v1/point-ui.mjs';
 const names={academic:academics,skills:Object.values(groups).flat()};
 const fresh=()=>({attr:{STR:25,CON:25,AGI:50,DEX:60,PER:25,INT:65},academic:{},skills:{},dev:false});
 const reload=c=>JSON.parse(JSON.stringify(c));

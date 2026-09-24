@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {AllocationEngine,pointSources,attributes,academics,groups,bonusSkills,allocation,randomizeScores,setScore,skillBudget,validateCharacter,validateAllocation,creatorPlayer,sum} from '../web/opening/points.mjs';
-import {pointPanel} from '../web/opening/point-ui.mjs';
+import {AllocationEngine,pointSources,attributes,academics,groups,bonusSkills,allocation,randomizeScores,setScore,skillBudget,validateCharacter,validateAllocation,creatorPlayer,sum} from '../archive/character-creation-v1/points.mjs';
+import {pointPanel} from '../archive/character-creation-v1/point-ui.mjs';
 const names={academic:academics,skills:Object.values(groups).flat()};
 const fresh=()=>({basic:{gender:'neutral'},attr:{STR:35,CON:35,AGI:35,DEX:35,PER:55,INT:55},academic:{},skills:{},dev:false});
 const rng=seed=>()=>((seed=(Math.imul(seed,1664525)+1013904223)>>>0)/2**32);

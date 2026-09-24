@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {attributes,academics,groups,bonus,pointPools,allocation,validateCharacter,setScore,randomizeScores,creatorPlayer,residenceFields,sum} from '../web/opening/points.mjs';
+import {attributes,academics,groups,bonus,pointPools,allocation,validateCharacter,setScore,randomizeScores,creatorPlayer,residenceFields,sum} from '../archive/character-creation-v1/points.mjs';
 const academic200={'語文':75,'數學':75,'物理':50};
 const general200={'音樂':75,'烹飪':75,'設計':50};
 function character(values=[42,42,42,42,41,41],academic=academic200,skills=general200){return {basic:{gender:'中性'},school:'coed',attr:Object.fromEntries(attributes.map((id,i)=>[id,values[i]])),academic:{...academic},skills:{...skills},dev:false};}

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {allocation,validateAllocation,validateCharacter,attributes,academics,groups,bonusSkills,randomizeScores,skillBudget} from '../web/opening/points.mjs';
-import {pointPanel} from '../web/opening/point-ui.mjs';
+import {allocation,validateAllocation,validateCharacter,attributes,academics,groups,bonusSkills,randomizeScores,skillBudget} from '../archive/character-creation-v1/points.mjs';
+import {pointPanel} from '../archive/character-creation-v1/point-ui.mjs';
 // User screenshot: Academic 200, Other 215, DEX +15, all other bonuses 0.
 // The image contains no skill rows. Test BOTH distributions with these same totals.
 const screenshotCase=()=>({attr:{STR:37,CON:37,AGI:37,DEX:65,PER:37,INT:37},academic:{語文:75,數學:75,物理:50},skills:{音樂:75,烹飪:75,設計:50,妙手:15}});

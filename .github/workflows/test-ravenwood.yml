@@ -1,10 +1,10 @@
 name: Verify Ravenwood text campus
 on:
   pull_request:
-    paths: ['web/opening/**', 'web/ravenwood/**', 'tests/**', '.github/workflows/test-ravenwood.yml']
+    paths: ['web/opening/**', 'web/creation-v2/**', 'web/ravenwood/**', 'archive/**', 'tests/**', '.github/workflows/test-ravenwood.yml']
   push:
     branches: [main]
-    paths: ['web/opening/**', 'web/ravenwood/**', 'tests/**', '.github/workflows/test-ravenwood.yml']
+    paths: ['web/opening/**', 'web/creation-v2/**', 'web/ravenwood/**', 'archive/**', 'tests/**', '.github/workflows/test-ravenwood.yml']
 permissions:
   contents: read
 jobs:
