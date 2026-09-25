@@ -35,7 +35,7 @@ jobs:
           node-version: 24
 
       - name: Verify before publication
-        run: node --test tests/character-creator-v2.test.mjs tests/ravenwood.test.mjs
+        run: node --test tests/character-creator-v2.test.mjs tests/school-selection.test.mjs tests/ravenwood.test.mjs
 
       - name: Configure Pages
         uses: actions/configure-pages@v5

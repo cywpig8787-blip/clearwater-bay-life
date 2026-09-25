@@ -24,5 +24,5 @@ export const financeTiers=Object.freeze([
  {id:'tier_5',label:'超富裕'}
 ]);
 
-// Deferred interface metadata; this Creator round does not render or validate schools.
+// School Selection is a separate post-Creator interface.
 export const schools={coed:'Ravenwood High School',girls:'Rosamund Girls’ Academy',boys:'Avenor Boys’ Academy'};

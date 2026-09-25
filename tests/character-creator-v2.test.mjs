@@ -8,17 +8,17 @@ import {attributes,categories,financeTiers,rules} from '../web/creation-v2/catal
 import {newRun,readRun,rollFinance,developerFinance} from '../web/creation-v2/finance.mjs';
 import {readFile} from 'node:fs/promises';
 const storage=()=>{const m=new Map();return {getItem:k=>m.get(k)||null,setItem:(k,v)=>m.set(k,v),removeItem:k=>m.delete(k)}};
-function filled(){const s=newCharacter();for(const [id,n] of Object.entries({STR:25,CON:25,AGI:25,DEX:25,PER:25,INT:25}))allocate(s,'attribute',id,n);s.basic={lastName:'測',firstName:'試角色',month:'2',day:'29',gender:'neutral',pronouns:'they/them'};s.motherTongue='中文';s.nationality='美國';allocate(s,'skill','寫作',1);allocate(s,'proficiency','鋼琴',1);return s}
+function filled(){const s=newCharacter();for(const [id,n] of Object.entries({STR:25,CON:25,AGI:25,DEX:25,PER:25,INT:25}))allocate(s,'attribute',id,n);s.basic={lastName:'測',firstName:'試角色',month:'2',day:'29',gender:'female',pronouns:'they/them'};s.motherTongue='中文';s.nationality='美國';allocate(s,'skill','寫作',1);allocate(s,'proficiency','鋼琴',1);return s}
 
-test('seven steps, no school step, final action ends without creating game state',async()=>{
+test('seven creator steps hand off to independently saved school selection',async()=>{
  const s=filled(),run={id:'run-a',locked:true,result:{id:'tier_3',label:'上中產'}};
  assert.equal(confirmCharacterData(s,run),true);assert.deepEqual(validateCharacter(s,run),[]);
  const app=await readFile('web/opening/app.mjs','utf8'),html=await readFile('web/opening/index.html','utf8');
  assert.match(app,/const titles=\['基本資料','家庭經濟','能力值','技能','熟練度','背景','最終確認'\]/);
- assert.doesNotMatch(app,/選校|校徽|House Placement|residenceId|preparation_week|player-state-v1/);
- assert.match(app,/角色資料已確認/);assert.match(app,/confirmCharacterData\(s,run\)/);
+ assert.doesNotMatch(app,/House Placement|residenceId|preparation_week/);
+ assert.match(app,/commitCreator\(s,run\)/);assert.match(app,/confirmCharacterData\(s,run\)/);
  assert.match(html,/paper-master\.jpg|style\.css/);assert.match(html,/rotateGate/);
- assert.match(html,/app\.mjs\?v=cyw51-r9/);assert.match(html,/style\.css\?v=cyw51-r9/);
+ assert.match(html,/app\.mjs\?v=cyw51-r10/);assert.match(html,/style\.css\?v=cyw51-r10/);
 });
 
 test('150 attribute points, individual cap, exact completion and clamp',()=>{

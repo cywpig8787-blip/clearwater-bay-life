@@ -1,7 +1,7 @@
-import {newCharacter} from './character-data.mjs?v=cyw51-r9';
-import {validateAttributes} from './attribute-engine.mjs?v=cyw51-r9';
-import {categories,rules,proficiencyGroups} from './catalog.mjs?v=cyw51-r9';
-import {categoryStatus,proficiencyRemaining} from './point-source-ledger.mjs?v=cyw51-r9';
+import {newCharacter} from './character-data.mjs?v=cyw51-r10';
+import {validateAttributes} from './attribute-engine.mjs?v=cyw51-r10';
+import {categories,rules,proficiencyGroups} from './catalog.mjs?v=cyw51-r10';
+import {categoryStatus,proficiencyRemaining} from './point-source-ledger.mjs?v=cyw51-r10';
 export {newCharacter};
 export function validatePage(s,run,page){
  const errors=[];
@@ -9,7 +9,7 @@ export function validatePage(s,run,page){
   for(const [key,label] of [['lastName','姓氏'],['firstName','名字'],['pronouns','代名詞']])if(!s.basic[key]?.trim())errors.push('請輸入'+label);
   const m=+s.basic.month,d=+s.basic.day;
   if(!Number.isInteger(m)||m<1||m>12||!Number.isInteger(d)||d<1||d>[31,29,31,30,31,30,31,31,30,31,30,31][m-1])errors.push('請選擇有效生日月／日');
-  if(!['male','female','neutral'].includes(s.basic.gender))errors.push('請選擇性別');
+  if(!['male','female'].includes(s.basic.gender))errors.push('請選擇性別');
  }
  if(page===1){if(!run?.locked)errors.push('請先投擲並鎖定家庭經濟');if(!s.nationality?.trim())errors.push('請輸入國籍／地區');}
  if(page===2){try{validateAttributes(s,true)}catch(e){errors.push(e.message)}}

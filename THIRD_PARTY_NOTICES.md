@@ -4,7 +4,7 @@
 
 Before adding external code, fonts, audio, images, models, textures, data, or generated-asset inputs to the formal game, record the exact source/version, author, license (including a retained license text or authoritative link), use path, modifications, and obligations. Unknown, missing, or incompatible commercial rights block admission to the game and release artifacts. Public availability is not a license. Do not substitute a guessed license.
 
-This v2 change adds no third-party runtime code, package, font, model, image or audio. The allocator is newly authored here. Native browser/Node APIs are used. UI markup/CSS and skill definitions are retained from this repository; repository origin alone is not proof of external asset rights.
+The allocator is authored here and uses native browser/Node APIs. External artwork and fonts added to later playtest revisions are recorded below; repository origin alone is not proof of external asset rights.
 
 ## Existing materials and dependencies
 
@@ -27,3 +27,17 @@ Future entry template: source URL + version/hash; author/rightsholder; license i
 - Usage: web/opening/assets/buttons/*.png and button-assets.css/mjs.
 - Modifications: exact rectangular crops with source alpha preserved for bases; original brown icon RGB preserved with a paper-background alpha mask for glyphs. No regenerated artwork, text, alternate palettes or state images.
 - Original source retained outside the Pages web artifact. Attribution and broader distribution rights remain as supplied by the user.
+
+## School Selection — 2026-09-25
+
+The user explicitly supplied the three school sheets (1000078262, 1000078267, 1000078271) and desk (1000078255), requesting their integration and publication to this GitHub Pages Playtest. This records that task-specific authorization, not an independently verified commercial artwork license. The desk is copied unchanged. Original school JPGs supply the crests through CSS clipping. The paper PNG derivatives use imagegen editing to remove printed text/crests for dynamic HTML overlays; generated reconstruction can differ locally from the originals. No alternate school identity was commissioned. Files and SHA-256 hashes are recorded in `web/school-selection/assets/manifest.json`.
+
+### Bundled fonts
+
+All three original, unmodified TTF files are distributed under SIL Open Font License 1.1, which permits commercial use and embedding subject to its conditions. Fonts are not sold separately; copyright and complete licenses accompany the files. No reserved font names are reassigned. No third-party download sites were used.
+
+| Font / copyright holder | Official source and version | Retained license / attribution | Use |
+| --- | --- | --- | --- |
+| Iansui / The Iansui Project Authors | https://github.com/ButTaiwan/iansui/tree/v1.020 | `web/school-selection/fonts/iansui-OFL.txt`, `iansui-AUTHORS.txt` | Ravenwood |
+| ChenYuLuoYan / Wang, Li-Yu and Liu, Wei-Chen | https://github.com/Chenyu-otf/chenyuluoyan_thin/tree/6e36815b0bec9f4f948298698d00b27a5f0b65c1 — ChenYuluoyan-2.0-Thin.ttf | `web/school-selection/fonts/chenyu-OFL.txt` (copyright included) | Rosamund |
+| LXGW WenKai TC / The LXGW WenKai Project Authors | https://github.com/lxgw/LxgwWenkaiTC/tree/v1.522 | `web/school-selection/fonts/wenkai-OFL.txt`, `wenkai-AUTHORS.txt` | Avenor |
