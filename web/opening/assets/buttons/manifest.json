@@ -1,0 +1,206 @@
+{
+  "source": "User-supplied Character Creator Button Asset Sheet, 2026-09-24",
+  "sourceSha256": "9c823a4862390982fedf8af63e11d0a37bdbd0cbb0771ea87cdc0abc75d617aa",
+  "sourceSize": [
+    2172,
+    724
+  ],
+  "assets": [
+    {
+      "file": "button-rectangle.png",
+      "sourceRect": [
+        57,
+        57,
+        707,
+        179
+      ],
+      "size": [
+        707,
+        179
+      ],
+      "processing": "Exact source crop; original alpha"
+    },
+    {
+      "file": "button-ornate.png",
+      "sourceRect": [
+        782,
+        57,
+        749,
+        181
+      ],
+      "size": [
+        749,
+        181
+      ],
+      "processing": "Exact source crop; original alpha"
+    },
+    {
+      "file": "button-stepper.png",
+      "sourceRect": [
+        57,
+        267,
+        185,
+        178
+      ],
+      "size": [
+        185,
+        178
+      ],
+      "processing": "Exact source crop; original alpha"
+    },
+    {
+      "file": "icon-gear.png",
+      "sourceRect": [
+        293,
+        313,
+        84,
+        85
+      ],
+      "size": [
+        84,
+        85
+      ],
+      "processing": "Original RGB; paper-only alpha mask, R=160..190 transition"
+    },
+    {
+      "file": "icon-dice.png",
+      "sourceRect": [
+        493,
+        304,
+        97,
+        102
+      ],
+      "size": [
+        97,
+        102
+      ],
+      "processing": "Original RGB; paper-only alpha mask, R=160..190 transition"
+    },
+    {
+      "file": "icon-left.png",
+      "sourceRect": [
+        711,
+        309,
+        60,
+        90
+      ],
+      "size": [
+        60,
+        90
+      ],
+      "processing": "Original RGB; paper-only alpha mask, R=160..190 transition"
+    },
+    {
+      "file": "icon-right.png",
+      "sourceRect": [
+        884,
+        309,
+        62,
+        90
+      ],
+      "size": [
+        62,
+        90
+      ],
+      "processing": "Original RGB; paper-only alpha mask, R=160..190 transition"
+    },
+    {
+      "file": "icon-up.png",
+      "sourceRect": [
+        1031,
+        325,
+        89,
+        58
+      ],
+      "size": [
+        89,
+        58
+      ],
+      "processing": "Original RGB; paper-only alpha mask, R=160..190 transition"
+    },
+    {
+      "file": "icon-down.png",
+      "sourceRect": [
+        1205,
+        325,
+        87,
+        58
+      ],
+      "size": [
+        87,
+        58
+      ],
+      "processing": "Original RGB; paper-only alpha mask, R=160..190 transition"
+    },
+    {
+      "file": "icon-upload.png",
+      "sourceRect": [
+        1395,
+        311,
+        78,
+        80
+      ],
+      "size": [
+        78,
+        80
+      ],
+      "processing": "Original RGB; paper-only alpha mask, R=160..190 transition"
+    },
+    {
+      "file": "icon-reset.png",
+      "sourceRect": [
+        1545,
+        310,
+        78,
+        80
+      ],
+      "size": [
+        78,
+        80
+      ],
+      "processing": "Original RGB; paper-only alpha mask, R=160..190 transition"
+    },
+    {
+      "file": "icon-delete.png",
+      "sourceRect": [
+        1700,
+        310,
+        70,
+        79
+      ],
+      "size": [
+        70,
+        79
+      ],
+      "processing": "Original RGB; paper-only alpha mask, R=160..190 transition"
+    },
+    {
+      "file": "icon-search.png",
+      "sourceRect": [
+        1843,
+        309,
+        87,
+        86
+      ],
+      "size": [
+        87,
+        86
+      ],
+      "processing": "Original RGB; paper-only alpha mask, R=160..190 transition"
+    },
+    {
+      "file": "icon-close.png",
+      "sourceRect": [
+        2005,
+        314,
+        74,
+        78
+      ],
+      "size": [
+        74,
+        78
+      ],
+      "processing": "Original RGB; paper-only alpha mask, R=160..190 transition"
+    }
+  ]
+}

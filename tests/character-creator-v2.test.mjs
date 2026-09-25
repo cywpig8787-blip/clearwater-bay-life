@@ -18,7 +18,7 @@ test('seven steps, no school step, final action ends without creating game state
  assert.doesNotMatch(app,/選校|校徽|House Placement|residenceId|preparation_week|player-state-v1/);
  assert.match(app,/角色資料已確認/);assert.match(app,/confirmCharacterData\(s,run\)/);
  assert.match(html,/paper-master\.jpg|style\.css/);assert.match(html,/rotateGate/);
- assert.match(html,/app\.mjs\?v=cyw51-r8/);assert.match(html,/style\.css\?v=cyw51-r8/);
+ assert.match(html,/app\.mjs\?v=cyw51-r9/);assert.match(html,/style\.css\?v=cyw51-r9/);
 });
 
 test('150 attribute points, individual cap, exact completion and clamp',()=>{

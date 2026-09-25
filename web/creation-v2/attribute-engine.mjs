@@ -1,4 +1,4 @@
-import {attributes,rules} from './catalog.mjs?v=cyw51-r8';
+import {attributes,rules} from './catalog.mjs?v=cyw51-r9';
 export const attributeTotal=s=>attributes.reduce((n,id)=>n+s.attributes[id],0);
 export function validateAttributes(s,complete=false){
  for(const id of attributes)if(!Number.isSafeInteger(s.attributes[id])||s.attributes[id]<0||s.attributes[id]>rules.attributeCap)throw Error(`${id} 必須在 0–65。`);

@@ -19,3 +19,11 @@ This v2 change adds no third-party runtime code, package, font, model, image or 
 | [actions/deploy-pages](https://github.com/actions/deploy-pages), GitHub Actions maintainers | MIT — upstream LICENSE | CI only, v4 | None | Same CI-only treatment and redistribution notice requirement. |
 
 Future entry template: source URL + version/hash; author/rightsholder; license identifier + text; commercial permission evidence; usage paths; changes; attribution/notice/source-disclosure/share-alike obligations; review status. This register is an inventory and admission gate, not a claim that the entire historical project has received commercial clearance.
+
+## Character Creator button sheet — user-supplied, 2026-09-24
+
+- Source: the image explicitly supplied and approved in the user's Character Creator v2 button-asset request; retained at docs/references/character-creator-button-sheet.png. SHA-256 and exact crop rectangles are in web/opening/assets/buttons/manifest.json.
+- Author/rightsholder not independently identified. No third-party/open-source license is asserted. The user explicitly authorized cropping this image, integrating the resulting assets, and publishing them to the existing GitHub Pages Playtest. This entry records that task-specific permission, not a broader commercial license.
+- Usage: web/opening/assets/buttons/*.png and button-assets.css/mjs.
+- Modifications: exact rectangular crops with source alpha preserved for bases; original brown icon RGB preserved with a paper-background alpha mask for glyphs. No regenerated artwork, text, alternate palettes or state images.
+- Original source retained outside the Pages web artifact. Attribution and broader distribution rights remain as supplied by the user.
