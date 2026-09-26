@@ -1,77 +1,127 @@
 [
   {
     "file": "avenor-paper.png",
-    "bytes": 2311914,
-    "sha256": "028BD6C8DED8ACE9A4E5516E054A2B6D32B794BBE1643299A327FD8524B24F17"
+    "bytes": 2306583,
+    "sha256": "080b82bf6da0218194ce328a850ec7a89310201b4d9a310538a7c412dd585206"
   },
   {
     "file": "avenor-source.jpg",
     "bytes": 105749,
-    "sha256": "E5567652F6FB442EC2C920590061E8085840034645EA376A54A3CDF48EB6F398"
+    "sha256": "e5567652f6fb442ec2c920590061e8085840034645ea376a54a3cdf48eb6f398"
   },
   {
     "file": "desk.jpg",
     "bytes": 130814,
-    "sha256": "11F0734B42B64A1E824DF4C24936F4FC26E7E89E9B5CD1BB7A356B53BCE1B4CE"
+    "sha256": "11f0734b42b64a1e824df4c24936f4fc26e7e89e9b5cd1bb7a356b53bce1b4ce"
   },
   {
     "file": "ravenwood-paper.png",
-    "bytes": 2115554,
-    "sha256": "7CAC27B190BCABACB5EF9389C718EF3D12A746A2B5653AA028A9F034C40FBE8C"
+    "bytes": 2491807,
+    "sha256": "9251438249dca6dc9d3aa88f6f01a5afc45644f1b8cd4784073c261a4241591c"
   },
   {
     "file": "ravenwood-source.jpg",
     "bytes": 82767,
-    "sha256": "07F0C67A10E05202265DFC333D9FF4BF5138EF8CC06931FBDDA22507757542EF"
+    "sha256": "07f0c67a10e05202265dfc333d9ff4bf5138ef8cc06931fbdda22507757542ef"
   },
   {
     "file": "rosamund-paper.png",
-    "bytes": 2299536,
-    "sha256": "911917F05D1F05C3A2BF3B4E4D8C7D3A1C52C3B465D35629286574BC558C0255"
+    "bytes": 2415192,
+    "sha256": "81767f7cbbfdd648d3c7fb61a5000bc85ea41c870d8b59a481e168599cdae9e0"
   },
   {
     "file": "rosamund-source.jpg",
     "bytes": 101592,
-    "sha256": "B61B7FDBAB1D83F6E035950369A8A6D52BEA6BB1A903983E2C7F436572C84F79"
+    "sha256": "b61b7fdbab1d83f6e035950369a8a6d52bea6bb1a903983e2c7f436572c84f79"
   },
   {
     "file": "chenyu-OFL.txt",
     "bytes": 4506,
-    "sha256": "393732512D2658FA5841DFAAD325E002CCB6755B9037A818500434C0A5C4A6D1"
+    "sha256": "393732512d2658fa5841dfaad325e002ccb6755b9037a818500434c0a5c4a6d1"
   },
   {
     "file": "ChenYuluoyan-2.0-Thin.ttf",
     "bytes": 9522140,
-    "sha256": "1289E42A6D1EC995D0CB23AEE89EFC69FC95749FBD54A610057A3E992DC453DB"
+    "sha256": "1289e42a6d1ec995d0cb23aee89efc69fc95749fbd54a610057a3e992dc453db"
+  },
+  {
+    "file": "cormorant-OFL.txt",
+    "bytes": 4387,
+    "sha256": "60700d351cac4650c51f3f9db318d2a420f8b45052dba2715eb5fec41f0f6956"
+  },
+  {
+    "file": "CormorantGaramond-Regular.ttf",
+    "bytes": 1054676,
+    "sha256": "6692a7e7f324e71ec0be0c36d1aab340dbf1df0ce2e29ab1770082f28e45eb09"
+  },
+  {
+    "file": "courier-OFL.txt",
+    "bytes": 4403,
+    "sha256": "9a755af092b494944c99f471be6fddd19b006a448fefdc4717e4ee0aa09a97b0"
+  },
+  {
+    "file": "CourierPrime-Regular.ttf",
+    "bytes": 71188,
+    "sha256": "72f793376f8e2841656bf21d77a5de010f2929bd6956a22ee848ad0c7eb978af"
   },
   {
     "file": "iansui-AUTHORS.txt",
-    "bytes": 445,
-    "sha256": "2B81D289F91BD0C87B8439408F4E80B37204985525E1490B89BEC341B12F6D21"
+    "bytes": 455,
+    "sha256": "82356f4e604a5afe02b38ea617ed8f1814bc84948a9fc89f43772a4521a6c2ba"
   },
   {
     "file": "iansui-OFL.txt",
-    "bytes": 4387,
-    "sha256": "912FFE9248119B16385BE59859BF709E0F221CA82A1BC89F5BAC2A78AB0CB5AE"
+    "bytes": 4479,
+    "sha256": "5d6d9d02d598daa2f178d0b577c55594892c5cf9c38566e2343cea049a371ac3"
   },
   {
     "file": "Iansui-Regular.ttf",
     "bytes": 9447424,
-    "sha256": "7F1AA62E9DCBF40D0CE41A5D3F1E5EA602E66C295778AC6FEFB6B84D8ED08BD5"
+    "sha256": "7f1aa62e9dcbf40d0ce41a5d3f1e5ea602e66c295778ac6fefb6b84d8ed08bd5"
+  },
+  {
+    "file": "IBMPlexMono-Regular.woff2",
+    "bytes": 49248,
+    "sha256": "ba204497f16b6d334cee9d1e963a831b73e3a56e1d6300a8489d18df7214b350"
+  },
+  {
+    "file": "IBMPlexSans-Regular.woff2",
+    "bytes": 63020,
+    "sha256": "ba711a3085ff9f27440b6b9c4550cfc47c97bf36591d5da958b975bb3add8c1a"
+  },
+  {
+    "file": "latin-sources.json",
+    "bytes": 1725,
+    "sha256": "ad4d2e54eba1ed2b86b1525ba0e75fd636df57492c7cd73566e5d2b81e92928a"
   },
   {
     "file": "LXGWWenKaiTC-Regular.ttf",
     "bytes": 15267616,
-    "sha256": "B1A0795862C1415BF3F393EA50B2A4EA6275012CF5BAD3F94FEEB1222F555731"
+    "sha256": "b1a0795862c1415bf3f393ea50b2a4ea6275012cf5bad3f94feeb1222f555731"
+  },
+  {
+    "file": "pinyon-OFL.txt",
+    "bytes": 4497,
+    "sha256": "f2a442ebad45ddbf22ec2bc0512bce929c09881613887de33289cb3456969ed5"
+  },
+  {
+    "file": "PinyonScript-Regular.ttf",
+    "bytes": 61672,
+    "sha256": "97c38e39eebadf8409de12c0dd33efbb6b211c8647732c9d4f812cda0e7371c5"
+  },
+  {
+    "file": "plex-OFL.txt",
+    "bytes": 4456,
+    "sha256": "7e6b2818edbd8f6a01ae80641cc8f16a51080d08fb4e532be3a0b6f74adb07da"
   },
   {
     "file": "wenkai-AUTHORS.txt",
-    "bytes": 283,
-    "sha256": "157B2216549168552DB7F30AE1B42FCBCC39FAF589C3112A59EAAC43A9DE11C9"
+    "bytes": 292,
+    "sha256": "6fbdacbb3b4d973602f813eeb63818191c97efb0c9502d615923494d9359ab0e"
   },
   {
     "file": "wenkai-OFL.txt",
-    "bytes": 4395,
-    "sha256": "1A13783BF4337242834B60309CDCDBEB566AE3F923576FDBBA8B78DB9D174DEF"
+    "bytes": 4488,
+    "sha256": "bddc513c614c5b380182189df4da8ba371b0dcaec087bc6132e5c66a8168bd74"
   }
 ]

@@ -1,4 +1,4 @@
-import {confirmCharacterData} from './creator-service.mjs?v=cyw51-r10';
+import {confirmCharacterData} from './creator-service.mjs?v=cyw51-r12-final';
 import {eligibleSchools,schoolEligibility} from './school-eligibility.mjs?v=cyw51-r10';
 // Promote the existing draft slot atomically: large portrait data is stored once.
 export const PLAYER_KEY='clearwater-life-creator-v4';

@@ -1,3 +1,5 @@
+> 歷史紀錄：已由 CYW-51 最新內容與 [r12 驗收紀錄](cyw51-r12.md) 取代，不得作為現行實作規格。
+
 # CYW-51 School Selection playtest r10
 
 Specification: CYW-51, re-read in full, updated 2026-09-25T08:48:13.861Z. The latest school-selection rules supersede the earlier stop-after-Creator and neutral-gender prototypes.

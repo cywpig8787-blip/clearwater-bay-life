@@ -77,3 +77,13 @@ export function randomizeProficiencies(s,rng=Math.random){
  s.proficiencies=draft.proficiencies;
  return s.proficiencies;
 }
+
+export function randomizeOne(s,kind,id,rng=Math.random){
+ const roll=rng();if(!Number.isFinite(roll)||roll<0||roll>=1)throw Error('無效隨機值。');
+ const current=kind==='attribute'?s.attributes[id]||0:kind==='skill'?s.skills[id]||0:s.proficiencies[id]||0;
+ const remaining=kind==='attribute'?attributePointsRemaining(s):kind==='skill'?categoryStatus(s,s.skillCategory[id]).remaining:proficiencyRemaining(s);
+ const min=kind==='skill'&&id==='母語'?rules.motherTongueBase:0;
+ const cap=kind==='attribute'?rules.attributeCap:kind==='skill'?rules.skillCap:rules.proficiencyCap;
+ const max=Math.max(min,Math.min(cap,current+Math.max(0,remaining)));
+ return allocate(s,kind,id,min+Math.floor(roll*(max-min+1)));
+}

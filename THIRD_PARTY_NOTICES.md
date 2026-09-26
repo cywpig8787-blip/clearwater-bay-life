@@ -22,9 +22,9 @@ Future entry template: source URL + version/hash; author/rightsholder; license i
 
 ## Character Creator button sheet — user-supplied, 2026-09-24
 
-- Source: the image explicitly supplied and approved in the user's Character Creator v2 button-asset request; retained at docs/references/character-creator-button-sheet.png. SHA-256 and exact crop rectangles are in web/opening/assets/buttons/manifest.json.
+- Source: the image explicitly supplied and approved in the user's Character Creator v2 button-asset request; retained at docs/references/character-creator-button-sheet.png. Historical crop hashes and rectangles remain in Git history (before r12).
 - Author/rightsholder not independently identified. No third-party/open-source license is asserted. The user explicitly authorized cropping this image, integrating the resulting assets, and publishing them to the existing GitHub Pages Playtest. This entry records that task-specific permission, not a broader commercial license.
-- Usage: web/opening/assets/buttons/*.png and button-assets.css/mjs.
+- Historical usage: web/opening/assets/buttons/*.png and button-assets.css/mjs. Removed from the r12 web artifact because the latest CYW-51 supersedes this control kit.
 - Modifications: exact rectangular crops with source alpha preserved for bases; original brown icon RGB preserved with a paper-background alpha mask for glyphs. No regenerated artwork, text, alternate palettes or state images.
 - Original source retained outside the Pages web artifact. Attribution and broader distribution rights remain as supplied by the user.
 
@@ -53,3 +53,11 @@ The bundled, unmodified TTFs were compared with the original projects' Git trees
 The Iansui and WenKai OFL / AUTHORS files also match upstream blobs. ChenYuLuoYan's retained OFL text equals upstream `license.txt` after CRLF/LF normalization. All notices and copyright / reserved-name declarations remain bundled. No font binaries, names inside the fonts, or glyphs were modified.
 
 Web use maps each original face explicitly to normal style / CSS weight 400, including the original Thin design for ChenYuLuoYan; this is a CSS face mapping, not a modified or emboldened font. School content disables synthetic weights and uses only the declared face. Assets are served from the same origin as the playtest. The scene verifies FontFaceSet loading before revealing text and displays a retry message if a required face or image fails, instead of silently presenting fallback text.
+
+## CYW-51 typography lock — 2026-09-26
+
+Latin font provenance, pinned upstream revision, exact download path and SHA-256 are retained in `web/school-selection/fonts/latin-sources.json`. Courier Prime is from quoteunquoteapps/CourierPrime; Cormorant Garamond from its original author CatharsisFonts/Cormorant; IBM Plex Sans and Mono from IBM/plex. All are SIL OFL 1.1; complete copyright and licenses accompany the files as courier-OFL.txt, cormorant-OFL.txt and plex-OFL.txt. Original font binaries are unmodified. Commercial use, embedding and redistribution follow these retained licenses; fonts are not sold on their own.
+
+Pinyon Script is compiled from the official librefonts/pinyonscript TTX tables at 1633812b2044a523b8b9f1f0da5d52630f624c6b using fontTools (no glyph outline or name edits, original timestamp retained). Copyright 2011 Sorkin Type Co, reserved name Pinyon Script; complete pinyon-OFL.txt accompanies the font. Format compilation does not change the design. No mirror website was used.
+
+The new three blank school paper assets and isolated Creator paper are generated using OpenAI built-in imagegen for this explicitly requested visual revision. Creator extraction uses the previously user-supplied paper-master reference. Seven blank sticky markers are project-authored SVG art. Prompts, provenance and asset hashes are recorded in docs/cyw51-r12-assets.json. Generated campus drawings are decorative visual direction, not authoritative world/location data. Existing school crests are retained from the already authorized source sheets; they do not establish broader commercial clearance.

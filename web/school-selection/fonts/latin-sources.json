@@ -1,0 +1,33 @@
+[
+  {
+    "file": "CourierPrime-Regular.ttf",
+    "source": "https://raw.githubusercontent.com/quoteunquoteapps/CourierPrime/7fd585a2dd4c1612c79b3308e300923d1c13df93/fonts/ttf/CourierPrime-Regular.ttf",
+    "license": "courier-OFL.txt",
+    "sha256": "72f793376f8e2841656bf21d77a5de010f2929bd6956a22ee848ad0c7eb978af"
+  },
+  {
+    "file": "CormorantGaramond-Regular.ttf",
+    "source": "https://raw.githubusercontent.com/CatharsisFonts/Cormorant/9719e26aa8e26d7a30e736667427b9e05b5db059/fonts/ttf/CormorantGaramond-Regular.ttf",
+    "license": "cormorant-OFL.txt",
+    "sha256": "6692a7e7f324e71ec0be0c36d1aab340dbf1df0ce2e29ab1770082f28e45eb09"
+  },
+  {
+    "file": "IBMPlexSans-Regular.woff2",
+    "source": "https://raw.githubusercontent.com/IBM/plex/763c36ef9117782905ae010056dfbe8fd2653a25/packages/plex-sans/fonts/complete/woff2/IBMPlexSans-Regular.woff2",
+    "license": "plex-OFL.txt",
+    "sha256": "ba711a3085ff9f27440b6b9c4550cfc47c97bf36591d5da958b975bb3add8c1a"
+  },
+  {
+    "file": "IBMPlexMono-Regular.woff2",
+    "source": "https://raw.githubusercontent.com/IBM/plex/763c36ef9117782905ae010056dfbe8fd2653a25/packages/plex-mono/fonts/complete/woff2/IBMPlexMono-Regular.woff2",
+    "license": "plex-OFL.txt",
+    "sha256": "ba204497f16b6d334cee9d1e963a831b73e3a56e1d6300a8489d18df7214b350"
+  },
+  {
+    "file": "PinyonScript-Regular.ttf",
+    "source": "https://github.com/librefonts/pinyonscript/tree/1633812b2044a523b8b9f1f0da5d52630f624c6b",
+    "license": "pinyon-OFL.txt",
+    "modification": "Lossless compilation of upstream TTX tables using fontTools; no outlines or naming changes.",
+    "sha256": "97c38e39eebadf8409de12c0dd33efbb6b211c8647732c9d4f812cda0e7371c5"
+  }
+]

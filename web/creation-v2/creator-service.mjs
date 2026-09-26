@@ -1,4 +1,4 @@
-import {newCharacter} from './character-data.mjs?v=cyw51-r10';
+import {newCharacter} from './character-data.mjs?v=cyw51-r12-final';
 import {validateAttributes} from './attribute-engine.mjs?v=cyw51-r10';
 import {categories,rules,proficiencyGroups} from './catalog.mjs?v=cyw51-r10';
 import {categoryStatus,proficiencyRemaining} from './point-source-ledger.mjs?v=cyw51-r10';

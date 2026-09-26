@@ -1,0 +1,50 @@
+{
+  "authority": {
+    "issue": "https://linear.app/cyw900704/issue/CYW-51/人生核心介面-02開局創角選校住宿與住所分配",
+    "updatedAt": "2026-09-26T03:21:15.439Z"
+  },
+  "generator": "OpenAI built-in imagegen",
+  "schoolPapers": [
+    {
+      "school": "ravenwood",
+      "file": "web/school-selection/assets/ravenwood-paper.png",
+      "prompt": "Create a production 1024x1536 portrait blank school admissions paper texture for a grounded contemporary public high school. Orthographic scan, full-bleed paper to all four edges, no desk, no shadow, no perspective. Plain off-white everyday office stock subtle real paper fibers, restrained black-gray thin administrative rules near top 22% and bottom 92%, small blank rectangular stamp outline bottom left, very faint modest real public high school building line drawing in bottom 15%. Entire middle 25%-85% blank for dynamic overlay text. Absolutely NO text, letters, numbers, logos or crests. No gold, no ornate border, no botanical ornament, no parchment, no fantasy. This must feel like an actual enrollment office photocopied administrative document.",
+      "bytes": 2491807,
+      "sha256": "9251438249dca6dc9d3aa88f6f01a5afc45644f1b8cd4784073c261a4241591c"
+    },
+    {
+      "school": "rosamund",
+      "file": "web/school-selection/assets/rosamund-paper.png",
+      "prompt": "Create a production 1024x1536 portrait blank paper texture for an expensive traditional private girls academy formal letter. Orthographic flat scan, full bleed paper reaching all edges, no desk, no shadows, no perspective. Thick ivory cream cotton paper, delicate restrained champagne old-gold foil hairline border, refined rose and vine botanical engraving confined to corners especially lower left. Very faint realistic historic academy facade line drawing across bottom 15%. Spacious empty letterhead zone top 25%, central 28%-83% wholly blank, delicate footer rule. NO text, letters, numbers, crests, logos or signature. Formal restrained costly institutional stationery, not wedding invitation, fantasy scroll or baroque decorative frame. Roses not lilies.",
+      "bytes": 2415192,
+      "sha256": "81767f7cbbfdd648d3c7fb61a5000bc85ea41c870d8b59a481e168599cdae9e0"
+    },
+    {
+      "school": "avenor",
+      "file": "web/school-selection/assets/avenor-paper.png",
+      "prompt": "Create a production 1024x1536 portrait blank paper texture for a modern private boys academy admissions brief with engineering drafting document aesthetics. Orthographic scan full bleed paper edges, no desk shadow perspective. High quality cool white very subtle stock, dark navy ink and silver-gray hairlines. Asymmetric structural layout: small navy vertical bar upper left, thin document metadata grid at top right, sparse fine coordinate ticks at left edge, registration crosses at margins, faint technical drafting grid lower right only and realistic minimalist academic building elevation confined bottom 15%. Top header area 6%-24% and middle body 28%-84% left clean for overlay text. No text letters numbers crest logo. Genuine printable elegant school document, not HUD, science fiction, glowing panel or fantasy spires.",
+      "bytes": 2306583,
+      "sha256": "080b82bf6da0218194ce328a850ec7a89310201b4d9a310538a7c412dd585206"
+    }
+  ],
+  "creator": {
+    "file": "web/opening/assets/application-paper.png",
+    "prompt": "Edit supplied creator master reference into a single isolated blank application paper, landscape 1536x1024. Preserve same delicate brown botanical and compass line art, cream paper tone and thin double border. Remove desk, books, real flowers, all sticky notes, all underlaid sheets and all outside surroundings. One flat rectangular sheet filling the image, no perspective or shadow. Entire center blank. No text or logos. Asset must be separable from desk and navigation for animation; do not include any sticky notes.",
+    "reference": "Previously user-supplied paper-master.jpg from repository history before r12",
+    "bytes": 2184873,
+    "sha256": "4f73bd513ecc37dffca6a0cc51db72be0a1a4e7b22d8bc946bbbdbd7309cebd9"
+  },
+  "stickyNotes": {
+    "files": "web/opening/assets/sticky-{1..7}.svg",
+    "author": "Project-authored SVG; blank independent assets",
+    "sha256": {
+      "sticky-1.svg": "3ae3776b07b329303a463ae39d579985cacbc5bd823a405d2ce16bd00f54430e",
+      "sticky-2.svg": "41f57173b3eeb913fb503ec3121ce2266a0fdf39348ee6536931bd9b76de1406",
+      "sticky-3.svg": "45502f6986551f4797d3f159eb12c9d69074db733bea8f56a5f802bf799d9ee6",
+      "sticky-4.svg": "fbcd2ce05e4f773070642cc014ce6fb5a9edcdaf485d4fe511fb7ba9605b71a3",
+      "sticky-5.svg": "c3b8725825c13e1c46416953a504fd321136961424197cd1ee4d8683b07250a2",
+      "sticky-6.svg": "3461f4bd1bdd2aca7504a0d2523e75c9a3b87785b5538d0b89133420307510b3",
+      "sticky-7.svg": "a7452988c321143b9eb932f9b423f471d2222ba3a1ca7d791e780f7983f37ccc"
+    }
+  }
+}

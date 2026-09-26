@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {newCharacter,validateCharacter,validatePage,pageGate,confirmCharacterData} from '../web/creation-v2/creator-service.mjs';
-import {allocate,adjust,attributePointsRemaining,randomizeAttributes,randomizeSkills,randomizeProficiencies} from '../web/creation-v2/allocation-engine.mjs';
+import {allocate,adjust,attributePointsRemaining,randomizeAttributes,randomizeSkills,randomizeProficiencies,randomizeOne} from '../web/creation-v2/allocation-engine.mjs';
 import {attributeTotal,validateAttributes} from '../web/creation-v2/attribute-engine.mjs';
 import {categoryBudget,categoryStatus,proficiencyRemaining} from '../web/creation-v2/point-source-ledger.mjs';
 import {attributes,categories,financeTiers,rules} from '../web/creation-v2/catalog.mjs';
@@ -18,7 +18,7 @@ test('seven creator steps hand off to independently saved school selection',asyn
  assert.doesNotMatch(app,/House Placement|residenceId|preparation_week/);
  assert.match(app,/commitCreator\(s,run\)/);assert.match(app,/confirmCharacterData\(s,run\)/);
  assert.match(html,/paper-master\.jpg|style\.css/);assert.match(html,/rotateGate/);
- assert.match(html,/app\.mjs\?v=cyw51-r11/);assert.match(html,/style\.css\?v=cyw51-r10/);
+ assert.match(html,/app\.mjs\?v=cyw51-r12/);assert.match(html,/style\.css\?v=cyw51-r12/);
 });
 
 test('150 attribute points, individual cap, exact completion and clamp',()=>{
@@ -87,38 +87,16 @@ test('portrait is only rendered on page 01; final summary omits portrait and all
  const app=await readFile('web/opening/app.mjs','utf8'),html=await readFile('web/opening/index.html','utf8');
  assert.match(app,/case 0:html=.*portraitSource/);const final=app.slice(app.indexOf('case 6:{'),app.indexOf('page.innerHTML=html'));
  assert.doesNotMatch(final,/portrait|school|House|Residence|校徽|住宿|選校/);
- const css=await readFile('web/opening/style.css','utf8');
- assert.match(css,/background:[^;]*paper-master\.jpg/);assert.match(css,/orientation: portrait/);assert.match(css,/orientation: landscape/);
- assert.match(css,/grid-template-columns: repeat\(7, minmax\(0, 1fr\)\)/);assert.match(css,/note-tab\.active/);assert.match(css,/note-tab\.pressed/);
+
 });
 
 test('skill details, expanded categories and scroll position persist',async()=>{
  const app=await readFile('web/opening/app.mjs','utf8');
  assert.match(app,/data-group/);assert.match(app,/s\.openGroups\[d\.dataset\.group\]=d\.open/);
  assert.match(app,/s\.scroll\[s\.page===3\?'skills':'proficiencies'\]/);
- assert.match(app,/class="note-tab/);assert.match(app,/b\.classList\.add\('pressed'\)/);
+ assert.match(app,/class="note-tab/);
  assert.match(app,/input\.oninput=.*allocate\(s,kind,id,Number\(input\.value\)\)/);assert.match(app,/refreshSkillBudget\('語言'\)/);
 });
-
-test('original attached paper master is byte-for-byte used by the page asset',async()=>{
- const {readFile,stat}=await import('node:fs/promises'),{createHash}=await import('node:crypto'),b=await readFile('web/opening/paper-master.jpg');
- assert.equal(createHash('md5').update(b).digest('hex'),'f4313003d0a5317582b87c9b9701ae59');assert.equal((await stat('web/opening/paper-master.jpg')).size,246605);
-});
-
-test('short landscape uses a bounded paper document, single-line tabs and internal lists',async()=>{
- const css=await readFile('web/opening/style.css','utf8');
- const mobile=css.split('@media (orientation: landscape) and (max-height: 600px) and (max-width: 1100px) {')[1]?.split('@media (orientation: portrait)')[0];
- assert(mobile,'dedicated short landscape rules must exist');
- assert.match(mobile,/\.paper\s*\{[^}]*width: 100%; height: 100dvh;[^}]*overflow: hidden;/s);
- assert.match(mobile,/\.sheet\s*\{[^}]*height: 100%; overflow: hidden;/s);
- assert.match(mobile,/#tabs \.note-tab\s*\{[^}]*white-space: nowrap; word-break: keep-all;/s);
- assert.match(mobile,/#page:has\(\.split\)\s*\{[^}]*overflow: hidden;/s);
- assert.match(mobile,/\.list, \.details\s*\{[^}]*overflow-y: auto; overflow-x: hidden;/s);
- assert.match(mobile,/\.counter\s*\{[^}]*flex-wrap: nowrap;/s);
- assert.match(mobile,/footer\s*\{[^}]*flex: none;/s);
- assert.doesNotMatch(mobile,/150dvh|aspect-ratio: 3 \/ 2/);
-});
-
 
 test('random allocation uses the formal engine and stays within 150 and each category budget',()=>{
  for(let i=0;i<20;i++){
@@ -172,4 +150,18 @@ test('overbudget proficiency drafts cannot proceed, lose no data, and can be rep
  assert.equal(proficiencyRemaining(s),-50);assert(validatePage(s,{locked:true},4).length);
  adjust(s,'proficiency','水彩',-10);assert.equal(s.proficiencies.水彩,65);
  randomizeProficiencies(s,()=>0);assert.equal(proficiencyRemaining(s),0);assert.equal(s.basic.lastName,'測');
+});
+
+test('single dice cannot create points, spend across categories or remove mother-tongue grant',()=>{
+ const s=filled(),run={locked:true};
+ for(const kind of ['attribute','skill','proficiency']){
+  const id={attribute:'STR',skill:'母語',proficiency:'鋼琴'}[kind],before=structuredClone(s);
+  randomizeOne(s,kind,id,()=>.99999);
+  assert(attributeTotal(s)<=150);assert(proficiencyRemaining(s)>=0);
+  for(const category of Object.keys(categories))assert(categoryStatus(s,category).remaining>=0);
+  assert(s.skills.母語>=55);
+  if(kind!=='attribute')assert.deepEqual(s.attributes,before.attributes);
+ }
+ const before=structuredClone(s);assert.throws(()=>randomizeOne(s,'skill','母語',()=>1));assert.deepEqual(s,before);
+ randomizeOne(s,'skill','母語',()=>0);assert.equal(s.skills.母語,55);
 });

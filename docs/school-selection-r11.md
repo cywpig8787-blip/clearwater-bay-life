@@ -1,3 +1,5 @@
+> 歷史紀錄：已由 CYW-51 最新內容與 [r12 驗收紀錄](cyw51-r12.md) 取代，不得作為現行實作規格。
+
 # School Selection presentation rebuild — CYW-51 r11
 
 Authority: CYW-51 read in full (updated 2026-09-25T09:10:16.142Z), plus the user's explicit replacement of historical arrow/stack navigation with directly selectable desk documents. Data, eligibility, school content, allocation and save contracts are unchanged.

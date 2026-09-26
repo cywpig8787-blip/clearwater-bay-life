@@ -1,0 +1,47 @@
+<!doctype html><html lang="zh-Hant"><meta charset="utf-8"><link rel="stylesheet" href="../web/school-selection/style.css?v=cyw51-r12-final"><style>body{margin:0}#testbar{position:fixed;left:5px;top:5px;z-index:100;color:white;background:#111d;padding:8px;font:12px monospace;max-width:310px}#testbar button{font:12px sans-serif}#results{max-height:140px;overflow:auto;white-space:pre-wrap}#creator,#rotateGate{display:none}</style><div id="creator"></div><div id="rotateGate"></div><aside id="testbar"><button id="collapse">收合驗收面板</button><div id="testcontrols"><button id="female">女性上中產</button><button id="male">男性中產</button><button id="single">女性小康</button><button id="fonts">驗證實際字形</button><button id="slow">0.25倍速</button><button id="blank">隱藏校名校徽</button><pre id="results"></pre></div></aside><script type="module">
+import {newCharacter} from '../web/creation-v2/creator-service.mjs?v=cyw51-r12-final';
+import {randomizeAttributes,randomizeSkills,randomizeProficiencies} from '../web/creation-v2/allocation-engine.mjs?v=cyw51-r12-final';
+import {commitCreator} from '../web/creation-v2/player-state.mjs?v=cyw51-r12-final';
+import {showSchoolSelection} from '../web/school-selection/app.mjs?v=cyw51-r12-release';
+import {schoolFonts,schoolLatinFonts,loadSchoolFont} from '../web/school-selection/presentation.mjs?v=cyw51-r12-final';
+document.querySelector('#collapse').onclick=e=>{const controls=document.querySelector('#testcontrols');controls.hidden=!controls.hidden;e.target.textContent=controls.hidden?'展開驗收面板':'收合驗收面板';};
+const results=document.querySelector('#results'),records=[];let speed=1,rootRef,paperRefs;
+const originalAnimate=Element.prototype.animate;
+Element.prototype.animate=function(frames,options){return originalAnimate.call(this,frames,{...options,duration:options.duration/speed});};
+const log=value=>{records.push(value);results.textContent=JSON.stringify(records,null,2);};
+async function scenario(gender,tier){
+ document.querySelector('#schoolSelection')?.remove();records.length=0;
+ const values=new Map(),storage={getItem:k=>values.get(k)||null,setItem:(k,v)=>values.set(k,v)};
+ const c=newCharacter();c.basic={lastName:'驗收',firstName:'角色',gender,month:'2',day:'29',pronouns:gender==='female'?'她':'他'};c.motherTongue='中文';c.nationality='臺灣';randomizeAttributes(c);randomizeSkills(c);randomizeProficiencies(c);
+ const run={id:'acceptance-'+gender+tier,locked:true,result:{id:'tier_'+tier,label:'測試'}};
+ const state=commitCreator(c,run,storage),scene=showSchoolSelection(state,{storage});await scene.ready;
+ rootRef=scene.root;paperRefs=[...rootRef.querySelectorAll('.school-sheet')];
+ log({gender,tier,schools:paperRefs.map(p=>p.dataset.school),resources:rootRef.dataset.resources});
+ let samples=[],recording=false;
+ const sample=()=>{if(!recording)return;const curtain=rootRef.querySelector('.transition-layer'),active=rootRef.querySelector('[data-active=true]'),content=active?.querySelector('.sheet-content');samples.push({t:performance.now(),state:rootRef.dataset.documentState,opacity:+getComputedStyle(curtain).opacity,resources:rootRef.dataset.resources,contentOpacity:content?+getComputedStyle(content).opacity:null,papers:paperRefs.every(p=>p.isConnected)});requestAnimationFrame(sample);};
+ rootRef.addEventListener('click',e=>{if(e.target.closest('.sheet-hit,.put-down,.accept')&&!recording){samples=[];recording=true;requestAnimationFrame(sample);}},{capture:true});
+ rootRef.addEventListener('document-transition-measure',e=>{recording=false;log({...e.detail,frameCheck:{frames:samples.length,maxMaskOpacity:Math.max(0,...samples.map(s=>s.opacity)),resourcesAlwaysReady:samples.every(s=>s.resources==='ready'),contentVisibleDuringPickReveal:e.detail.kind==='pick'?samples.filter(s=>s.state==='revealing').every(s=>s.contentOpacity===1):null,noPaperReplacementBeforeFinal:samples.every(s=>s.state==='revealing'&&e.detail.kind==='enrollment'||s.papers)},samples,normalizedMs:e.detail.durationMs*speed,sameRoot:rootRef===document.querySelector('#schoolSelection'),samePapers:paperRefs.every(p=>p.isConnected)});});
+}
+document.querySelector('#female').onclick=()=>scenario('female',3);
+document.querySelector('#male').onclick=()=>scenario('male',2);
+document.querySelector('#single').onclick=()=>scenario('female',1);
+document.querySelector('#slow').onclick=e=>{speed=speed===1?.25:1;e.target.textContent=speed===1?'0.25倍速':'恢復正常速度';};
+document.querySelector('#blank').onclick=()=>{rootRef.classList.toggle('blank-test');};
+const style=document.createElement('style');style.textContent='.blank-test .sheet-identity,.blank-test .desk-identity{visibility:hidden!important}';document.head.append(style);
+// Compare actual glyph raster with expected font and two intentionally forced fallbacks.
+// Each probe inherits its exact live DOM style; a CSS declaration alone cannot pass.
+function raster(font,text){const c=document.createElement('canvas');c.width=1200;c.height=90;const x=c.getContext('2d',{willReadFrequently:true});x.font=font;x.fillText(text,4,65);return x.getImageData(0,0,c.width,c.height).data;}
+const equal=(a,b)=>a.length===b.length&&a.every((n,i)=>n===b[i]);
+document.querySelector('#fonts').onclick=async()=>{
+ const checks=[];
+ for(const sheet of document.querySelectorAll('.school-sheet')){
+  const id=sheet.dataset.school;await loadSchoolFont(id);
+  const probes=[[sheet.querySelector('.school-zh'),schoolFonts[id],'招生文案待確認學校'],[sheet.querySelector('h2'),id==='girls'?'Pinyon Script':schoolLatinFonts[id][0],'Admissions School 09'],[sheet.querySelector('.sheet-subtitle'),id==='girls'?'Cormorant Garamond':schoolLatinFonts[id][0],'Admissions School 09']];
+  if(id==='boys')probes.push([sheet.querySelector('.document-metadata'),'IBM Plex Mono','REV. ADMISSIONS 09']);
+  for(const [el,family,sample] of probes){const computed=getComputedStyle(el),live=raster(`400 40px ${computed.fontFamily}`,sample),expected=raster(`400 40px "${family}"`,sample),fallback=raster('400 40px serif',sample),sans=raster('400 40px sans-serif',sample);checks.push({school:id,family,loaded:document.fonts.check(`400 40px "${family}"`,sample),matchesExpectedGlyphs:equal(live,expected),differsFromFallback:!equal(live,fallback)&&!equal(live,sans)});}
+ }
+ const resources=performance.getEntriesByType('resource').filter(x=>/\.(ttf|woff2|png|jpg)(\?|$)/.test(x.name));
+ log({fontChecks:checks,resources:resources.map(r=>({url:r.name.split('/').at(-1),status:r.responseStatus,size:r.decodedBodySize})),overflow:document.documentElement.scrollWidth>innerWidth});
+};
+await scenario('female',3);
+</script></html>

@@ -15,8 +15,8 @@
 
 ### Character Creation v2 ＋ Ravenwood 文本校園測試
 
-- [創角與校園試玩](https://cywpig8787-blip.github.io/clearwater-bay-life/opening/)：建立角色後進入開學前校園，再到行政中心辦理住宿；中性角色於此時選宿舍側別。
-- v2 模組分離 Character Data、Attribute Engine、Point Source Ledger、Allocation Engine、School Eligibility、Residence Assignment。Academic / Other 各 200；Bonus 為獨立 restricted source，所有技能均保存付款來源。
+- [創角與校園試玩](https://cywpig8787-blip.github.io/clearwater-bay-life/opening/)：七頁角色申請文件冊 → 依資格選校 → 入學文件交件。現行驗收與邊界見 [CYW-51 r12](docs/cyw51-r12.md)。
+- v2 模組分離 Character Data、Attribute Engine、Point Source Ledger、Allocation Engine、School Eligibility、Residence Assignment。現行能力值 150／單項 65；14 個技能大項各自依正式屬性配對公式計算預算；熟練度共用 400／單項 75。不得沿用舊 Academic／Other 分池。
 - v1 已封存在 `archive/character-creation-v1/`，不發布、不作為 v2 分配邏輯來源。v2 草稿與 v1 草稿隔離；既有正式存檔保留。
 - [架構、規格核對與限制](docs/character-creation-v2.md)；[第三方來源與商業發行記錄](THIRD_PARTY_NOTICES.md)。
 - [接續校園存檔](https://cywpig8787-blip.github.io/clearwater-bay-life/ravenwood/)：主校舍、科學翼、02–07、08–11 宿舍及南門→公園→商店街。
