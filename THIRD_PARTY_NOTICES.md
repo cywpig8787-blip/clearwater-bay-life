@@ -41,3 +41,15 @@ All three original, unmodified TTF files are distributed under SIL Open Font Lic
 | Iansui / The Iansui Project Authors | https://github.com/ButTaiwan/iansui/tree/v1.020 | `web/school-selection/fonts/iansui-OFL.txt`, `iansui-AUTHORS.txt` | Ravenwood |
 | ChenYuLuoYan / Wang, Li-Yu and Liu, Wei-Chen | https://github.com/Chenyu-otf/chenyuluoyan_thin/tree/6e36815b0bec9f4f948298698d00b27a5f0b65c1 — ChenYuluoyan-2.0-Thin.ttf | `web/school-selection/fonts/chenyu-OFL.txt` (copyright included) | Rosamund |
 | LXGW WenKai TC / The LXGW WenKai Project Authors | https://github.com/lxgw/LxgwWenkaiTC/tree/v1.522 | `web/school-selection/fonts/wenkai-OFL.txt`, `wenkai-AUTHORS.txt` | Avenor |
+
+### School font verification — CYW-51 r11 (2026-09-26)
+
+The bundled, unmodified TTFs were compared with the original projects' Git trees at the versions above. Their Git blob hashes match exactly:
+
+- Iansui v1.020, `fonts/ttf/Iansui-Regular.ttf`: `3dcc17971252ea3c23f1eac4e6277e762f4566d0`.
+- ChenYuLuoYan pinned commit, `ChenYuluoyan-2.0-Thin.ttf`: `647b14819d9a734eec5800bcbbff0f5cad2d42cf`.
+- LXGW WenKai TC v1.522, `fonts/TTF/LXGWWenKaiTC-Regular.ttf`: `b4a79650617dc7db626b196c50777b411340d023`.
+
+The Iansui and WenKai OFL / AUTHORS files also match upstream blobs. ChenYuLuoYan's retained OFL text equals upstream `license.txt` after CRLF/LF normalization. All notices and copyright / reserved-name declarations remain bundled. No font binaries, names inside the fonts, or glyphs were modified.
+
+Web use maps each original face explicitly to normal style / CSS weight 400, including the original Thin design for ChenYuLuoYan; this is a CSS face mapping, not a modified or emboldened font. School content disables synthetic weights and uses only the declared face. Assets are served from the same origin as the playtest. The scene verifies FontFaceSet loading before revealing text and displays a retry message if a required face or image fails, instead of silently presenting fallback text.

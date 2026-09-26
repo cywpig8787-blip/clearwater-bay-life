@@ -1,5 +1,5 @@
 import {commitCreator,loadPlayerState} from '../creation-v2/player-state.mjs?v=cyw51-r10';
-import {showSchoolSelection} from '../school-selection/app.mjs?v=cyw51-r10';
+import {showSchoolSelection} from '../school-selection/app.mjs?v=cyw51-r11';
 import {decorateButtons} from './button-assets.mjs?v=cyw51-r10';
 import {newCharacter,validateCharacter,validatePage,pageGate as validationGate,confirmCharacterData} from '../creation-v2/creator-service.mjs?v=cyw51-r10';
 import {attributes,attributeLabels,categories,proficiencyGroups,financeTiers,rules} from '../creation-v2/catalog.mjs?v=cyw51-r10';

@@ -18,7 +18,7 @@ test('seven creator steps hand off to independently saved school selection',asyn
  assert.doesNotMatch(app,/House Placement|residenceId|preparation_week/);
  assert.match(app,/commitCreator\(s,run\)/);assert.match(app,/confirmCharacterData\(s,run\)/);
  assert.match(html,/paper-master\.jpg|style\.css/);assert.match(html,/rotateGate/);
- assert.match(html,/app\.mjs\?v=cyw51-r10/);assert.match(html,/style\.css\?v=cyw51-r10/);
+ assert.match(html,/app\.mjs\?v=cyw51-r11/);assert.match(html,/style\.css\?v=cyw51-r10/);
 });
 
 test('150 attribute points, individual cap, exact completion and clamp',()=>{
