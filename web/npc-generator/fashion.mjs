@@ -1,0 +1,177 @@
+import {plain,split,tagged,pools} from './catalog.mjs';
+
+// Families are sampling groups, not personality, gender, ancestry or school rules.
+const family = (id,label,tags,material,palette,shoes,accessory) => ({id,label,tags:tags.split(' '),material:plain(material),palette:plain(palette),shoes:plain(shoes),accessory:plain(accessory)});
+export const families = [
+ family('everyday','日常／無固定風格','minimal street','水洗棉＋丹寧|棉質毛圈布＋彈性褲料|柔軟針織＋斜紋布','衣櫃裡的藍灰白自然混用|常穿的兩三個顏色輪替|中性色為主，偶爾穿一件亮色','穿慣的球鞋|低筒帆布鞋|方便走路的休閒鞋','實用背包|普通手錶|不特別戴飾品'),
+ family('tailoring','經典剪裁／正裝','classic minimal','棉府綢＋細羊毛|平滑斜紋布＋薄針織|細格紋呢料＋棉布','海軍藍＋米白＋棕|炭灰＋霧藍|駝色＋奶油白','樂福鞋|繫帶皮鞋|素面短靴','小絲巾|細皮帶與腕錶|領帶夾'),
+ family('academia','學院／書卷','classic','粗花呢＋棉襯衫|燈芯絨＋針織|斜紋棉＋羅紋','深棕＋米白＋酒紅|象牙白＋卡其|深綠＋灰棕','樂福鞋|繫帶牛津鞋|皮革休閒鞋','細框眼鏡|帆布書袋|小型胸針'),
+ family('minimal','極簡／現代日常','minimal','高密度棉＋平滑針織|水洗亞麻＋細棉|柔軟羊毛混紡＋斜紋布','米白＋灰棕|海軍藍＋白|黑＋霧灰','簡潔球鞋|素面樂福鞋|低跟短靴','無標誌小包|幾何細戒|只戴日常手錶'),
+ family('romantic','浪漫／田園','romantic natural','刺繡棉布＋薄針織|細棉＋蕾絲邊|雪紡外層＋棉質內襯','奶油白＋煙粉|鼠尾草綠＋米白|霧藍＋柔棕','Mary Jane|芭蕾平底鞋|低跟繫帶短靴','小花別針|緞帶髮夾|小珍珠耳飾'),
+ family('lolita','Lolita／王子系','romantic classic','棉質印花＋棉蕾絲|霧面提花＋緞帶|細棉襯衫＋挺度裙料','莓紅＋奶油白|粉藍＋白|深棕＋象牙白','圓頭搭扣鞋|低厚底 Mary Jane|繫帶短靴','同色緞帶頭飾|小巧盒形包|領口小胸針'),
+ family('gothic','Gothic／暗色浪漫','dark','天鵝絨＋細蕾絲|黑色棉布＋暗紋提花|霧面斜紋布＋少量皮革','黑＋炭灰＋酒紅|深紫＋黑＋銀|墨綠＋黑','黑色繫帶靴|低厚底搭扣鞋|銀扣短靴','古銀色小吊墜|窄絨帶頸飾|暗紋手袋'),
+ family('punk','Punk／DIY','dark street','補丁丹寧＋棉布|格紋棉＋皮革|做舊帆布＋金屬小扣','黑＋紅格紋|靛藍＋黑＋白|炭灰＋一塊亮色','耐磨戰靴|舊帆布鞋|滑板鞋','自行縫上的布章|小圈耳飾|固定在口袋的短鍊'),
+ family('rock','搖滾／音樂場景','dark street','樂團印花棉＋丹寧|格絨布＋舊針織|皮革外層＋素色棉布','黑＋水洗藍|暗紅＋灰|褪色黑＋米白','穿舊短靴|高筒帆布鞋|黑色球鞋','演出徽章|舊皮帶|布製腕帶'),
+ family('street','街頭／舞蹈','street sport','厚棉＋丹寧|尼龍＋羅紋|運動網眼＋棉布','靛藍＋白＋紅|灰＋黑＋亮色小點|橄欖綠＋米白','復古高筒球鞋|滑板鞋|耐走跑鞋','棒球帽|織標斜背包|短金屬鍊'),
+ family('gyaru','Gyaru／辣妹文化','street romantic','丹寧＋羅紋棉|柔軟絨面＋小水鑽|印花棉＋蕾絲邊','亮粉＋白＋丹寧藍|黑＋金色細節|奶油色＋焦糖棕','厚底球鞋|搭扣厚底鞋|短筒靴','大型耳環|彩色手機掛繩|裝飾密集的小包'),
+ family('kawaii','原宿／可愛裝飾','romantic experimental street','彩色棉布＋薄紗局部|復古印花＋柔軟絨布|羅紋棉＋塑膠小飾件','粉紫＋薄荷綠＋奶油白|紅黃藍重複呼應|黑＋粉色小圖案','彩色球鞋|低厚底搭扣鞋|圖案帆布鞋','成組彩色髮夾|同主題玩具手環|掛件豐富的小包'),
+ family('vintage','年代／復古','classic street','燈芯絨＋圖案棉布|丹寧＋復古針織|格紋呢料＋棉府綢','芥末黃＋棕|磚紅＋奶油白|墨綠＋酒紅','復古繫帶鞋|圓頭短靴|簡單帆布鞋','二手皮包|復古小絲巾|舊式手錶'),
+ family('regional','地域來源／現代融合','experimental natural minimal','提花棉布＋素色斜紋布|局部刺繡＋棉麻|圖紋布料＋平滑純色內搭','靛藍＋米白|陶土紅＋深棕|主圖紋取兩個顏色呼應','簡潔繫帶鞋|素色平底鞋|現代球鞋','小型布包|單一圖紋絲巾|幾何金屬飾件'),
+ family('workwear','工裝／西部','street natural','耐磨帆布＋丹寧|斜紋棉＋燈芯絨|厚棉襯衫＋軟皮革','靛藍＋棕|軍綠＋沙色|磚紅＋奶油白','耐磨工作靴|低跟西部短靴|厚底帆布鞋','耐用皮帶|實用帆布包|舊式小腕錶'),
+ family('outdoor','戶外／機能','sport natural','輕量防風布＋透氣棉|抓絨＋防撥水布|耐磨斜紋布＋快乾內層','苔綠＋沙色|黑＋霧灰|海軍藍＋橘色小點','輕量機能鞋|越野跑鞋|防水步行鞋','功能小包|輕量腕錶|可拆反光掛件'),
+ family('sports','運動／校園休閒','sport street','珠地棉＋斜紋布|運動針織＋棉質內搭|快乾織物＋羅紋','白＋海軍藍|草綠＋米白|酒紅＋灰','日常跑鞋|復古訓練鞋|白色球鞋','運動腕錶|素色帽子|輕便肩包'),
+ family('art','藝術／結構實驗','experimental minimal','硬挺棉布＋垂墜布|舊布拼接＋素色棉布|霧面布＋少量透明材料','黑＋白＋鈷藍|一個主色的深淺變化|磚紅＋灰紫','幾何鞋面平底鞋|分片配色球鞋|側拉鍊短靴','不對稱耳飾|自製幾何胸針|有畫痕的布包'),
+ family('digital','數位／復古未來','experimental sport','霧面尼龍＋透明小配件|像素印花棉＋羅紋|局部銀色面料＋純色棉布','霧銀＋白＋藍|粉紫＋青藍|黑＋螢光綠小點','銀灰球鞋|分片機能鞋|黑白高筒鞋','透明小包|像素別針|單一電子圖形掛件')
+];
+const F=Object.fromEntries(families.map(f=>[f.id,f]));
+const profile=(id,familyId,label,outfits,aliases='',extra={})=>({id,family:familyId,label,aliases:split(aliases),tags:F[familyId].tags,silhouette:plain(outfits),...extra});
+export const styles = [
+ profile('no-style','everyday','沒有固定風格','洗好哪件 T-shirt 就穿哪件＋平常的長褲|舊衛衣＋牛仔褲，外套看天氣拿'),
+ profile('comfort','everyday','舒服就好','軟棉上衣＋鬆腰長褲|寬鬆衛衣＋柔軟直筒褲','Cozycore|Hygge Style'),
+ profile('family-bought','everyday','家人買什麼就穿什麼','家人買的條紋上衣＋耐穿長褲|合尺寸的針織衫＋普通牛仔褲'),
+ profile('basics','everyday','基本款輪替','素 T＋直筒牛仔褲|素色襯衫＋卡其褲','Casual|Normcore|Capsule Wardrobe|Uniform Dressing'),
+ profile('sport-casual','everyday','運動休閒為主','運動上衣＋鬆身運動長褲|衛衣＋棉質短褲','Sportswear'),
+ profile('accidental','everyday','隨手穿，慢慢有了自己的樣子','常穿的褪色上衣＋固定那條寬褲|舊開襟衫＋領口露出一點圖案的 T-shirt'),
+ profile('unnamed-pretty','everyday','喜歡漂亮衣服，不知道風格名稱','喜歡的小領片襯衫＋簡單長裙|覺得顏色好看的針織衫＋直筒褲'),
+ profile('mixed','everyday','來源混雜，靠重複顏色搭起來','二手外套＋家人買的上衣＋常穿牛仔褲|圖案 T-shirt＋舊針織背心＋素色長褲','Eclectic|Thrifted Style'),
+ profile('occasion-only','everyday','只有約好出門才認真搭配','平日素 T＋長褲，出門聚會換領口好看的襯衫|平日衛衣＋牛仔褲，特別出門才換成整套針織與裙裝'),
+ profile('smart','tailoring','Smart Casual｜精緻休閒','棉襯衫＋直筒褲＋不打領帶的軟西裝|薄針織＋西裝長褲','Classic|Timeless|Business Casual|Elegant|Sophisticated'),
+ profile('dandy','tailoring','Neo-Dandy｜新丹迪','彩色背心＋襯衫＋直筒長褲|格紋短外套＋領巾＋素色褲','Dandy|Dapper|Gentleman Style'),
+ profile('heritage','tailoring','British Heritage｜英倫傳承','粗花呢外套＋襯衫＋燈芯絨褲|格紋背心＋細針織＋直筒裙','Heritage|British Prep|Old Money|英倫獵裝'),
+ profile('occasion-tailored','tailoring','Formal-inspired｜正裝日常化','西裝背心＋襯衫＋長褲，平日省去領帶|短套裝外套＋及膝 A 字裙','Formal|Semi-Formal|Business Formal|Tailored'),
+ profile('italian','tailoring','Sprezzatura｜義式鬆弛剪裁','柔肩西裝＋開領襯衫＋高腰褲|細針織＋有褲線的寬褲','Italian Chic|Italian Tailoring'),
+ profile('dark-academia','academia','Dark Academia｜深色學院','粗花呢西裝＋高領針織＋長褲|深棕背心＋襯衫＋百褶長裙','Gothic Academia|Library Gothic|Museumcore'),
+ profile('light-academia','academia','Light Academia｜淺色學院','奶油色針織背心＋襯衫＋卡其褲|米白開襟衫＋淺色長裙','Romantic Academia|Writercore|Poetcore'),
+ profile('ivy','academia','Ivy／Preppy｜美式學院','牛津襯衫＋針織背心＋卡其褲|格紋百褶裙＋素襯衫＋短開襟衫','Preppy|Ivy League|American Trad|Korean Preppy'),
+ profile('grandpa','academia','Grandpacore｜舊式針織','寬鬆針織背心＋舊襯衫＋寬褲|有點過時的菱格開襟衫＋燈芯絨褲','Eclectic Grandpa|Geek Chic|Librarian Chic|Intellectual Chic'),
+ profile('j-minimal','minimal','Japanese Minimalism｜日式留白','箱形棉襯衫＋九分寬褲|長背心＋寬鬆上衣＋直筒裙','East Asian Minimalism|City Boy|City Girl|Genderless Fashion|Androgynous'),
+ profile('scandi','minimal','Scandinavian Minimalism｜柔和機能','落肩針織＋寬鬆長褲|簡潔外套＋素 T＋直筒裙','Minimalist|Monochrome|Tonal Dressing'),
+ profile('french','minimal','French／Parisian Chic｜簡潔都會','條紋上衣＋直筒牛仔褲＋短外套|薄針織＋簡單 A 字裙','Parisian Minimalism|Effortless Chic'),
+ profile('korean-clean','minimal','Korean Minimalism｜韓系清爽','寬鬆襯衫＋高腰直筒褲|短針織外套＋素色長裙','Korean Clean Fit|Ulzzang|Korean Casual|Seongsu Style'),
+ profile('quiet','minimal','Quiet Luxury｜材質感極簡','無標誌細針織＋俐落長褲|合肩短外套＋直線長裙','1990s Minimalism|90s Supermodel|Model Off-Duty'),
+ profile('pastoral','romantic','Romantic Pastoral｜花園田園','泡袖棉上衣＋層疊長裙|小花襯衫洋裝＋薄針織','Cottagecore|Prairiecore|Romantic|Garden Party'),
+ profile('ballet','romantic','Balletcore｜練習服線條','包裹式針織上衣＋柔軟長裙|簡單上衣＋輕薄罩衫＋闊腿褲','Ballet Practice Wear|Dancewear'),
+ profile('otome','romantic','Otome／Twee｜俏皮復古','娃娃領襯衫＋及膝 A 字裙|復古印花洋裝＋小開襟衫','Otome Kei|Twee|Soft Vintage|Grandmacore / Grannycore'),
+ profile('ethereal','romantic','Ethereal｜輕薄流動','不透內襯長裙＋輕紗短罩衫|軟棉上衣＋不規則輕薄裙襬','Etherealcore|Fairycore|Angelcore'),
+ profile('sweet-lolita','lolita','Sweet Lolita｜甜系裙形','甜點印花及膝蓬裙＋圓領襯衫|粉彩背帶裙＋棉蕾絲上衣','Princesscore|Dollcore|Hime Lolita'),
+ profile('classic-lolita','lolita','Classic Lolita｜古典裙形','沉穩花卉及膝蓬裙＋立領襯衫|提花背帶裙＋短開襟衫','Country Lolita|Casual Lolita|Shiro Lolita|Kuro Lolita'),
+ profile('gothic-lolita','lolita','Gothic Lolita｜哥德裙形','黑色及膝蓬裙＋白色蕾絲襯衫|暗紋鐘形背帶裙＋長袖上衣','Old School Lolita|Punk Lolita',{tags:['dark','romantic'],palette:plain('黑＋白＋銀|黑＋深紫|黑＋酒紅')}),
+ profile('sailor-lolita','lolita','Sailor Lolita｜航海裙形','水手領上衣＋海軍藍蓬裙|條紋領片背帶裙＋素色襯衫','Military Lolita|Pirate Lolita',{palette:plain('海軍藍＋白|白＋紅色領結')}),
+ profile('ouji','lolita','Ouji｜王子系','立領襯衫＋短背心＋及膝短褲與長襪|短外套＋小領結＋馬褲式長褲','Kodona|Princecore|王子系'),
+ profile('romantic-goth','gothic','Romantic Gothic｜浪漫哥德','蕾絲立領襯衫＋垂墜長裙|黑色長背心＋荷葉邊襯衫＋長褲','Romantic Goth|Dark Romantic|Victorian Goth|Neo-Victorian'),
+ profile('aristocrat','gothic','Gothic Aristocrat｜哥德貴族','高領襯衫＋長外套＋直筒褲|暗紋背心＋長裙＋小披肩','Aristocrat|Aristocratic Style|Vampire Goth|Vampire Style'),
+ profile('trad-goth','gothic','Trad Goth｜後龐克哥德','寬袖黑上衣＋直筒長裙|短皮外套＋網紋內搭＋黑長褲','Goth|Gothcore|Deathrock'),
+ profile('modern-goth','gothic','Modern Goth｜現代哥德','俐落黑襯衫＋寬腿褲|黑色長針織＋窄直裙','Nu Goth|Soft Goth|Corporate Goth'),
+ profile('mall-goth','gothic','Mall Goth｜商場哥德','黑色圖案 T＋寬腿丹寧褲|長袖圖案上衣＋多口袋寬褲','Nu Metal Style'),
+ profile('whimsigoth','gothic','Whimsigoth｜星月暗色復古','星月印花上衣＋天鵝絨長裙|寬袖上衣＋深色長裙與短背心','Witchcore|Dark Boho|Strega'),
+ profile('diy-punk','punk','Street Punk｜補丁與別針','補丁牛仔外套＋格紋長褲|手繪 T-shirt＋磨損長裙與短靴','Punk|Punkcore|Anarcho-Punk|Crust Punk'),
+ profile('pop-punk','punk','Pop／Skate Punk｜滑板龐克','樂團 T＋寬短褲＋格紋外襯|拉鍊帽 T＋窄直牛仔褲','Hardcore Punk|Skate Punk|Riot Grrrl'),
+ profile('grunge','rock','Grunge｜舊衣層次','起球開襟衫＋舊 T＋牛仔褲|格絨襯衫＋褪色長裙','Soft Grunge|Grungecore|Neo-Grunge|Indie Sleaze'),
+ profile('metal','rock','Metalhead｜樂團日常','布章丹寧背心＋樂團 T＋黑褲|長袖樂團上衣＋舊牛仔褲','Heavy Metal Style|Death Metal Style|Black Metal Style'),
+ profile('emo','rock','Emo｜暗色音樂日常','條紋內搭＋樂團 T＋窄直褲|舊連帽外套＋黑色牛仔褲','Emo Revival|2010s Tumblr'),
+ profile('visual-kei','rock','Visual Kei｜視覺系日常','不對稱領片襯衫＋窄直長褲|短背心＋層次下襬上衣＋長裙','Kote Kei|Tanbi Kei|Nagoya Kei|Glam Rock|Glam Metal'),
+ profile('ska','rock','Ska｜黑白格與窄剪裁','小格紋襯衫＋直筒褲|吊帶褲＋素色短袖上衣','Ska Style|Rude Boy / Rude Girl'),
+ profile('skater','street','Skater｜耐磨街頭','寬 T＋寬直工裝褲|帽 T＋耐磨過膝短褲','Skate Style'),
+ profile('hiphop','street','Old-School Hip-Hop｜老派運動街頭','寬鬆運動套裝＋素 T|棒球外套＋寬腿丹寧褲','Hip-Hop|B-Boy / B-Girl|Grime Style'),
+ profile('y2k','street','Y2K｜千禧線條','短版拉鍊外套＋寬腿牛仔褲|圖形 T-shirt＋低腰感工裝長裙','Cyber Y2K|Wasteland Y2K|2000s Pop Star'),
+ profile('mcbling','street','McBling｜水鑽與絨面','水鑽圖案上衣＋直筒丹寧褲|亮色絨面運動外套＋同色長褲','New Money',{palette:plain('亮粉＋白＋銀|紫＋黑＋水鑽小點'),accessory:plain('水鑽裝飾小包|大圈耳環|亮面吊墜')}),
+ profile('acubi','street','Acubi｜灰階街頭','薄針織疊長袖上衣＋工裝褲|短罩衫＋素 T＋直筒長裙','Korean Streetwear|Hongdae Style'),
+ profile('amekaji','gyaru','Amekaji Gyaru｜美式休閒辣妹','鮮色圖案 T＋牛仔短褲與長襪|運動短外套＋寬鬆丹寧褲','Neo Gyaru|B-Gyaru'),
+ profile('himekaji','gyaru','Himekaji｜公主休閒','碎花洋裝＋針織開襟衫|蝴蝶結上衣＋多層次短裙與長襪','Hime Gyaru'),
+ profile('rokku','gyaru','Rokku Gyaru｜搖滾辣妹','皮外套＋圖案上衣＋格紋裙|黑色背心外搭＋磨損牛仔褲','Goshikku Gyaru|Ora Ora Gyaru'),
+ profile('haady','gyaru','Haady Gyaru｜華麗撞色','鮮色印花上衣＋撞色短外套與丹寧褲|豹紋局部上衣＋高彩裙裝','Tsuyome Gyaru|Gyaruo',{palette:plain('螢光粉＋檸檬黃＋黑色收邊|鈷藍＋亮橘＋白')}),
+ profile('kogal','gyaru','Kogyaru｜制服元素時尚','鬆針織＋襯衫＋格裙與泡泡襪|外搭開襟衫＋領帶襯衫＋短裙與長襪','Kogyaru / Kogal|Seifuku Kei'),
+ profile('decora','kawaii','Decora｜成組裝飾','圖案 T＋彩色短裙與條紋長襪|彩色帽 T＋寬短褲與圖案襪','Dark Decora|Shinora|Kidcore|Rainbowcore',{accessory:plain('同主題十多枚髮夾與玩具手環|多層彩珠頸鍊與同色系髮夾')}),
+ profile('fairy-kei','kawaii','Fairy Kei｜粉彩懷舊','復古玩具圖案衛衣＋粉彩裙|寬鬆印花 T＋淡色吊帶褲','Yume Kawaii|Pop Kei|Kawaii|Barbiecore'),
+ profile('jirai','kawaii','Jirai／Ryousangata｜黑粉緞帶','蕾絲領上衣＋黑色 A 字裙|粉色開襟衫＋領結襯衫＋百褶裙','Jirai Kei|Ryousangata',{palette:plain('黑＋煙粉＋白|粉白＋少量黑'),accessory:plain('成對緞帶髮夾|同色小領結與掛件包')}),
+ profile('tenshi','kawaii','Tenshi Kaiwai｜白藍科技可愛','白藍運動外套＋寬鬆短褲與長襪|淡藍拉鍊上衣＋白色機能長裙','Cyber Kawaii',{palette:plain('白＋冰藍＋透明細節|霧銀＋白＋淡藍')}),
+ profile('scene','kawaii','Scene｜彩色音樂圖像','卡通 T＋窄直牛仔褲＋條紋袖套|黑色連帽外套＋高彩圖案上衣與長褲','Scenecore|Oshare Kei'),
+ profile('mori','romantic','Mori／Natural Kei｜自然層次','棉麻長裙＋寬鬆針織背心|長襯衫＋不規則裙襬＋薄圍巾','Mori Kei|Natural Kei|Forestcore|Earthcore'),
+ profile('dark-mori','gothic','Dark Mori｜深色舊布','深棕長上衣＋不規則長裙|灰黑舊針織＋長裙與短披肩','Fairy Grunge|Goblincore'),
+ profile('dolly','vintage','Dolly Kei｜古董織物','刺繡背心＋碎花長裙|舊提花外套＋棉質洋裝','Cult Party Kei'),
+ profile('new-look','vintage','1950s New Look｜收腰與傘裙','合身短開襟衫＋高腰傘裙|圓領襯衫＋及膝圓裙','Pin-Up|Rockabilly'),
+ profile('mod','vintage','Mod｜六〇年代幾何','幾何 A 字洋裝＋短外套|窄領襯衫＋俐落直筒褲','60s Mod|Swinging Sixties'),
+ profile('seventies','vintage','1970s Retro｜大地色寬線條','尖領襯衫＋喇叭褲|麂皮感背心＋印花長裙','Hippie|Bohemian / Boho|Boho Chic|Western Boho'),
+ profile('eighties','vintage','1980s｜寬肩與拼色','稍寬肩西裝＋高腰直筒褲|拼色運動外套＋高腰牛仔褲','1980s Power Dressing|Aerobics Style'),
+ profile('teddy','vintage','Teddy｜英倫搖滾復古','長西裝外套＋窄直長褲|襯衫＋短領巾＋長外套與窄裙','Teddy Boy|Teddy Girl|New Romantic'),
+ profile('edwardian','vintage','Edwardian｜高領復古轉譯','高領棉襯衫＋高腰長裙|細褶襯衫＋直筒長褲','Gibson Girl|Belle Époque|1910s Fashion|Regency'),
+ profile('new-chinese','regional','新中式｜立領與現代剪裁','立領盤扣短外套＋直筒長褲|簡潔上衣＋日常長度馬面裙','New Chinese Style / Xin Zhongshi|Neo-Chinese|Guochao'),
+ profile('han-element','regional','漢元素｜交領與直線','交領短上衣＋寬腿褲|短褙子式外搭＋素上衣與長裙','Modern Hanfu|Han Element|Hanfu Revival'),
+ profile('qipao','regional','Qipao Fusion｜旗袍元素','立領直筒洋裝＋短開襟衫|盤扣襯衫＋高腰寬褲','Modern Qipao|Shanghai Retro'),
+ profile('wa-modern','regional','Wa-style Modern｜和風剪裁','短羽織外套＋素 T＋寬腿褲|幾何和柄上衣＋單色長裙','Kimono Mix|Taisho Roman|Wa Lolita'),
+ profile('hk-retro','regional','Hong Kong Retro｜港風丹寧','寬鬆襯衫＋高腰牛仔褲|短皮外套＋素上衣與直筒裙','Taiwanese Retro|Hong Kong Retro'),
+ profile('kurta','regional','Modern Kurta｜長上衣融合','棉質長上衣＋直筒長褲|刺繡短上衣＋寬褲與輕披巾','Indo-Western|Indian Fusion|Desi Fashion|Pakistani Lawn Style'),
+ profile('modest','regional','Modest Fashion｜長線條與覆蓋','寬鬆長袖上衣＋長裙|長外套＋素色上衣與闊腿長褲','Abaya Fashion|Hijabi Fashion'),
+ profile('ankara','regional','Ankara｜印花與素色搭配','蠟染印花短外套＋素 T與直筒褲|印花 A 字裙＋單色襯衫','Wax Print Fashion|Afro-Chic|African Streetwear'),
+ profile('americana','workwear','Americana｜丹寧工裝','丹寧工作外套＋厚棉上衣與工裝褲|帆布背心＋格襯衫與牛仔褲','American Workwear|Japanese Americana|Japanese Workwear'),
+ profile('western','workwear','Western／Vaquero｜西部日常','刺繡肩片襯衫＋直筒丹寧褲|短丹寧外套＋長裙','Cowboy / Cowgirl|Cowgirl|Ranch Wear|Vaquero Style|Rodeo Style'),
+ profile('military','workwear','Military Surplus｜軍品再穿','舊軍綠外套＋素上衣與直筒褲|短飛行外套＋高腰工裝長裙','Army Surplus|Military Chic|軍裝風'),
+ profile('garden','workwear','Gardening Workwear｜園藝日常','可捲袖襯衫＋吊帶褲|多口袋工作背心＋長袖棉衣與耐磨褲','Farmcore|Fieldwear|Garage Mechanic'),
+ profile('techwear','outdoor','Techwear｜城市機能','短機能外套＋寬腿工裝褲|拉鍊罩衫＋裙式超寬褲','Urban Techwear|Darkwear|Utility Chic'),
+ profile('gorp','outdoor','Gorpcore｜山系日常','抓絨上衣＋耐磨長褲|輕量防風外套＋寬短褲與長襪','Yama Kei|Hiker Style|Granola Girl|Campcore|Trail Style'),
+ profile('coast','outdoor','Nautical／Coastal｜海岸穿法','條紋上衣＋直筒褲＋防風外套|薄針織＋寬鬆長裙','Sailing Style|Riviera|Fishermancore|Mediterranean Style'),
+ profile('tennis','sports','Tennis／Golf｜清爽運動剪裁','Polo 衫＋百褶裙|針織背心＋Polo 衫與直筒褲','Tenniscore|Golfcore|Sporty Prep'),
+ profile('varsity','sports','Varsity｜校園運動元素','棒球外套＋T-shirt與牛仔褲|粗條紋 Rugby 上衣＋棉質長褲','Collegiate|Baseball Style|Rugby Style|Campus Casual'),
+ profile('football','sports','Blokecore／Blokette｜足球衫混搭','復古足球衫＋牛仔褲|足球衫＋百褶裙與長襪','Blokecore|Blokette|Basketball Style'),
+ profile('surf','sports','Surfer｜海岸休閒','寬 T＋輕便及膝短褲|開領印花襯衫＋素 T與長褲','Surf Style|Surfer Gyaru|Island Style'),
+ profile('moto','sports','Motocore｜賽車線條日常','拼色賽車夾克＋直筒牛仔褲|短皮外套＋寬腿長褲','Racing Style|Bikercore|Moto Chic|Biker'),
+ profile('deconstruct','art','Deconstruction｜錯位與重組','外露縫線襯衫＋直筒褲|不對稱長上衣＋素色長裙','Deconstructed|Subversive Basics|Experimental Fashion|Avant-Garde'),
+ profile('architectural','art','Architectural｜幾何結構','硬挺短外套＋弧線長褲|幾何裁片上衣＋A 字裙','Architectural Fashion|Sculptural Fashion|Conceptual Fashion'),
+ profile('upcycled','art','Upcycled｜舊衣再造','拼布工作外套＋素 T與牛仔褲|手繪襯衫＋直筒長裙','Sustainable Fashion|Handmade Patchwork|Artsy|Art Academia'),
+ profile('maximal','art','Maximalist｜重複主題的極繁','兩種呼應色印花疊穿＋素色寬褲|鮮色針織＋圖案長裙','Designer Maximalism|Dopamine Dressing|Colorcore|Avant Basic',{palette:plain('鈷藍＋橘＋奶油白|莓紅＋草綠＋粉色')}),
+ profile('space-age','digital','Space Age｜六〇年代未來','白色幾何短外套＋A 字裙|銀灰局部拼片上衣＋直筒褲','Space Age Fashion|Metallic Futurism|Y3K|Robotcore'),
+ profile('webcore','digital','Webcore｜舊網路圖像','像素印花 T＋素色寬褲|向量圖案運動外套＋牛仔褲','Glitchcore|Frutiger Metro|Nerdcore Fashion'),
+ profile('vaporwave','digital','Vaporwave｜數位懷舊','粉紫藍拼色外套＋素 T與長褲|復古圖案衛衣＋寬短褲','Synthwave|Retrowave|Mallsoft|Seapunk'),
+ profile('solarpunk','digital','Solarpunk｜自然與科技','淺色機能背心＋棉麻上衣與長褲|可拆口袋短外套＋素色長裙','Frutiger Aero|Cyber Techwear')
+];
+// Keep explicit garment colors aligned with the palette card.
+const refinements={
+ 'sweet-lolita':{palette:'粉彩藍＋奶油白|煙粉＋象牙白',material:'印花棉布＋棉蕾絲|霧面裙料＋緞帶'},
+ 'sailor-lolita':{palette:'海軍藍＋白＋紅色小點'},
+ 'dark-academia':{palette:'深棕＋米白＋黑|深棕＋酒紅＋奶油白'},
+ 'light-academia':{palette:'奶油白＋卡其|米白＋淺棕'},
+ 'fairy-kei':{palette:'粉紫＋薄荷綠＋奶油白|粉藍＋淺黃＋白'},
+ 'mori':{palette:'棉麻白＋苔綠|米白＋柔棕',material:'棉麻＋柔軟針織|水洗亞麻＋細棉'},
+ 'dark-mori':{palette:'深棕＋灰黑|炭灰＋黑＋暗褐',material:'舊棉布＋薄針織|柔軟棉麻＋磨毛布'},
+ 'comfort':{material:'柔軟棉布＋彈性針織|水洗棉＋細羅紋'},
+ 'sport-casual':{material:'棉質毛圈布＋運動針織|透氣棉＋彈性褲料'},
+ 'ouji':{material:'襯衫棉布＋斜紋呢料|棉府綢＋霧面提花',accessory:'小領結與短鍊胸針|領口胸針與小巧肩包'},
+ 'western':{shoes:'低跟西部短靴|耐磨繫帶靴'},
+ 'modest':{accessory:'輕量長圍巾|簡潔肩包|小型金屬胸針'}
+};
+for(const s of styles)for(const [k,v] of Object.entries(refinements[s.id]||{}))s[k]=plain(v);
+export const commonItems = s => s.silhouette.map(x=>({label:x.label.split('＋').slice(0,2).join('、')}));
+export const styleOptions=(s,field)=>s[field]||F[s.family][field]||pools[field];
+export const familyById=F;
+export const everydayIds = styles.filter(s=>s.family==='everyday').map(s=>s.id);
+export const fashionAttitudes = plain('沒有固定風格|以舒適為主|家人採買為主|基本款反覆穿|運動休閒為主|隨手穿出習慣|喜歡漂亮但不懂風格名|多種來源混搭|只有特定場合打扮|有明確審美');
+export const fashionFields=[
+ ['attitude','對穿衣的想法'],['styleFamily','風格家族'],['items','常穿單品'],['formality','正式／休閒程度'],['tidiness','衣物整潔度'],['coordination','搭配投入'],['dailyWear','實際生活穿法'],['climate','當天氣候'],['activity','當天活動需求'],['sensory','穿著感官需求'],['upkeep','打理時間'],['clothingSource','衣物取得方式'],['familyRules','家庭穿衣管束'],['culture','風格接觸來源'],['occasionWear','特別場合穿法']
+].map(([id,label])=>({id,label,group:'穿搭'}));
+export const extraPools={
+ tidiness:plain('洗淨且整理平整|乾淨，偶爾有自然皺褶|衣服乾淨，但袖口常被揉皺|鞋有磨痕，衣服會固定清洗|舊衣有褪色與修補，並不髒|出門整齊，放學後有點凌亂|衣襬常有折痕，不特別在意|會仔細清理明顯污漬'),
+ upkeep:plain('早上只想花兩分鐘|願意花五到十分鐘|前晚準備好，早上不用想|日常很快，重要場合會提早準備|喜歡花時間慢慢整理|衣服好洗比新潮重要'),
+ climate:[{label:'溫暖晴天',kind:'warm'},{label:'微涼有風',kind:'cool'},{label:'春季有雨',kind:'rain'},{label:'偏冷的冬日',kind:'cold'}],
+ activity:plain('普通上課與步行|今天要搬材料或做手作|今天有運動，另外帶換洗衣服|課後要看展或逛街|今天要長時間坐著|課後有戶外活動，另備實用裝備|今天要練樂器或參加排練|今天會搭公車走一段路|今天和朋友聚會|今天要整理植物或做觀察'),
+ sensory:plain('沒有特殊偏好|不喜歡刺癢的內領|偏好腰部沒有束縛|不喜歡沉重的配件|走路多，需要鞋底舒服|怕熱，內層希望透氣|怕冷，會多帶一層|不喜歡硬的衣服標籤|偏好手臂能自由活動|不喜歡會一直晃動的飾品'),
+ familyRules:plain('自己決定穿什麼|家人只提醒天氣與安全|購衣有預算，風格自己選|正式家庭場合需要提前商量|家人偏保守，醒目造型留到外出再搭|家人不懂風格，但願意聽說明|家人會給建議，最後由自己決定|大部分自由，洗護要自己負責'),
+ culture:plain('從本地街景與同學穿法慢慢學|從網路穿搭圖片接觸，自己試著轉譯|受家中舊照片和保存衣物影響|在二手店找到喜歡的單品才開始查|從音樂現場或舞台造型得到靈感|從影視服裝接觸，日常只借部分元素|受親友跨地區生活經驗影響|從服裝書和展覽理解剪裁|在旅行與市集中接觸不同布料|只憑自己穿起來的感覺，不追溯派系'),
+ clothingSource:[...plain('平價基本款和少量喜歡的單品|二手衣與舊衣改造|家人購買，自己重新搭配|親友送的舊衣和自己買的基本款|存一陣子買一件重點單品|不同價位混穿，重點看合不合用'),...plain('有預算做局部修改與訂製|會為喜歡的布料與剪裁付較高價格').map(x=>({...x,minResource:2})),...plain('可買高價款，但也常穿普通基本款|需要時可以訂製，平時仍有幾件穿慣的舊衣').map(x=>({...x,minResource:3}))]
+};
+
+export const boldTwists=[
+ {label:'端正學院裝配一雙非常鮮豔的襪子',families:['academia','tailoring'],effect:'襪子是唯一高彩度焦點'},
+ {label:'Sweet Lolita 的包上扣著天文觀測用紅光小手電',styles:['sweet-lolita'],effect:'實用配件固定在包上，不增加第二套穿搭'},
+ {label:'Techwear 偏愛裙裝／裙式超寬褲輪廓',styles:['techwear'],effect:'裙式超寬褲＋短機能外套',override:'silhouette'},
+ {label:'極簡衣服搭一對非常誇張的雕塑耳飾',families:['minimal','everyday'],effect:'一對大型雕塑耳飾，其他飾品省略',override:'accessory'},
+ {label:'喜歡土得很有誠意的紀念品圖案',effect:'包上掛一個亮色觀光紀念吊飾'},
+ {label:'故意穿過時的卡通圖案襪，覺得很親切',effect:'襪口圖案是個人記號'},
+ {label:'極繁裝飾只圍繞同一個卡通角色',families:['kawaii','gyaru','art'],effect:'同主題掛件、髮夾與徽章，沿用衣服的兩個主色',override:'accessory'},
+ {label:'分色染只在髮束內側出現，放下頭髮才露出',families:['punk','rock','kawaii','gyaru','digital'],effect:'內層彩虹染，表層保留主髮色',override:'hairTexture'},
+ {label:'喜歡黑白大切分染髮，衣服保留一個主色',families:['gothic','punk','rock'],effect:'黑白分區染，界線刻意清楚',override:'hairTexture'},
+ {label:'粗塊撞色挑染，顏色取自當天配件',families:['kawaii','gyaru','punk'],effect:'粗塊挑染呼應配件主色',override:'hairTexture'},
+ {label:'把高密度金屬小飾物集中在一側包帶',families:['punk','gothic','rock'],effect:'單側包帶掛一組金屬小飾物',override:'accessory'},
+ {label:'喜歡廉價亮片的玩具感，精心選了呼應色',effect:'一個亮片小包取代普通日常包',override:'accessory'}
+];
+
+

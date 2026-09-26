@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0f1014"><title>ACG 人體煉成轉蛋機 v2</title><link rel="stylesheet" href="style.css"></head>
+<body><main><header class="hero"><p class="eyebrow">CHARACTER LAB / 02</p><h1>ACG 人體煉成轉蛋機 <small>v2</small></h1><p class="sub">先骰出一個人，再看看故事會往哪裡走。</p></header>
+<nav class="bar" id="modes" aria-label="顯示欄位"><button data-mode="6">快速 6</button><button data-mode="10">標準 10</button><button data-mode="15">完整 15</button><button data-mode="all">全部細節</button><button id="archBtn" aria-expanded="false">考古模式</button></nav>
+<div class="status"><span class="pill">近期 8 次避重</span><span class="pill">鎖定喜歡的，繼續骰</span><span class="pill">不自動分校／分院</span><span class="pill" id="poolCount"></span></div>
+<div class="toolbar"><button class="spin" id="spin">⚄ 煉成</button><button id="copy">複製人物</button><button id="download">匯出人物</button><button id="unlock">全部解鎖</button></div>
+<p id="notice" role="status" aria-live="polite">按「煉成」開始。展開「全部細節」可看完整穿搭與人物背景。</p>
+<div id="warnings" class="warnings" hidden></div>
+<section class="summary" id="summary" hidden aria-label="穿搭速寫"><p class="eyebrow">今天的穿法</p><p id="outfit"></p><p id="daily"></p></section>
+<div class="grid" id="grid"></div>
+<section class="history" id="arch" hidden><h2>考古紀錄 <small>最近 100 次，保存在這個瀏覽器</small></h2><button id="exportHistory">匯出全部紀錄</button><pre id="log">尚未煉成。</pre></section>
+<details class="help"><summary>這版怎麼骰？</summary><p>快速 6、標準 10、完整 15 保留原本的欄位順序。每次會補齊底層人物；「全部細節」能看到服裝家族、子風格、穿法、口吻與家庭等新增欄位。</p><p>服裝先選日常取向或明確審美，再從家族選子風格與具體單品。55% 的新核心走沒有固定風格、舒適派等日常路線；這是設計取樣比例，不是世界人口統計。性格與家境不由服裝推導。</p><p>換核心審美時會一起更新未鎖定的穿搭；單抽其他欄位只更新必要的連動項目。鎖定永遠優先，保留的混搭會明確提示。個人偏移通常是一個小習慣，約 12% 會選有條件的醒目反差。</p><p>學校與 House 不參與生成。紀錄保存在目前瀏覽器；清除網站資料或換裝置不會自動搬移，喜歡的角色請匯出。</p><p>風格參考：<a href="https://app.notion.com/p/3d8b523ffd8c81c3bc1ec143062ef3f0">《人生》全球服裝風格參考表</a>。這裡產生的是待發展草案，不會寫入正式 NPC。</p></details>
+<footer>從原版繼續長出新學生。<span id="saveState"></span></footer>
+</main><script type="module" src="app.mjs"></script></body></html>
+

@@ -13,6 +13,12 @@
 
 ## 目前正式模組
 
+### NPC 特徵轉蛋機 v2
+
+- [開啟 ACG 人體煉成轉蛋機 v2](https://cywpig8787-blip.github.io/clearwater-bay-life/npc-generator/)：保留快速 6／標準 10／完整 15、鎖欄、單抽與考古；全部細節展開 53 欄。
+- 19 個服裝家族、97 份實際穿法，含普通日常與無固定風格學生。生成角色草案，學校與 House 由人工判斷。
+- [來源、邏輯、驗證與後續 TODO](docs/npc-generator-v2.md)；[1,070 個原詞條審查](docs/npc-generator-v2-pool-audit.md)。原版保存於 `archive/npc-generator-v1/`。
+
 ### Character Creation v2 ＋ Ravenwood 文本校園測試
 
 - [創角與校園試玩](https://cywpig8787-blip.github.io/clearwater-bay-life/opening/)：七頁角色申請文件冊 → 依資格選校 → 入學文件交件。現行驗收與邊界見 [CYW-51 r12](docs/cyw51-r12.md)。
@@ -46,3 +52,4 @@ AGENTS.md     後續 ChatGPT / 開發者接手規則
 ```
 
 核心系統不要使用 AppDeploy 作為正式來源；正式修改應回到此 repository。
+
