@@ -1,4 +1,4 @@
-import {fields,modes,pools,styles,families,createState,restore,roll,textFor,issues} from './engine.mjs';
+import {fields,modes,pools,styles,families,createState,restore,roll,textFor,issues,lockAll,unlockAll,clearCharacter} from './engine.mjs';
 const key='cbl-npc-generator-v2';
 let state=createState();let storageOK=true;
 try{state=restore(JSON.parse(localStorage.getItem(key)));}catch{storageOK=false;}
@@ -12,7 +12,7 @@ for(const f of fields){
  const single=document.createElement('button');single.className='mini';single.textContent='單抽';single.setAttribute('aria-label','單抽 '+f.label);
  // Derived cards explain their source rather than offering a no-op reroll/lock.
  const derived=['attitude','styleFamily','items','formality','coordination','dailyWear','occasionWear'].includes(f.id);
- if(derived){const hint=document.createElement('span');hint.className='label';hint.textContent='隨人物與穿搭自動整理';tools.append(hint);}else{tools.append(lock,single);}
+ if(!derived)tools.append(lock,single);
  card.append(top,tools);grid.append(card);cards.set(f.id,{card,value,lock,single});
  lock.onclick=()=>{state.locked[f.id]=!state.locked[f.id];save();render();};
  single.onclick=()=>generate(f.id);
@@ -24,6 +24,7 @@ function render(){
  for(const b of document.querySelectorAll('[data-mode]')){b.classList.toggle('active',b.dataset.mode===state.mode);b.setAttribute('aria-pressed',String(b.dataset.mode===state.mode));}
  const v=state.values;$('#summary').hidden=!v.core;
  if(v.core){$('#outfit').textContent=[v.styleFamily?.label,v.core.label,v.silhouette?.label,v.shoes?.label,v.accessory?.label].filter(Boolean).join(' · ');$('#daily').textContent='個人偏移：'+(v.twist?.label||'尚未抽取')+'。 '+(v.dailyWear?.label||'');}
+ else{$('#outfit').textContent='';$('#daily').textContent='';}
  const notes=issues(state);$('#warnings').hidden=!notes.length;$('#warnings').textContent=notes.join(' ');
  $('#copy').disabled=$('#download').disabled=!v.core;
  $('#log').textContent=state.history.length?state.history.map(h=>textFor({values:h.values,count:h.number,mode:'all'})).join('\n\n────────────\n\n'):'尚未煉成。';
@@ -32,7 +33,9 @@ function generate(only=null){try{const r=roll(state,{only});state=r.state;save()
 $('#spin').onclick=()=>generate();
 for(const b of document.querySelectorAll('[data-mode]'))b.onclick=()=>{state.mode=b.dataset.mode;save();render();};
 $('#archBtn').onclick=()=>{const open=$('#arch').hidden;$('#arch').hidden=!open;$('#archBtn').setAttribute('aria-expanded',String(open));};
-$('#unlock').onclick=()=>{state.locked={};save();render();$('#notice').textContent='已全部解鎖，人物內容保留。';};
+$('#lockAll').onclick=()=>{state=lockAll(state);save();render();$('#notice').textContent='已全部鎖定，人物內容保留。';};
+$('#unlock').onclick=()=>{state=unlockAll(state);save();render();$('#notice').textContent='已全部解鎖，人物內容保留。';};
+$('#clear').onclick=()=>{state=clearCharacter(state);$('#arch').hidden=true;$('#archBtn').setAttribute('aria-expanded','false');save();render();$('#notice').textContent='目前角色已清空，考古紀錄保留。按「煉成」生成新角色。';};
 $('#copy').onclick=async()=>{try{await navigator.clipboard.writeText(textFor(state));$('#notice').textContent='完整人物已複製，可以貼回對話繼續設計。';}catch{$('#arch').hidden=false;$('#archBtn').setAttribute('aria-expanded','true');$('#notice').textContent='瀏覽器未允許複製，可從考古紀錄選取文字或匯出人物。';}};
 function download(text,name){const url=URL.createObjectURL(new Blob([text],{type:'text/plain;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 $('#download').onclick=()=>download(textFor(state),'student-'+state.count+'.txt');

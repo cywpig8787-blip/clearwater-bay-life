@@ -1,7 +1,9 @@
 import {fields as baseFields,modes as baseModes,pools as basePools,plain} from './catalog.mjs';
 import {retained} from './retained.mjs';
 import {styles,families,familyById,styleOptions,everydayIds,fashionFields,extraPools,boldTwists} from './fashion.mjs';
-export const fields=[...baseFields,...fashionFields];
+const internalFields=[...baseFields,...fashionFields];
+const removedFields=new Set(['posture','access','direction','upkeep','activity','clothingSource','familyRules','sensory','culture']);
+export const fields=internalFields.filter(f=>!removedFields.has(f.id));
 export const modes={...baseModes,all:fields.map(f=>f.id)};
 export const pools={...basePools,...retained,...extraPools};
 pools.unlikedTalent=pools.interest;
@@ -19,6 +21,9 @@ export function pick(items,recent=[],rng=Math.random,weight=x=>x.weight||1){
 const getStyle=s=>styles.find(x=>x.id===s.values.core?.id);
 const wardrobe=new Set(['silhouette','material','palette','shoes','accessory']);
 const derived=new Set(['attitude','styleFamily','items','formality','coordination','dailyWear','occasionWear']);
+export function lockAll(state){const next=structuredClone(state);for(const f of internalFields)if(!derived.has(f.id)&&next.values[f.id])next.locked[f.id]=true;return next;}
+export function unlockAll(state){return {...state,locked:{}};}
+export function clearCharacter(state){return {...createState(),mode:state.mode,history:state.history,recent:state.recent,count:state.count};}
 // This is a dependency graph, not a personality graph: fashion never changes a mind.
 const dependencies={
  core:['attitude','styleFamily','silhouette','material','palette','shoes','accessory','twist','hair','makeup','items','formality','coordination','dailyWear','occasionWear'],
@@ -60,18 +65,7 @@ function derive(id,s){
  if(id==='occasionWear')return item(st.family==='everyday'?'特別場合換乾淨襯衫或簡單洋裝，鞋子整理好':['gothic','lolita','vintage','tailoring'].includes(st.family)?'重要聚會增加同系列外套、領口與髮飾；平日省去大件裝飾':'重要聚會保留原本剪裁，換狀況較好的單品與一件重點配件');
  if(id==='dailyWear'){
   const weather={warm:'天暖時選薄料，把外層換成可脫的輕薄版本',cool:'有風時帶一件容易脫下的外層',rain:'雨天另帶防雨外層與鞋套，布料不拖地',cold:'冬日加保暖內層、外套與保暖襪'}[v.climate.kind];
-  const needs=[];
-  if(v.sensory.label.includes('刺癢'))needs.push('領口加柔軟內層');
-  if(v.sensory.label.includes('腰部'))needs.push('同輪廓改用鬆緊腰或放量版型');
-  if(v.sensory.label.includes('沉重')||v.sensory.label.includes('晃動'))needs.push('飾品挑輕量並固定，妨礙活動時收进包裡');
-  if(v.sensory.label.includes('鞋底'))needs.push('選同鞋型的緩震版本');
-  if(v.sensory.label.includes('標籤'))needs.push('去除硬標籤');
-  if(v.sensory.label.includes('手臂'))needs.push('袖窿保留活動量');
-  if(v.sensory.label.includes('怕熱'))needs.push('內層選透氣材質');
-  if(v.sensory.label.includes('怕冷'))needs.push('包裡多放一件薄保暖層');
-  if(v.familyRules.label.includes('偏保守'))needs.push('在家先用簡化版本，醒目配件外出後再搭');
-  const life=v.activity.label.includes('普通')?'日常以坐下、走路都方便為準':v.activity.label.includes('運動')?'運動時另換功能服與鞋':v.activity.label.includes('戶外')?'戶外活動另備防護裝備':v.activity.label.includes('材料')?'動手做事時收好垂掛飾物並加工作罩衣':v.activity.label.includes('植物')?'接觸泥土時加罩衣，手套另備':v.activity.label.includes('樂器')?'練習時先收起會碰撞器材的飾物':'出門前確認包與鞋適合當天行程';
-  return item([weather,life,...needs].join('；')+'。');
+  return item(weather+'。');
  }
 }
 function weightFor(id,s){const st=getStyle(s);return x=>{
@@ -82,8 +76,6 @@ function weightFor(id,s){const st=getStyle(s);return x=>{
 export function issues(s){
  const v=s.values,st=getStyle(s),out=[];if(!st)return out;
  for(const id of wardrobe){const item=v[id];if(!item)continue;if(!styleOptions(st,id).some(x=>x.label===item.label)&&!item.twist)out.push(`${fields.find(f=>f.id===id).label}是保留的個人混搭，沒有隨新審美改動。`);}
- if(v.access&&!v.access.levels?.includes(v.resource?.level))out.push('興趣資源取得已鎖定，與新的家庭資源需要人工核對。');
- if(v.clothingSource&&(v.clothingSource.minResource||0)>v.resource?.level)out.push('衣物取得方式已鎖定，可能超出目前家庭資源。');
  if(v.unlikedTalent?.label===v.interest?.label||[v.interest?.label,v.unlikedTalent?.label].includes(v.likedNovice?.label))out.push('興趣／擅長與喜歡欄位因鎖定出現重疊，可解鎖其中一欄再抽。');
  return out;
 }
@@ -92,7 +84,8 @@ export function roll(state,{only=null,rng=Math.random}={}){
  if(only&&!fields.some(f=>f.id===only))throw Error('未知欄位');
  if(only&&s.locked[only])return {state,changed:[],notes:issues(state)};
  // All underlying values exist, even when the compact mode shows just six cards.
- for(const f of fields)if(!s.values[f.id])target.add(f.id);
+ for(const f of internalFields)if(!s.values[f.id])target.add(f.id);
+ if(![...target].some(id=>!derived.has(id)&&(!s.locked[id]||!s.values[id])))return {state,changed:[],notes:issues(state)};
  for(const id of [...target])if(!s.locked[id])addDescendants(target,id);
  const previousTwist=s.values.twist;
  if(previousTwist?.override&&target.has('twist')&&!s.locked.twist)target.add(previousTwist.override);
@@ -120,7 +113,7 @@ export function restore(raw){
  const s=createState();if(!raw||raw.version!==2)return s;
  s.mode=Object.hasOwn(modes,String(raw.mode))?String(raw.mode):'15';
  // Only accept known fields and catalog values; derived text is rebuilt from validated choices.
- for(const f of fields){const x=raw.values?.[f.id];if(!x||typeof x.label!=='string')continue;
+ for(const f of internalFields){const x=raw.values?.[f.id];if(!x||typeof x.label!=='string')continue;
   const candidates=f.id==='core'?[...styles]:wardrobe.has(f.id)?styles.flatMap(st=>styleOptions(st,f.id)):[...(pools[f.id]||[])];
   if(f.id==='twist')candidates.push(...boldTwists);
   for(const t of boldTwists)if(t.override===f.id)candidates.push({label:t.effect,twist:true});
@@ -128,7 +121,7 @@ export function restore(raw){
   if(item)s.values[f.id]=structuredClone(item);
   if(item&&raw.locked?.[f.id])s.locked[f.id]=true;
  }
- for(const f of fields){const a=raw.recent?.[f.id];if(Array.isArray(a))s.recent[f.id]=a.filter(x=>typeof x==='string'&&x.length<300).slice(-8);}
+ for(const f of internalFields){const a=raw.recent?.[f.id];if(Array.isArray(a))s.recent[f.id]=a.filter(x=>typeof x==='string'&&x.length<300).slice(-8);}
  s.count=Number.isSafeInteger(raw.count)&&raw.count>=0?raw.count:0;
  // History is display-only and rendered with textContent, never interpreted as HTML.
  if(Array.isArray(raw.history))s.history=raw.history.slice(0,100).filter(h=>Number.isSafeInteger(h.number)&&h.values&&typeof h.values==='object');
