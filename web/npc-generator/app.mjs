@@ -22,16 +22,14 @@ function render(){
  const vis=new Set(modes[state.mode]);
  for(const f of fields){const c=cards.get(f.id),v=state.values[f.id];c.card.hidden=!vis.has(f.id);c.value.textContent=v?.label||'？？？';c.card.classList.toggle('long',(v?.label.length||0)>35);c.card.classList.toggle('wide',f.id==='dailyWear');c.card.classList.toggle('locked',!!state.locked[f.id]);c.lock.disabled=!v;c.lock.classList.toggle('on',!!state.locked[f.id]);c.lock.textContent=state.locked[f.id]?'已鎖定':'鎖定';c.lock.setAttribute('aria-pressed',String(!!state.locked[f.id]));c.single.disabled=!!state.locked[f.id];}
  for(const b of document.querySelectorAll('[data-mode]')){b.classList.toggle('active',b.dataset.mode===state.mode);b.setAttribute('aria-pressed',String(b.dataset.mode===state.mode));}
- const v=state.values;$('#summary').hidden=!v.core;
- if(v.core){$('#outfit').textContent=[v.styleFamily?.label,v.core.label,v.silhouette?.label,v.shoes?.label,v.accessory?.label].filter(Boolean).join(' · ');$('#daily').textContent='個人偏移：'+(v.twist?.label||'尚未抽取')+'。 '+(v.dailyWear?.label||'');}
- else{$('#outfit').textContent='';$('#daily').textContent='';}
+ const v=state.values;
  const notes=issues(state);$('#warnings').hidden=!notes.length;$('#warnings').textContent=notes.join(' ');
  $('#copy').disabled=$('#download').disabled=!v.core;
  $('#log').textContent=state.history.length?state.history.map(h=>textFor({values:h.values,count:h.number,mode:'all'})).join('\n\n────────────\n\n'):'尚未煉成。';
 }
 function generate(only=null){try{const r=roll(state,{only});state=r.state;save();render();const linked=r.changed.filter(x=>x!==only);$('#notice').textContent=r.changed.length?(only?`已單抽「${fields.find(f=>f.id===only).label}」${linked.length?'，並更新 '+linked.length+' 個未鎖定的連動欄位':''}。`:`第 ${state.count} 次煉成。喜歡的欄位鎖住，再繼續骰。`):'欄位已鎖定；解鎖想更換的欄位即可。';}catch(e){$('#notice').textContent='這次沒有改動人物：'+e.message;}}
 $('#spin').onclick=()=>generate();
-for(const b of document.querySelectorAll('[data-mode]'))b.onclick=()=>{state.mode=b.dataset.mode;save();render();};
+for(const b of document.querySelectorAll('[data-mode]'))b.onclick=()=>{state.mode=b.dataset.mode;$('#arch').hidden=true;$('#archBtn').setAttribute('aria-expanded','false');save();render();};
 $('#archBtn').onclick=()=>{const open=$('#arch').hidden;$('#arch').hidden=!open;$('#archBtn').setAttribute('aria-expanded',String(open));};
 $('#lockAll').onclick=()=>{state=lockAll(state);save();render();$('#notice').textContent='已全部鎖定，人物內容保留。';};
 $('#unlock').onclick=()=>{state=unlockAll(state);save();render();$('#notice').textContent='已全部解鎖，人物內容保留。';};

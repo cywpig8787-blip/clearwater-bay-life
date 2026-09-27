@@ -5,7 +5,7 @@ test('catalogs contain visual descriptions and no geometric face lottery',()=>{
  assert.equal(new Set(fields.map(f=>f.id)).size,fields.length);
  assert.ok(!JSON.stringify(pools.face).match(/五官集中|眼距|眉眼距|中庭/));
  assert.ok(styles.length>=80);for(const s of styles){assert.ok(s.silhouette.length>=2);for(const f of ['material','palette','shoes','accessory'])assert.ok(styleOptions(s,f).length);}
- assert.deepEqual(Object.values(modes).slice(0,3).map(a=>a.length),[6,10,15]);
+ assert.deepEqual(Object.keys(modes),['all']);assert.equal(modes.all.length,26);
 });
 test('10,000 full rolls: valid fields, independent talents, access and style consistency',()=>{
  let s=createState();s.mode='all';const rng=seeded(847122);let ordinary=0,bold=0;const seen=new Set();
@@ -23,7 +23,7 @@ test('10,000 full rolls: valid fields, independent talents, access and style con
 test('locks survive full rolls, mode changes and dependency rerolls',()=>{
  const rng=seeded(39);let s=roll(createState(),{rng}).state;s.locked.silhouette=true;s.locked.personality=true;const before=structuredClone(s.values);
  s=roll(s,{only:'core',rng}).state;assert.deepEqual(s.values.silhouette,before.silhouette);assert.deepEqual(s.values.personality,before.personality);
- s.mode='6';s=roll(s,{rng}).state;assert.deepEqual(s.values.silhouette,before.silhouette);
+ s.mode='all';s=roll(s,{rng}).state;assert.deepEqual(s.values.silhouette,before.silhouette);
  assert.deepEqual(roll(s,{only:'silhouette',rng}).changed,[]);
 });
 test('changing only core never changes personality or family resource',()=>{
@@ -32,7 +32,7 @@ test('changing only core never changes personality or family resource',()=>{
  for(const f of ['personality','resource','family','interest','social','gender'])assert.deepEqual(s.values[f],before[f]);
 });
 test('anti-repeat, compact completeness, capped history and transactional failures',()=>{
- const rng=seeded(17);let s=createState();s.mode='6';s=roll(s,{rng}).state;
+ const rng=seeded(17);let s=createState();s.mode='all';s=roll(s,{rng}).state;
  assert.ok(fields.every(f=>s.values[f.id]));
  const seen=[];for(let i=0;i<12;i++){s=roll(s,{only:'personality',rng}).state;assert.ok(!seen.slice(-8).includes(s.values.personality.label));seen.push(s.values.personality.label);}
  for(let i=0;i<105;i++)s=roll(s,{only:'personality',rng}).state;assert.equal(s.history.length,100);

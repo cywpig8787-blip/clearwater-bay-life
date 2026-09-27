@@ -1,16 +1,16 @@
-import {fields as baseFields,modes as baseModes,pools as basePools,plain} from './catalog.mjs';
+import {fields as baseFields,pools as basePools,plain} from './catalog.mjs';
 import {retained} from './retained.mjs';
 import {styles,families,familyById,styleOptions,everydayIds,fashionFields,extraPools,boldTwists} from './fashion.mjs';
 const internalFields=[...baseFields,...fashionFields];
-const removedFields=new Set(['posture','access','direction','upkeep','activity','clothingSource','familyRules','sensory','culture']);
+const removedFields=new Set(['posture','access','direction','upkeep','activity','clothingSource','familyRules','sensory','culture','motivation','friction','attitude','styleFamily','formality','tidiness','coordination','dailyWear','climate','depth','socialStart','learning','family','familyDynamic','twist','makeup','items','occasionWear']);
 export const fields=internalFields.filter(f=>!removedFields.has(f.id));
-export const modes={...baseModes,all:fields.map(f=>f.id)};
+export const modes={all:fields.map(f=>f.id)};
 export const pools={...basePools,...retained,...extraPools};
 pools.unlikedTalent=pools.interest;
 pools.likedNovice=pools.interest;
 export {styles,families};
 export function seeded(seed){let a=seed>>>0;return ()=>{a+=0x6D2B79F5;let t=a;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return ((t^t>>>14)>>>0)/4294967296;};}
-export const createState=()=>({version:2,mode:'15',values:{},locked:{},recent:{},history:[],count:0});
+export const createState=()=>({version:2,mode:'all',values:{},locked:{},recent:{},history:[],count:0});
 const draw=rng=>{const n=rng();if(!Number.isFinite(n)||n<0||n>=1)throw Error('無效隨機值');return n;};
 export function pick(items,recent=[],rng=Math.random,weight=x=>x.weight||1){
  if(!items?.length)throw Error('沒有可用選項');
@@ -83,7 +83,7 @@ export function roll(state,{only=null,rng=Math.random}={}){
  const s=structuredClone(state),target=new Set(only?[only]:modes[s.mode]);
  if(only&&!fields.some(f=>f.id===only))throw Error('未知欄位');
  if(only&&s.locked[only])return {state,changed:[],notes:issues(state)};
- // All underlying values exist, even when the compact mode shows just six cards.
+ // Retain shared underlying values for the existing generation dependencies.
  for(const f of internalFields)if(!s.values[f.id])target.add(f.id);
  if(![...target].some(id=>!derived.has(id)&&(!s.locked[id]||!s.values[id])))return {state,changed:[],notes:issues(state)};
  for(const id of [...target])if(!s.locked[id])addDescendants(target,id);
@@ -111,7 +111,7 @@ export function roll(state,{only=null,rng=Math.random}={}){
 export function textFor(s,{all=true}={}){const ids=all?fields.map(f=>f.id):modes[s.mode];return 'ACG 人體煉成轉蛋機 v2｜#'+s.count+'\n'+fields.filter(f=>ids.includes(f.id)&&s.values[f.id]).map(f=>f.label+'：'+s.values[f.id].label).join('\n')+'\n（角色草案；學校與 House 留待人工判斷）';}
 export function restore(raw){
  const s=createState();if(!raw||raw.version!==2)return s;
- s.mode=Object.hasOwn(modes,String(raw.mode))?String(raw.mode):'15';
+ s.mode='all';
  // Only accept known fields and catalog values; derived text is rebuilt from validated choices.
  for(const f of internalFields){const x=raw.values?.[f.id];if(!x||typeof x.label!=='string')continue;
   const candidates=f.id==='core'?[...styles]:wardrobe.has(f.id)?styles.flatMap(st=>styleOptions(st,f.id)):[...(pools[f.id]||[])];
