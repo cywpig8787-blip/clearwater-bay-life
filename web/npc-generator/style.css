@@ -3,3 +3,4 @@
 
 /* Keep long translated labels and toolbar controls within narrow viewports. */
 main,.toolbar,.status,.history{min-width:0}h1,.pill,.help{overflow-wrap:anywhere}.toolbar>button{min-width:0}.tools button{min-height:44px}.history pre{max-width:100%}
+@media(max-width:560px){.toolbar>button:not(.spin){flex:1 1 100px;white-space:nowrap}}
