@@ -1,0 +1,42 @@
+name: Verify appearance generator
+on:
+  push:
+    paths:
+      - 'web/npc-generator/**'
+      - 'tests/npc-generator*.mjs'
+      - 'tests/browser/npc-generator.mjs'
+      - '.github/workflows/npc-generator-verify.yml'
+  pull_request:
+    paths:
+      - 'web/npc-generator/**'
+      - 'tests/npc-generator*.mjs'
+      - 'tests/browser/npc-generator.mjs'
+      - '.github/workflows/npc-generator-verify.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Test visual constraints and existing project gates
+        run: node --test tests/character-creator-v2.test.mjs tests/school-selection.test.mjs tests/ravenwood.test.mjs tests/npc-generator.test.mjs tests/npc-generator-controls.test.mjs
+      - name: Install browser test tools outside the app
+        run: |
+          npm install --prefix "$RUNNER_TEMP/npc-browser" playwright@1.62.1
+          node "$RUNNER_TEMP/npc-browser/node_modules/playwright/cli.js" install --with-deps chromium
+      - name: Verify controls, persistence, export and mobile layout
+        env:
+          PLAYWRIGHT_MODULE: ${{ runner.temp }}/npc-browser/node_modules/playwright
+          BROWSER_OUTPUT: ${{ runner.temp }}/npc-browser-results
+        run: node tests/browser/npc-generator.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: appearance-generator-browser
+          path: ${{ runner.temp }}/npc-browser-results
+          retention-days: 7
