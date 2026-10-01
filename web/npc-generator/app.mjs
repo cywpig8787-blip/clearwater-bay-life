@@ -1,4 +1,4 @@
-import {fields,modes,pools,styles,families,createState,restore,roll,textFor,issues,lockAll,unlockAll,clearCharacter} from './engine.mjs';
+import {fields,modes,pools,styles,families,createState,restore,roll,textFor,issues,lockAll,unlockAll,clearCharacter} from './engine.mjs?v=appearance-v3';
 const key='cbl-npc-generator-v2';
 let state=createState();let storageOK=true;let migrated=false;
 try{const raw=JSON.parse(localStorage.getItem(key));migrated=raw?.version===2;state=restore(raw);}catch{storageOK=false;}

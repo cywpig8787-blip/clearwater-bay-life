@@ -1,5 +1,5 @@
-import {pools,marks} from './catalog.mjs';
-import {styles,styleOptions} from './fashion.mjs';
+import {pools,marks} from './catalog.mjs?v=appearance-v3';
+import {styles,styleOptions} from './fashion.mjs?v=appearance-v3';
 export const MAX_EMPHASIS=2;
 export const wardrobe=['silhouette','palette','shoes','accessory'];
 export const dependencies={hair:['hairTexture','hairVolume','fringe','part','tie'],hairTexture:['fringe','part','tie'],fringe:['part'],core:wardrobe};

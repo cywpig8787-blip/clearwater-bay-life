@@ -1,4 +1,4 @@
-import {plain} from './catalog.mjs';
+import {plain} from './catalog.mjs?v=appearance-v3';
 // Families coordinate garments, colors, footwear and accessories only.
 const family=(id,label,palette,shoes,accessory)=>({id,label,palette:plain(palette),shoes:plain(shoes),accessory:[{label:'不加配件',weight:3,count:0},...plain(accessory,{count:1})]});
 export const families=[

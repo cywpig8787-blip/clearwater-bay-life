@@ -1,6 +1,6 @@
-import {fields,pools as visualPools} from './catalog.mjs';
-import {styles,families,styleOptions} from './fashion.mjs';
-import {allowed,compatible,candidates,dependencies,featureOptions,issues,wardrobe} from './rules.mjs';
+import {fields,pools as visualPools} from './catalog.mjs?v=appearance-v3';
+import {styles,families,styleOptions} from './fashion.mjs?v=appearance-v3';
+import {allowed,compatible,candidates,dependencies,featureOptions,issues,wardrobe} from './rules.mjs?v=appearance-v3';
 export {fields,styles,families,issues};
 export const pools={...visualPools,feature:featureOptions};
 export const modes={all:fields.map(f=>f.id)};
