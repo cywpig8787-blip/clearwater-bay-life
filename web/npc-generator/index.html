@@ -1,14 +1,14 @@
 <!doctype html>
-<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0f1014"><title>純外貌角色生成器</title><link rel="stylesheet" href="style.css?v=appearance-v3"></head>
-<body><main><header class="hero"><p class="eyebrow">CHARACTER LAB / 03</p><h1>純外貌角色生成器 <small>v3</small></h1><p class="sub">正常基礎，少量辨識特徵。先取得外貌，再由你建立角色。</p></header>
+<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0f1014"><title>純外貌角色生成器</title><link rel="stylesheet" href="style.css?v=appearance-compact1"></head>
+<body><main><header class="hero"><p class="eyebrow">CHARACTER LAB / 03</p><h1>純外貌角色生成器 <small>精簡版</small></h1><p class="sub">正常基礎，少量辨識特徵。先取得外貌，再由你建立角色。</p></header>
 <nav class="bar" id="modes" aria-label="顯示欄位"><button data-mode="all">完整版</button><button id="archBtn" aria-expanded="false">考古模式</button></nav>
 <div class="status"><span class="pill">相容選項內近期避重</span><span class="pill">鎖定喜歡的，繼續骰</span><span class="pill">只生成視覺特徵</span><span class="pill" id="poolCount"></span></div>
 <div class="toolbar"><button class="spin" id="spin">⚄ 煉成</button><button id="copy">複製外貌</button><button id="download">匯出外貌</button><button id="lockAll">全部鎖定</button><button id="unlock">全部解鎖</button><button id="clear">清空角色</button></div>
 <p id="notice" role="status" aria-live="polite">按「煉成」開始。考古模式可查看先前生成的角色。</p>
 <div id="warnings" class="warnings" hidden></div>
-<div class="grid" id="grid"></div>
+<p id="empty" class="empty">按「煉成」取得一份外貌視覺種子。</p><div class="grid" id="grid" hidden></div>
 <section class="history" id="arch" hidden><h2>考古紀錄 <small>最近 100 次，保存在這個瀏覽器</small></h2><button id="exportHistory">匯出全部紀錄</button><pre id="log">尚未煉成。</pre></section>
-<details class="help"><summary>這版怎麼骰？</summary><p>30 個外貌與穿搭欄位；考古模式保留最近 100 次生成紀錄。沒有性格、背景或妝容。身高使用公分；其他比例是繪圖描述，不限定性別。</p><p>突出特徵全身最多兩項，眼睛最多一項。痣、雀斑、胎記等通常 0–2 個，不疊加多個面部記號。髮色來自人工整理的色彩池；服裝與配件依風格搭配。</p><p>單抽髮型會更新未鎖定的瀏海、分線與綁法；換服裝風格會更新未鎖定的穿搭。鎖定欄位會限制其他欄位的可選組合。若只剩一個相容選項，結果可能相同。</p><p>紀錄只保存在目前瀏覽器；清空角色保留歷史，喜歡的外貌請匯出。舊紀錄僅保留能對應目前資料池的外貌，舊人物與生活設定不再載入。</p></details>
+<details class="help"><summary>這版怎麼骰？</summary><p>只抽 12 項主要外貌。眼型與瞳色分開選取，頭髮直接給出完整描述，穿搭只決定風格方向；身高不指定公分。辨識特徵通常 0–1 個，少部分 2 個。</p><p>喜歡的欄位可鎖定；單抽只換該項。若身高與小巧體型被鎖住，會從相容的選項抽取。性格、背景與妝容由你另外設計。</p><p>紀錄保存在目前瀏覽器，最多 100 次。清空角色保留歷史；換裝置前請匯出。舊紀錄會整理成主要外貌，無法完整對應的舊歷史不再顯示。</p></details>
 <footer>Clearwater Bay Life · 視覺種子。<span id="saveState"></span></footer>
-</main><script type="module" src="app.mjs?v=appearance-v3"></script></body></html>
+</main><script type="module" src="app.mjs?v=appearance-compact1"></script></body></html>
 

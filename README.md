@@ -15,7 +15,7 @@
 
 ### 純外貌角色生成器
 
-- [開啟純外貌角色生成器](https://cywpig8787-blip.github.io/clearwater-bay-life/npc-generator/)：30 個外貌與穿搭欄位；保留鎖欄、單抽、歷史、複製與匯出。
+- [開啟純外貌角色生成器](https://cywpig8787-blip.github.io/clearwater-bay-life/npc-generator/)：12 個主要外貌欄位（眼型與瞳色分開）；保留鎖欄、單抽、歷史、複製與匯出。
 - [資料流、規則與驗證](docs/npc-generator-v2.md)。使用原入口，舊人物／生活資料池與可執行備份已移除。
 
 ### Character Creation v2 ＋ Ravenwood 文本校園測試
